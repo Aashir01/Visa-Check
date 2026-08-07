@@ -49,11 +49,14 @@ class Settings(BaseSettings):
     max_files_per_check: int = 25
 
     # --- OCR ---
-    # "tesseract" (default, cheap) or "claude_vision" (accurate on phone
-    # photos, costs tokens). Per-corridor override lives in the rule pack as
-    # `ocr.provider`, so you can pay for vision only where it earns its keep.
+    # "tesseract"    — no extra install, but falls off a cliff on phone photos
+    # "paddleocr"    — self-hosted PP-OCR, robust on photos, zero marginal cost
+    # "claude_vision"— best on the worst inputs, costs tokens per page
+    # A rule pack can override this per corridor via `ocr.provider`, so you can
+    # pay for accuracy only where it earns its keep.
     ocr_provider: str = "tesseract"
     tesseract_lang: str = "eng"
+    paddle_lang: str = "en"
     tesseract_timeout_s: int = 60
     ocr_raster_dpi: int = 200
     # A digital PDF page with at least this many extractable characters skips

@@ -238,20 +238,71 @@ Everything is env-overridable; see `backend/.env.example`.
 | `RETENTION_DAYS` | `30` | Document purge window |
 | `LOW_CONFIDENCE_THRESHOLD` | `0.55` | Below this, a check is routed to the review queue |
 
-### A note on OCR accuracy
+### Choosing an OCR engine
 
-Tesseract is the default because it is free, and the text-layer shortcut means
-most real bundles never touch it. It is genuinely weak, however, on passport
-MRZ bands and on skewed phone photos of documents — which is what applicants
-actually upload. Two mitigations are built in:
+Three providers sit behind one interface, so switching is a config change:
 
-- The MRZ parser validates ICAO check digits and repairs the OCR-B glyph
-  confusions (`O`/`0`, `I`/`1`, `S`/`5`), recovering most misreads.
-- A Claude vision OCR provider can be switched on per corridor when accuracy
-  matters more than token cost.
+| Provider | Cost per page | Runs on | Good for |
+|---|---|---|---|
+| `tesseract` | free | CPU | Digital PDFs and clean scans |
+| `paddleocr` | free | CPU (GPU optional) | Phone photos, skew, uneven lighting |
+| `claude_vision` | tokens | API | Worst-case images, when accuracy beats cost |
 
-If real-world classification accuracy disappoints, that switch is the first
-thing to try.
+Set `OCR_PROVIDER`, or override per corridor with `ocr.provider` in a rule
+pack so you only pay for accuracy where it earns its keep.
+
+`paddleocr` needs an extra install and a one-time model download:
+
+```bash
+pip install paddlepaddle paddleocr
+```
+
+### Measured: where Tesseract stops working
+
+Tesseract was benchmarked against simulated phone photos — perspective, skew,
+a shadow gradient, and JPEG recompression — scoring whether the passport MRZ
+could be recovered *and* its ICAO check digits validated:
+
+| Degradation | Text recovered | MRZ found | Check digits |
+|---|---|---|---|
+| Light (slight skew, mild compression) | 330 chars | yes | 3/3 valid |
+| Medium (~120 DPI effective, blur, JPEG 55) | 122 chars | no | — |
+| Harsh (heavy blur, JPEG 35) | 89 chars | no | — |
+
+The cliff between light and medium is steep and **preprocessing does not fix
+it**: CLAHE, denoising, sharpening and adaptive thresholding were each
+measured and all made recognition *worse*, amplifying JPEG noise faster than
+they recovered strokes. Plain upscaling to ~1800px was the only transform that
+helped, and it is the only one applied.
+
+So: Tesseract is fine for digital PDFs, which is most of a typical bundle
+(bank statements, e-tickets, insurance certificates are nearly always
+born-digital and bypass OCR entirely via the text layer). Passports and CNICs
+are the documents applicants photograph, and those are exactly where it fails.
+If your traffic is phone-photo heavy, move to `paddleocr`.
+
+`PaddleOcrProvider` could not be benchmarked in the build environment — the
+model hosts (HuggingFace, ModelScope, BOS) are unreachable from it, so the
+provider is written and unit-tested but its accuracy on your traffic is
+unverified. Benchmark it yourself before switching:
+
+```bash
+python tests/make_phone_photo.py --pdf passport.pdf --out photo.jpg --level medium
+OCR_PROVIDER=paddleocr python cli.py check --corridor schengen_short_stay_pk photo.jpg
+```
+
+### Why the MRZ matters so much
+
+The MRZ is the only place in a bundle where a field can be *verified* rather
+than merely read: ICAO 9303 check digits mean a recovered passport number is
+either right or detectably wrong. The parser also repairs the OCR-B glyph
+confusions (`O`/`0`, `I`/`1`, `S`/`5`) and re-checks.
+
+This is worth guarding. An early bug flattened Tesseract's word output into a
+single line, which made the two-line MRZ impossible to locate and silently
+disabled verified passport extraction for *every image upload* — while digital
+PDFs, which keep their newlines, kept working and hid the problem in tests.
+`tests/test_ocr_lines.py` now pins the line structure end to end.
 
 ---
 
