@@ -1,0 +1,379 @@
+{
+  "schema_version": 1,
+  "corridor_key": "uk_visitor_pk",
+  "version": "0.1.0-draft",
+  "title": "UK Standard Visitor visa from Pakistan",
+  "unverified": true,
+  "effective_date": "2026-08-07",
+  "currency": "GBP",
+  "default_trip_days": 14,
+  "review_cadence_days": 30,
+  "source_notes": [
+    "DRAFT — AI-assembled from published UK Visitor Rules (Appendix V) and UKVI guidance. NOT verified against live casework.",
+    "The UK sets NO fixed financial threshold for visitors. The per-day figure in this pack is an internal heuristic for spotting obviously thin files, NOT an official requirement — say so in any client-facing wording.",
+    "UKVI decides on the balance of probabilities across the whole file, so 'genuine visitor' judgement matters more here than any single document.",
+    "TB testing: applicants from Pakistan applying for more than 6 months require an IOM TB certificate. Standard visitor stays of up to 6 months normally do not.",
+    "Verify against the current Appendix V and the online application journey before relying on any finding."
+  ],
+  "disclaimer": "This is a document completeness check against a named checklist. It is not immigration advice and does not predict whether a visa will be granted.",
+  "fx": {
+    "base": "GBP",
+    "updated": "2026-08-07",
+    "note": "Indicative rates for threshold comparison only. Edit in /admin/rules.",
+    "rates": { "PKR": 375.0, "EUR": 1.19, "USD": 1.30, "SAR": 4.87, "AED": 4.77 }
+  },
+  "severity_weights": { "critical": 22, "warning": 8, "info": 2 },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed / business owner",
+    "student": "Student",
+    "retired": "Retired"
+  },
+  "ocr": { "provider": null },
+
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "The passport bio-data page is the identity anchor for the whole application.",
+      "fix": "Upload a clear scan of the bio-data page including the two machine-readable lines at the bottom."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement (6 months)",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "satisfied_by": ["bank_letter"],
+      "why": "UKVI assesses whether you can meet the cost of the trip without working or accessing public funds. Six months of statements is the norm caseworkers expect.",
+      "fix": "Obtain bank statements covering the last 6 months, stamped by the bank, showing your name and the closing balance."
+    },
+    {
+      "key": "cover_letter",
+      "label": "Cover letter",
+      "required": true,
+      "severity": "warning",
+      "profiles": ["*"],
+      "why": "The visitor route turns on whether the caseworker believes you are a genuine visitor who will leave. A cover letter is where that case is made.",
+      "fix": "Write a one-page letter stating your purpose, dates, accommodation, who is funding the trip, and your reasons to return to Pakistan."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Flight reservation",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "UKVI does not require a purchased ticket and advises against buying one before a decision. A reservation or a stated itinerary still helps evidence intent to leave.",
+      "fix": "Include a provisional itinerary or reservation. Do not buy a non-refundable ticket before the decision."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Proof of accommodation",
+      "required": true,
+      "severity": "warning",
+      "profiles": ["*"],
+      "satisfied_by": ["invitation_letter"],
+      "why": "You must show where you will stay for the duration of the visit.",
+      "fix": "Add a hotel booking, or an invitation letter from your host in the UK with their address."
+    },
+    {
+      "key": "employment_letter",
+      "label": "Employment letter / NOC",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["employed"],
+      "satisfied_by": ["salary_slip"],
+      "why": "Employment with approved leave is the strongest ordinary evidence that you will return to Pakistan.",
+      "fix": "Ask your employer for a letter on letterhead confirming your role, salary, service dates, and approved leave for the travel period."
+    },
+    {
+      "key": "salary_slip",
+      "label": "Salary slips",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["employed"],
+      "why": "Salary slips corroborate that the credits in your bank statement are genuine earnings.",
+      "fix": "Add your last 3 to 6 salary slips."
+    },
+    {
+      "key": "business_registration",
+      "label": "Business registration / NTN certificate",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["self_employed"],
+      "satisfied_by": ["tax_return"],
+      "why": "Self-employed applicants must evidence the business that funds the trip and that they will return to.",
+      "fix": "Include your business registration or NTN certificate together with your most recent tax return."
+    },
+    {
+      "key": "tax_return",
+      "label": "Tax return",
+      "required": true,
+      "severity": "warning",
+      "profiles": ["self_employed"],
+      "why": "A filed return substantiates declared business income.",
+      "fix": "Add your most recent FBR tax return acknowledgement."
+    },
+    {
+      "key": "student_enrollment",
+      "label": "Enrolment / bonafide certificate",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["student"],
+      "why": "Students must evidence current enrolment and that they are expected back.",
+      "fix": "Ask your institution for a bonafide certificate confirming enrolment and no objection to your travel."
+    },
+    {
+      "key": "pension_statement",
+      "label": "Pension statement",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["retired"],
+      "satisfied_by": ["bank_letter"],
+      "why": "Retired applicants must evidence their ongoing income.",
+      "fix": "Include your pension payment order or recent pension credit statements."
+    },
+    {
+      "key": "sponsor_letter",
+      "label": "Sponsor letter (if someone else is funding the trip)",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "If a third party pays, UKVI expects their commitment in writing plus their own financial evidence.",
+      "fix": "Ask your sponsor for a letter confirming what they will cover, with their bank statements and proof of their UK status if they are resident there."
+    },
+    {
+      "key": "property_document",
+      "label": "Property or asset documents",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "Assets in Pakistan support the case that you intend to return.",
+      "fix": "Consider adding property papers or other asset documentation."
+    },
+    {
+      "key": "previous_visa",
+      "label": "Previous visas / travel history",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "Prior compliant travel, especially to the UK, US, Schengen, Australia or Canada, is among the strongest positive signals for this route.",
+      "fix": "Include copies of previous visas and entry/exit stamps."
+    }
+  ],
+
+  "rules": [
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Your name is not written the same way on every document",
+      "category": "consistency",
+      "passed_label": "Name matches across all documents",
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": ["passport", "bank_statement", "flight_ticket", "hotel_booking", "employment_letter"],
+        "aliases": {
+          "bank_statement": "account_holder",
+          "flight_ticket": "passenger_name",
+          "hotel_booking": "guest_name",
+          "employment_letter": "employee_name"
+        }
+      },
+      "fix": "Every document must show your name exactly as in your passport. Ask any third-party issuer to reissue documents with the correct spelling."
+    },
+    {
+      "id": "consistency.dob",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Date of birth does not match across documents",
+      "category": "consistency",
+      "passed_label": "Date of birth matches across documents",
+      "params": {
+        "field": "date_of_birth",
+        "mode": "date",
+        "across": ["passport", "national_id"]
+      },
+      "fix": "Correct the date of birth to match your passport exactly."
+    },
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport is valid for the whole visit",
+      "params": { "min_days_after_return": 1 },
+      "fix": "Your passport must be valid for the whole of your stay in the UK. Renew it before applying if it expires during the trip."
+    },
+    {
+      "id": "financial.sufficiency",
+      "type": "financial_sufficiency",
+      "severity": "warning",
+      "title": "Funds look thin for the trip length",
+      "category": "financial",
+      "passed_label": "Funds look adequate for the trip length",
+      "params": {
+        "method": "per_day",
+        "per_day_amount": 100,
+        "minimum_total": 1500,
+        "currency": "GBP",
+        "balance_field": "closing_balance",
+        "source_documents": ["bank_statement", "bank_letter"]
+      },
+      "fix": "The UK sets no official minimum, but the caseworker must believe you can cover the trip without working. Either show a stronger balance, or evidence a sponsor with their own statements and a letter of support."
+    },
+    {
+      "id": "financial.recency",
+      "type": "statement_recency",
+      "severity": "warning",
+      "title": "Bank statement recency",
+      "category": "financial",
+      "passed_label": "Bank statement is recent",
+      "params": { "document": "bank_statement", "field": "statement_date", "max_age_days": 30 }
+    },
+    {
+      "id": "financial.history",
+      "type": "statement_history",
+      "severity": "warning",
+      "title": "Bank statement history length",
+      "category": "financial",
+      "passed_label": "Bank statement covers the expected period",
+      "params": { "document": "bank_statement", "min_months": 6 }
+    },
+    {
+      "id": "financial.sudden_deposit",
+      "type": "sudden_deposit",
+      "severity": "warning",
+      "title": "Sudden large deposit",
+      "category": "financial",
+      "passed_label": "No single deposit dominates the balance",
+      "params": { "document": "bank_statement", "ratio": 0.35 },
+      "fix": "UKVI specifically probes unexplained deposits. Include documentary proof of where the money came from, or a sponsor's affidavit if it was a gift."
+    },
+    {
+      "id": "employment.letter_age",
+      "type": "document_age",
+      "severity": "warning",
+      "title": "Employment letter is too old",
+      "category": "validity",
+      "passed_label": "Employment letter is recently dated",
+      "profiles": ["employed"],
+      "params": { "document": "employment_letter", "field": "issue_date", "max_age_days": 30 }
+    },
+    {
+      "id": "profile.income_proof",
+      "type": "profile_documents",
+      "severity": "critical",
+      "title": "No proof of income for your stated status",
+      "category": "missing_document",
+      "passed_label": "Proof of income provided",
+      "profiles": ["employed"],
+      "params": { "any_of": ["employment_letter", "salary_slip", "tax_return"] },
+      "detail": "You selected 'employed', so the file needs documentary proof of that employment.",
+      "fix": "Add an employment letter, recent salary slips, or your tax return."
+    },
+    {
+      "id": "itinerary.accommodation_covers_stay",
+      "type": "date_order",
+      "severity": "info",
+      "title": "Accommodation does not start by your arrival date",
+      "category": "consistency",
+      "passed_label": "Accommodation dates line up with your itinerary",
+      "params": {
+        "a_document": "hotel_booking",
+        "a_field": "check_in",
+        "b_document": "flight_ticket",
+        "b_field": "departure_date",
+        "operator": "gte",
+        "tolerance_days": 1
+      },
+      "fix": "Extend the booking so it covers every night of the visit."
+    },
+    {
+      "id": "photo.spec",
+      "type": "photo_spec",
+      "severity": "info",
+      "title": "Photograph compliance",
+      "category": "photo",
+      "passed_label": "Photograph meets the specification",
+      "params": {
+        "width_mm": 35,
+        "height_mm": 45,
+        "aspect_tolerance": 0.08,
+        "min_height_px": 600,
+        "face_height_ratio": [0.6, 0.8],
+        "max_centre_offset": 0.25,
+        "min_background_uniformity": 0.7,
+        "background_lightness_range": [0.55, 1.0],
+        "min_sharpness": 60,
+        "must_be_colour": true
+      }
+    }
+  ],
+
+  "llm_review": {
+    "enabled": true,
+    "targets": ["cover_letter", "employment_letter", "invitation_letter", "sponsor_letter"],
+    "criteria": [
+      {
+        "id": "letter.cover_genuine_visitor",
+        "document": "cover_letter",
+        "label": "Cover letter does not address why you will return to Pakistan",
+        "severity": "warning",
+        "passed_label": "Cover letter addresses intent to return",
+        "question": "Does the letter give concrete reasons the applicant will leave the UK at the end of the visit — employment to return to, business, dependants, study, or property? Vague statements of intent do not count.",
+        "fix": "Add a paragraph with specifics: your job and the date you return to work, family who depend on you, and any business or property you hold in Pakistan."
+      },
+      {
+        "id": "letter.cover_funding",
+        "document": "cover_letter",
+        "label": "Cover letter does not explain who is funding the trip",
+        "severity": "warning",
+        "passed_label": "Cover letter explains trip funding",
+        "question": "Does the letter state clearly who is paying for the trip and how those funds were accumulated?",
+        "fix": "State plainly whether you are self-funding or being sponsored, and where the money came from."
+      },
+      {
+        "id": "letter.cover_itinerary",
+        "document": "cover_letter",
+        "label": "Cover letter does not set out the itinerary",
+        "severity": "info",
+        "passed_label": "Cover letter sets out the itinerary",
+        "question": "Does the letter state the intended arrival and departure dates and what the applicant will do during the visit?",
+        "fix": "Add your intended dates and a short day-level outline of the visit."
+      },
+      {
+        "id": "letter.employment_completeness",
+        "document": "employment_letter",
+        "label": "Employment letter is missing details caseworkers expect",
+        "severity": "warning",
+        "passed_label": "Employment letter contains the expected details",
+        "question": "Does the letter state the applicant's job title, salary, length of service, approved leave dates, and confirm they are expected to return to work? List which are absent.",
+        "fix": "Ask your employer to reissue the letter covering job title, salary, service length, approved leave dates, and your expected return-to-work date."
+      },
+      {
+        "id": "letter.invitation_status",
+        "document": "invitation_letter",
+        "label": "Invitation letter does not evidence the host's UK status",
+        "severity": "warning",
+        "passed_label": "Invitation letter references the host's UK status",
+        "question": "Does the letter reference the host's own immigration status in the UK, such as British citizenship, settled status or a visa, and their address?",
+        "fix": "Ask your host to state their UK status and address, and to attach a copy of their passport or residence document."
+      },
+      {
+        "id": "letter.sponsor_capacity",
+        "document": "sponsor_letter",
+        "label": "Sponsor letter does not evidence the sponsor's capacity to pay",
+        "severity": "warning",
+        "passed_label": "Sponsor letter addresses capacity to pay",
+        "question": "Does the letter state the sponsor's income or financial position and specifically which costs they will cover?",
+        "fix": "Ask the sponsor to state their income, what they will pay for, and to attach their own bank statements."
+      }
+    ]
+  }
+}

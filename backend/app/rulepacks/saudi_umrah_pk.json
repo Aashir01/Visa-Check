@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "corridor_key": "saudi_umrah_pk",
+  "version": "0.1.0-draft",
+  "title": "Saudi Arabia Umrah visa from Pakistan",
+  "unverified": true,
+  "effective_date": "2026-08-07",
+  "currency": "SAR",
+  "default_trip_days": 14,
+  "review_cadence_days": 30,
+  "source_notes": [
+    "DRAFT — AI-assembled from published Saudi Ministry of Hajj and Umrah / Nusuk guidance. NOT verified against live casework.",
+    "Umrah requirements change frequently and are often announced per-season. Treat every threshold here as provisional.",
+    "Meningococcal ACWY vaccination is a long-standing entry requirement for pilgrims; confirm the current validity window and any seasonal additions before each season.",
+    "The mahram requirement for women has been relaxed in recent years. This pack treats it as informational, not blocking. Confirm current policy.",
+    "Umrah is commonly processed through licensed agents and the Nusuk platform rather than a consulate counter, so document handling differs from the Schengen and UK corridors.",
+    "This corridor is high-volume and low-margin: verify carefully before selling checks against it."
+  ],
+  "disclaimer": "This is a document completeness check against a named checklist. It is not immigration advice and does not predict whether a visa will be granted.",
+  "fx": {
+    "base": "SAR",
+    "updated": "2026-08-07",
+    "note": "Indicative rates for threshold comparison only. Edit in /admin/rules.",
+    "rates": { "PKR": 77.0, "EUR": 0.245, "GBP": 0.205, "USD": 0.267, "AED": 0.98 }
+  },
+  "severity_weights": { "critical": 22, "warning": 8, "info": 2 },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed / business owner",
+    "student": "Student",
+    "retired": "Retired"
+  },
+  "ocr": { "provider": null },
+
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "The passport must be machine-readable and valid for at least 6 months from the intended date of entry.",
+      "fix": "Upload a clear scan of the bio-data page including the two machine-readable lines at the bottom."
+    },
+    {
+      "key": "photo",
+      "label": "Passport photograph (white background)",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "A recent colour photograph on a plain white background is required for the visa record.",
+      "fix": "Upload a recent colour photograph on a plain white background with the full face visible."
+    },
+    {
+      "key": "vaccination_certificate",
+      "label": "Meningococcal ACWY vaccination certificate",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "Proof of meningococcal ACWY vaccination is an entry requirement for pilgrims and is checked on arrival as well as at visa stage.",
+      "fix": "Get the ACWY vaccination at an authorised centre and upload the certificate. It must be administered within the validity window required for the season and at least 10 days before travel."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Confirmed round-trip flight booking",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "A confirmed return booking is required to evidence the intended departure date.",
+      "fix": "Add your confirmed round-trip flight booking covering the intended travel dates."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Accommodation booking in Makkah / Madinah",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "Confirmed accommodation for the pilgrimage period is required and is normally arranged through the licensed agent or the Nusuk platform.",
+      "fix": "Add the confirmed hotel booking covering every night of the pilgrimage."
+    },
+    {
+      "key": "national_id",
+      "label": "CNIC / national identity card",
+      "required": true,
+      "severity": "warning",
+      "profiles": ["*"],
+      "why": "Pakistani applicants are normally required to provide their CNIC alongside the passport.",
+      "fix": "Add a clear copy of both sides of your CNIC."
+    },
+    {
+      "key": "mahram_proof",
+      "label": "Mahram relationship proof",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "Saudi Arabia has relaxed the mahram requirement for women performing Umrah, but relationship proof is still commonly requested by agents when travelling as a family group.",
+      "fix": "If travelling as a family group, include a marriage certificate, birth certificate or family registration certificate showing the relationship."
+    },
+    {
+      "key": "travel_insurance",
+      "label": "Travel medical insurance",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "Medical cover is normally bundled into the Umrah visa fee, but a separate policy is still commonly recommended and sometimes requested.",
+      "fix": "Consider adding a travel medical insurance certificate covering the pilgrimage dates."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "There is no published financial threshold for Umrah, but agents commonly ask for evidence that the trip is funded.",
+      "fix": "Consider adding a recent bank statement showing you can cover the trip."
+    },
+    {
+      "key": "marriage_certificate",
+      "label": "Marriage certificate",
+      "required": false,
+      "recommend_if_missing": false,
+      "profiles": ["*"],
+      "why": "Required only when relationship proof is needed for a group booking.",
+      "fix": "Include the nikah nama or marriage certificate if travelling with a spouse."
+    }
+  ],
+
+  "rules": [
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Your name is not written the same way on every document",
+      "category": "consistency",
+      "passed_label": "Name matches across all documents",
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": ["passport", "flight_ticket", "hotel_booking", "vaccination_certificate", "national_id", "travel_insurance"],
+        "aliases": {
+          "flight_ticket": "passenger_name",
+          "hotel_booking": "guest_name",
+          "travel_insurance": "insured_name"
+        }
+      },
+      "fix": "Saudi systems match the passport name exactly. Any difference between your ticket, hotel booking, vaccination certificate and passport must be corrected before submission, or entry can be refused at the airport."
+    },
+    {
+      "id": "consistency.passport_number",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Passport number does not match across documents",
+      "category": "consistency",
+      "passed_label": "Passport number matches across documents",
+      "params": {
+        "field": "passport_number",
+        "mode": "exact",
+        "across": ["passport", "flight_ticket", "travel_insurance"]
+      },
+      "fix": "Correct the passport number wherever it differs and have the booking reissued."
+    },
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport meets the 6-month validity requirement",
+      "params": { "min_days_after_return": 180 },
+      "fix": "Your passport must be valid for at least 6 months. Renew it before booking — this is enforced strictly and is the most common reason an Umrah booking is rejected."
+    },
+    {
+      "id": "vaccination.age",
+      "type": "document_age",
+      "severity": "warning",
+      "title": "Vaccination certificate may be outside its validity window",
+      "category": "validity",
+      "passed_label": "Vaccination certificate is within its validity window",
+      "params": { "document": "vaccination_certificate", "field": "dose_date", "max_age_days": 1095 },
+      "fix": "The ACWY vaccination has a limited validity period that depends on the vaccine type. Check the expiry with the vaccination centre and re-vaccinate if it has lapsed."
+    },
+    {
+      "id": "itinerary.accommodation_covers_stay",
+      "type": "date_order",
+      "severity": "warning",
+      "title": "Accommodation does not start by your arrival date",
+      "category": "consistency",
+      "passed_label": "Accommodation dates line up with your flights",
+      "params": {
+        "a_document": "hotel_booking",
+        "a_field": "check_in",
+        "b_document": "flight_ticket",
+        "b_field": "departure_date",
+        "operator": "gte",
+        "tolerance_days": 1
+      },
+      "fix": "Extend the booking so it covers every night between arrival and departure."
+    },
+    {
+      "id": "insurance.dates",
+      "type": "date_coverage",
+      "severity": "warning",
+      "title": "Travel insurance does not cover the whole trip",
+      "category": "validity",
+      "passed_label": "Insurance covers the full travel period",
+      "params": {
+        "document": "travel_insurance",
+        "from_field": "valid_from",
+        "to_field": "valid_to"
+      },
+      "fix": "Ask the insurer to reissue the certificate covering every day of the pilgrimage."
+    },
+    {
+      "id": "photo.spec",
+      "type": "photo_spec",
+      "severity": "warning",
+      "title": "Photograph compliance",
+      "category": "photo",
+      "passed_label": "Photograph meets the specification",
+      "params": {
+        "width_mm": 40,
+        "height_mm": 60,
+        "aspect_tolerance": 0.1,
+        "min_height_px": 600,
+        "face_height_ratio": [0.6, 0.85],
+        "max_centre_offset": 0.25,
+        "min_background_uniformity": 0.8,
+        "background_lightness_range": [0.75, 1.0],
+        "min_sharpness": 60,
+        "must_be_colour": true
+      }
+    }
+  ],
+
+  "llm_review": {
+    "enabled": true,
+    "targets": ["sponsor_letter", "cover_letter"],
+    "criteria": [
+      {
+        "id": "letter.sponsor_clarity",
+        "document": "sponsor_letter",
+        "label": "Sponsorship letter does not clearly state what is covered",
+        "severity": "info",
+        "passed_label": "Sponsorship letter states what is covered",
+        "question": "Does the letter state the sponsor's full name, their relationship to the applicant, and specifically which costs they undertake to cover?",
+        "fix": "Ask the sponsor to state their name, relationship to you, and exactly which expenses they will cover."
+      },
+      {
+        "id": "letter.cover_group",
+        "document": "cover_letter",
+        "label": "Cover letter does not describe the travelling group",
+        "severity": "info",
+        "passed_label": "Cover letter describes the travelling group",
+        "question": "Does the letter state who the applicant is travelling with and the relationship between them?",
+        "fix": "Add a line naming everyone in the group and how they are related to you."
+      }
+    ]
+  }
+}

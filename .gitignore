@@ -1,0 +1,31 @@
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# --- app data (never commit: contains applicant documents) ---
+backend/storage/
+backend/*.db
+backend/*.db-wal
+backend/*.db-shm
+
+# --- secrets ---
+.env
+.env.local
+*.pem
+
+# --- node ---
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+
+# --- editors / os ---
+.vscode/
+.idea/
+.DS_Store
+*.swp

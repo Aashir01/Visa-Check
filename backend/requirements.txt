@@ -1,0 +1,37 @@
+# --- web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic==2.10.4
+pydantic-settings==2.7.0
+email-validator==2.2.0
+
+# --- persistence ---
+SQLAlchemy==2.0.36
+alembic==1.14.0
+
+# --- auth / crypto ---
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1  # passlib 1.7.4 mis-detects bcrypt>=4.1
+PyJWT==2.10.1
+cryptography==44.0.0
+
+# --- document ingestion ---
+pypdf==5.1.0
+pdfplumber==0.11.4
+pypdfium2==4.30.0          # PDF rasterisation, no system poppler needed
+pytesseract==0.3.13
+Pillow==11.0.0
+numpy==2.2.1
+opencv-python-headless==4.10.0.84
+
+# --- reasoning + reporting ---
+anthropic==0.42.0
+reportlab==4.2.5
+
+# --- misc ---
+python-dateutil==2.9.0.post0
+httpx==0.28.1
+
+# --- dev ---
+pytest==8.3.4

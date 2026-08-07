@@ -1,0 +1,453 @@
+{
+  "schema_version": 1,
+  "corridor_key": "schengen_short_stay_pk",
+  "version": "0.1.0-draft",
+  "title": "Schengen short-stay (Type C) from Pakistan",
+  "unverified": true,
+  "effective_date": "2026-08-07",
+  "currency": "EUR",
+  "default_trip_days": 10,
+  "review_cadence_days": 30,
+  "source_notes": [
+    "DRAFT — AI-assembled from published EU Visa Code and consulate guidance. NOT verified against live casework.",
+    "Financial thresholds vary by Schengen member state and are revised annually. The per-day figure here is an indicative placeholder.",
+    "Verify against the specific consulate handling the application (main destination / longest stay) before relying on any finding.",
+    "Replace this pack with your own casework-derived version before selling checks against it."
+  ],
+  "disclaimer": "This is a document completeness check against a named checklist. It is not immigration advice and does not predict whether a visa will be granted.",
+  "fx": {
+    "base": "EUR",
+    "updated": "2026-08-07",
+    "note": "Indicative rates for threshold comparison only. Edit in /admin/rules.",
+    "rates": { "PKR": 315.0, "GBP": 0.84, "USD": 1.09, "SAR": 4.09, "AED": 4.0, "TRY": 38.0 }
+  },
+  "severity_weights": { "critical": 22, "warning": 8, "info": 2 },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed / business owner",
+    "student": "Student",
+    "retired": "Retired"
+  },
+  "ocr": { "provider": null },
+
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "The passport bio-data page is the identity anchor for the whole application. Every other document is checked against it.",
+      "fix": "Upload a clear scan or photo of the bio-data page, including the two machine-readable lines at the bottom of the page."
+    },
+    {
+      "key": "application_form",
+      "label": "Completed Schengen visa application form",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "The signed harmonised application form is mandatory at submission.",
+      "fix": "Complete and sign the Schengen visa application form for your destination consulate and include it in the bundle."
+    },
+    {
+      "key": "photo",
+      "label": "Passport photograph",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "A compliant biometric photograph is required. Non-compliant photos are the most common reason a submission is rejected at the counter.",
+      "fix": "Upload the digital photograph file supplied by the photo studio, 35mm x 45mm, taken within the last 6 months."
+    },
+    {
+      "key": "travel_insurance",
+      "label": "Travel medical insurance",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "Schengen rules require medical cover of at least EUR 30,000 including repatriation, valid across all Schengen states for the whole stay.",
+      "fix": "Buy a Schengen-compliant policy covering EUR 30,000 including repatriation, valid from departure to return."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "satisfied_by": ["bank_letter"],
+      "why": "Proof of sufficient means of subsistence for the intended stay is mandatory.",
+      "fix": "Obtain a bank statement covering the last 6 months, stamped and signed by the bank, showing the closing balance."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Flight reservation (round trip)",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "why": "A round-trip reservation showing intended entry and exit dates is required. A reservation, not a purchased ticket, is normally sufficient.",
+      "fix": "Add a round-trip flight reservation covering your intended travel dates."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Proof of accommodation",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["*"],
+      "satisfied_by": ["invitation_letter"],
+      "why": "Proof of where you will stay for every night of the trip is required. A hotel booking or a host's invitation both satisfy this.",
+      "fix": "Add a hotel booking covering every night, or an invitation letter from your host with their address."
+    },
+    {
+      "key": "cover_letter",
+      "label": "Cover letter",
+      "required": true,
+      "severity": "warning",
+      "profiles": ["*"],
+      "why": "A cover letter explaining the purpose of travel, itinerary and who is funding the trip is expected by most consulates and materially helps the officer read the file.",
+      "fix": "Write a one-page letter stating the purpose of travel, your dates, where you will stay, who is paying, and your ties to Pakistan."
+    },
+    {
+      "key": "employment_letter",
+      "label": "Employment letter / NOC",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["employed"],
+      "satisfied_by": ["salary_slip"],
+      "why": "Proof of employment and approved leave demonstrates ties to Pakistan and reason to return.",
+      "fix": "Ask your employer for a letter on company letterhead stating your position, salary, joining date, and that your leave is approved for the travel dates."
+    },
+    {
+      "key": "business_registration",
+      "label": "Business registration / NTN certificate",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["self_employed"],
+      "satisfied_by": ["tax_return"],
+      "why": "Self-employed applicants must evidence their business and its income.",
+      "fix": "Include your business registration or NTN certificate and your most recent tax return."
+    },
+    {
+      "key": "student_enrollment",
+      "label": "Enrolment / bonafide certificate",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["student"],
+      "why": "Students must prove current enrolment and approved leave from the institution.",
+      "fix": "Ask your institution for a bonafide certificate confirming enrolment and no objection to your travel."
+    },
+    {
+      "key": "pension_statement",
+      "label": "Pension statement",
+      "required": true,
+      "severity": "critical",
+      "profiles": ["retired"],
+      "satisfied_by": ["bank_letter"],
+      "why": "Retired applicants must evidence their ongoing income.",
+      "fix": "Include your pension payment order or recent pension credit statements."
+    },
+    {
+      "key": "tax_return",
+      "label": "Tax return",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["employed", "self_employed"],
+      "why": "A filed tax return corroborates declared income and strengthens the financial picture.",
+      "fix": "Add your most recent FBR tax return acknowledgement."
+    },
+    {
+      "key": "property_document",
+      "label": "Property or asset documents",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "Evidence of assets in Pakistan supports the case that you intend to return.",
+      "fix": "Consider adding property papers or other asset documentation."
+    },
+    {
+      "key": "previous_visa",
+      "label": "Previous visas / travel history",
+      "required": false,
+      "recommend_if_missing": true,
+      "profiles": ["*"],
+      "why": "A record of prior compliant travel is one of the strongest positive signals available to an applicant from a high-refusal corridor.",
+      "fix": "Include copies of previous visas and entry/exit stamps if you have them."
+    }
+  ],
+
+  "rules": [
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Your name is not written the same way on every document",
+      "category": "consistency",
+      "passed_label": "Name matches across all documents",
+      "profiles": ["*"],
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": ["passport", "bank_statement", "flight_ticket", "travel_insurance", "hotel_booking", "employment_letter", "application_form"],
+        "aliases": {
+          "bank_statement": "account_holder",
+          "flight_ticket": "passenger_name",
+          "travel_insurance": "insured_name",
+          "hotel_booking": "guest_name",
+          "employment_letter": "employee_name"
+        }
+      },
+      "fix": "Every document must show your name exactly as it appears in your passport. Where a bank, employer or airline issued the document, ask them to reissue it with the correct spelling."
+    },
+    {
+      "id": "consistency.passport_number",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Passport number does not match across documents",
+      "category": "consistency",
+      "passed_label": "Passport number matches across documents",
+      "params": {
+        "field": "passport_number",
+        "mode": "exact",
+        "across": ["passport", "application_form", "travel_insurance", "flight_ticket"]
+      },
+      "fix": "Correct the passport number wherever it differs from the passport itself, and have any third-party document reissued."
+    },
+    {
+      "id": "consistency.dob",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Date of birth does not match across documents",
+      "category": "consistency",
+      "passed_label": "Date of birth matches across documents",
+      "params": {
+        "field": "date_of_birth",
+        "mode": "date",
+        "across": ["passport", "application_form", "national_id"]
+      },
+      "fix": "Correct the date of birth to match your passport exactly."
+    },
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport validity meets the requirement",
+      "params": { "min_days_after_return": 90, "max_issue_age_years": 10 }
+    },
+    {
+      "id": "financial.sufficiency",
+      "type": "financial_sufficiency",
+      "severity": "critical",
+      "title": "Means of subsistence",
+      "category": "financial",
+      "passed_label": "Bank balance meets the indicative threshold",
+      "params": {
+        "method": "per_day",
+        "per_day_amount": 100,
+        "minimum_total": 800,
+        "currency": "EUR",
+        "balance_field": "closing_balance",
+        "source_documents": ["bank_statement", "bank_letter"]
+      },
+      "fix": "Build the balance well before you submit — funds that appear days before the appointment are read as borrowed. If someone else is funding the trip, add a sponsorship affidavit and the sponsor's own statements."
+    },
+    {
+      "id": "financial.recency",
+      "type": "statement_recency",
+      "severity": "warning",
+      "title": "Bank statement recency",
+      "category": "financial",
+      "passed_label": "Bank statement is recent",
+      "params": { "document": "bank_statement", "field": "statement_date", "max_age_days": 30 }
+    },
+    {
+      "id": "financial.history",
+      "type": "statement_history",
+      "severity": "warning",
+      "title": "Bank statement history length",
+      "category": "financial",
+      "passed_label": "Bank statement covers the required period",
+      "params": { "document": "bank_statement", "min_months": 6 }
+    },
+    {
+      "id": "financial.sudden_deposit",
+      "type": "sudden_deposit",
+      "severity": "warning",
+      "title": "Sudden large deposit",
+      "category": "financial",
+      "passed_label": "No single deposit dominates the balance",
+      "params": { "document": "bank_statement", "ratio": 0.4 }
+    },
+    {
+      "id": "insurance.coverage",
+      "type": "numeric_min",
+      "severity": "critical",
+      "title": "Travel insurance cover is below EUR 30,000",
+      "category": "validity",
+      "passed_label": "Insurance cover meets EUR 30,000",
+      "params": {
+        "document": "travel_insurance",
+        "field": "coverage_amount",
+        "min": 30000,
+        "currency": "EUR"
+      },
+      "fix": "Buy a policy with at least EUR 30,000 of medical cover. Most Pakistani insurers sell a specific 'Schengen' product that meets this."
+    },
+    {
+      "id": "insurance.dates",
+      "type": "date_coverage",
+      "severity": "critical",
+      "title": "Travel insurance does not cover the whole trip",
+      "category": "validity",
+      "passed_label": "Insurance covers the full travel period",
+      "params": {
+        "document": "travel_insurance",
+        "from_field": "valid_from",
+        "to_field": "valid_to"
+      },
+      "fix": "Ask the insurer to reissue the certificate covering every day from departure to return inclusive."
+    },
+    {
+      "id": "insurance.repatriation",
+      "type": "boolean_required",
+      "severity": "critical",
+      "title": "Insurance does not mention repatriation cover",
+      "category": "validity",
+      "passed_label": "Insurance includes repatriation",
+      "params": { "document": "travel_insurance", "field": "covers_repatriation", "expected": true },
+      "detail": "Schengen rules require the policy to cover repatriation for medical reasons and death. The certificate must say so explicitly.",
+      "fix": "Ask the insurer for a certificate that states repatriation cover in writing."
+    },
+    {
+      "id": "itinerary.accommodation_covers_stay",
+      "type": "date_order",
+      "severity": "warning",
+      "title": "Accommodation does not start by your arrival date",
+      "category": "consistency",
+      "passed_label": "Accommodation dates line up with your flights",
+      "params": {
+        "a_document": "hotel_booking",
+        "a_field": "check_in",
+        "b_document": "flight_ticket",
+        "b_field": "departure_date",
+        "operator": "gte",
+        "tolerance_days": 1
+      },
+      "detail": "Your accommodation should cover the night you arrive.",
+      "fix": "Extend the booking so it covers every night between arrival and departure."
+    },
+    {
+      "id": "employment.letter_age",
+      "type": "document_age",
+      "severity": "warning",
+      "title": "Employment letter is too old",
+      "category": "validity",
+      "passed_label": "Employment letter is recently dated",
+      "profiles": ["employed"],
+      "params": { "document": "employment_letter", "field": "issue_date", "max_age_days": 30 },
+      "fix": "Ask your employer to reissue the letter dated within a month of your appointment."
+    },
+    {
+      "id": "profile.income_proof",
+      "type": "profile_documents",
+      "severity": "critical",
+      "title": "No proof of income for your stated status",
+      "category": "missing_document",
+      "passed_label": "Proof of income provided",
+      "profiles": ["employed"],
+      "params": { "any_of": ["employment_letter", "salary_slip", "tax_return"] },
+      "detail": "You selected 'employed', so the file needs documentary proof of that employment and its income.",
+      "fix": "Add an employment letter on company letterhead, recent salary slips, or your tax return."
+    },
+    {
+      "id": "photo.spec",
+      "type": "photo_spec",
+      "severity": "warning",
+      "title": "Photograph compliance",
+      "category": "photo",
+      "passed_label": "Photograph meets the specification",
+      "params": {
+        "width_mm": 35,
+        "height_mm": 45,
+        "aspect_tolerance": 0.06,
+        "min_dpi": 300,
+        "min_height_px": 600,
+        "face_height_ratio": [0.7, 0.8],
+        "max_centre_offset": 0.25,
+        "min_background_uniformity": 0.75,
+        "background_lightness_range": [0.6, 1.0],
+        "min_sharpness": 60,
+        "must_be_colour": true
+      }
+    }
+  ],
+
+  "llm_review": {
+    "enabled": true,
+    "targets": ["invitation_letter", "employment_letter", "cover_letter", "sponsor_letter"],
+    "criteria": [
+      {
+        "id": "letter.employment_completeness",
+        "document": "employment_letter",
+        "label": "Employment letter is missing details consulates expect",
+        "severity": "warning",
+        "passed_label": "Employment letter contains the expected details",
+        "question": "Does the letter state ALL of: the applicant's job title, their salary, their joining or service date, and that leave has been approved or granted for the travel period? List specifically which of these are absent.",
+        "fix": "Ask your employer to reissue the letter on company letterhead covering your job title, salary, joining date, approved leave dates, and a contact person with a phone number."
+      },
+      {
+        "id": "letter.employment_return",
+        "document": "employment_letter",
+        "label": "Employment letter does not confirm you will return to your job",
+        "severity": "info",
+        "passed_label": "Employment letter confirms return to work",
+        "question": "Does the letter state that the applicant is expected to resume or return to their position after the trip?",
+        "fix": "Ask your employer to add a line confirming you are expected back at work on a specific date."
+      },
+      {
+        "id": "letter.invitation_completeness",
+        "document": "invitation_letter",
+        "label": "Invitation letter is missing details consulates expect",
+        "severity": "warning",
+        "passed_label": "Invitation letter contains the expected details",
+        "question": "Does the invitation state ALL of: the host's full name, their full residential address, their contact details, their relationship to the applicant, the exact dates of the intended stay, and who will cover accommodation and living costs? List which are absent.",
+        "fix": "Ask your host to rewrite the invitation covering their full name and address, contact details, your relationship, your exact dates, and who is paying for what."
+      },
+      {
+        "id": "letter.invitation_status",
+        "document": "invitation_letter",
+        "label": "Invitation letter does not evidence the host's legal status",
+        "severity": "info",
+        "passed_label": "Invitation letter references the host's status",
+        "question": "Does the letter reference the host's own legal status in the destination country, such as citizenship, residence permit or a supporting document attached?",
+        "fix": "Ask your host to attach a copy of their passport, ID card or residence permit alongside the invitation."
+      },
+      {
+        "id": "letter.cover_purpose",
+        "document": "cover_letter",
+        "label": "Cover letter does not clearly explain the trip",
+        "severity": "warning",
+        "passed_label": "Cover letter explains the trip clearly",
+        "question": "Does the cover letter state the purpose of the visit, the intended dates, where the applicant will stay, and who is funding the trip? List which are absent.",
+        "fix": "Rewrite the cover letter so it states, in order: why you are travelling, your exact dates, your accommodation, who is paying, and your ties to Pakistan."
+      },
+      {
+        "id": "letter.cover_ties",
+        "document": "cover_letter",
+        "label": "Cover letter does not mention your ties to Pakistan",
+        "severity": "warning",
+        "passed_label": "Cover letter describes ties to Pakistan",
+        "question": "Does the letter describe concrete ties to the home country such as employment, business, family dependants, study or property?",
+        "fix": "Add a short paragraph describing your job, family and any property or business that ties you to Pakistan."
+      },
+      {
+        "id": "letter.sponsor_clarity",
+        "document": "sponsor_letter",
+        "label": "Sponsorship letter does not clearly state what is covered",
+        "severity": "warning",
+        "passed_label": "Sponsorship letter states what is covered",
+        "question": "Does the sponsorship letter state the sponsor's full name, their relationship to the applicant, and specifically which costs they undertake to cover?",
+        "fix": "Ask the sponsor to state their name, relationship to you, and exactly which expenses they will cover, and to attach their own financial evidence."
+      }
+    ]
+  }
+}

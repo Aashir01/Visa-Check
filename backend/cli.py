@@ -1,0 +1,302 @@
+#!/usr/bin/env python3
+"""Command-line runner — Phase 2 of the build order ("CLI only, no UI").
+
+Run a bundle of documents through the full pipeline without touching the web
+app. This is the tool for testing rule packs against real anonymised cases,
+which §8 says to do before trusting any of it.
+
+    python cli.py corridors
+    python cli.py check --corridor schengen_short_stay_pk --profile employed \\
+        --from 2026-09-10 --to 2026-09-20 --pdf out.pdf ./bundle/*.pdf
+    python cli.py validate app/rulepacks/uk_visitor_pk.json
+    python cli.py purge
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import mimetypes
+import sys
+from pathlib import Path
+
+from app.config import settings
+from app.db import SessionLocal, init_db
+from app.models import Check, CheckStatus, Corridor, Role, RulePack, User, utcnow
+from app.pipeline.doctypes import label_for
+from app.pipeline.runner import run_check
+from app.report.pdf import build_report_pdf
+from app.rulepack_schema import validate_pack
+from app.security import hash_password
+from app import storage
+
+BOLD, DIM, RESET = "\033[1m", "\033[2m", "\033[0m"
+RED, YELLOW, BLUE, GREEN = "\033[31m", "\033[33m", "\033[34m", "\033[32m"
+SEV_COLOR = {"critical": RED, "warning": YELLOW, "info": BLUE}
+
+
+def _cli_user(db) -> User:
+    user = db.query(User).filter(User.email == "cli@localhost").first()
+    if not user:
+        user = User(
+            email="cli@localhost",
+            password_hash=hash_password("cli-local-only"),
+            full_name="CLI",
+            role=Role.admin,
+            credits=10_000,
+        )
+        db.add(user)
+        db.commit()
+    return user
+
+
+def cmd_corridors(_args) -> int:
+    db = SessionLocal()
+    try:
+        rows = db.query(Corridor).order_by(Corridor.label).all()
+        if not rows:
+            print("No corridors. Run: python -m app.seed")
+            return 1
+        for c in rows:
+            pack = db.get(RulePack, c.active_rulepack_id) if c.active_rulepack_id else None
+            flag = "enabled " if c.enabled else "disabled"
+            version = pack.version if pack else "— no published pack —"
+            warn = f" {YELLOW}[UNVERIFIED]{RESET}" if pack and pack.unverified else ""
+            print(f"  {BOLD}{c.key}{RESET}  {flag}  v{version}{warn}")
+            print(f"    {DIM}{c.label}{RESET}")
+    finally:
+        db.close()
+    return 0
+
+
+def cmd_validate(args) -> int:
+    path = Path(args.path)
+    if not path.exists():
+        print(f"{RED}No such file: {path}{RESET}")
+        return 1
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        print(f"{RED}Invalid JSON: {exc}{RESET}")
+        return 1
+
+    errors = validate_pack(data)
+    if errors:
+        print(f"{RED}{len(errors)} problem(s) in {path.name}:{RESET}")
+        for e in errors:
+            print(f"  - {e}")
+        return 1
+
+    docs = data.get("documents", [])
+    print(f"{GREEN}{path.name} is valid.{RESET}")
+    print(f"  version   : {data.get('version')}")
+    print(f"  documents : {len(docs)} ({sum(1 for d in docs if d.get('required'))} required)")
+    print(f"  rules     : {len(data.get('rules', []))}")
+    print(f"  llm checks: {len((data.get('llm_review') or {}).get('criteria', []))}")
+    if data.get("unverified"):
+        print(f"  {YELLOW}marked UNVERIFIED — reports will carry a draft banner{RESET}")
+    return 0
+
+
+def cmd_check(args) -> int:
+    paths: list[Path] = []
+    for pattern in args.files:
+        p = Path(pattern)
+        if p.is_dir():
+            paths.extend(sorted(x for x in p.iterdir() if x.is_file()))
+        elif p.exists():
+            paths.append(p)
+        else:
+            print(f"{YELLOW}skipping missing file: {pattern}{RESET}")
+    if not paths:
+        print(f"{RED}No input files.{RESET}")
+        return 1
+
+    db = SessionLocal()
+    try:
+        corridor = db.query(Corridor).filter(Corridor.key == args.corridor).first()
+        if not corridor:
+            print(f"{RED}Unknown corridor '{args.corridor}'.{RESET} Try: python cli.py corridors")
+            return 1
+        if not corridor.active_rulepack_id:
+            print(f"{RED}Corridor '{args.corridor}' has no published rule pack.{RESET}")
+            return 1
+        pack_row = db.get(RulePack, corridor.active_rulepack_id)
+
+        user = _cli_user(db)
+        check = Check(
+            user_id=user.id,
+            corridor_id=corridor.id,
+            rulepack_id=pack_row.id,
+            rulepack_version=pack_row.version,
+            rulepack_unverified=pack_row.unverified,
+            applicant_profile=args.profile,
+            travel_from=getattr(args, "from"),
+            travel_to=args.to,
+            status=CheckStatus.draft,
+        )
+        db.add(check)
+        db.flush()
+
+        from app.models import Document
+
+        for path in paths:
+            mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+            raw = path.read_bytes()
+            doc = Document(
+                check_id=check.id, filename=path.name, mime=mime, size_bytes=len(raw)
+            )
+            db.add(doc)
+            db.flush()
+            stored, digest = storage.save_document(check.id, doc.id, raw)
+            doc.storage_path, doc.sha256 = stored, digest
+        db.commit()
+
+        print(f"{DIM}Running {len(paths)} document(s) against "
+              f"{pack_row.data.get('title')} v{pack_row.version}...{RESET}")
+        run_check(db, check, pack_row.data or {})
+        db.refresh(check)
+
+        if check.status != CheckStatus.complete:
+            print(f"{RED}Check failed: {check.error}{RESET}")
+            return 1
+
+        _print_report(check, db)
+
+        if args.pdf:
+            pdf = build_report_pdf(
+                check=check, corridor=corridor, pack=pack_row.data or {},
+                documents=list(check.documents),
+            )
+            Path(args.pdf).write_bytes(pdf)
+            print(f"\n{GREEN}PDF written to {args.pdf}{RESET}")
+
+        if args.json:
+            Path(args.json).write_text(
+                json.dumps(
+                    {
+                        "check_id": check.id,
+                        "risk_score": check.risk_score,
+                        "risk_band": check.risk_band,
+                        "summary": check.summary,
+                        "confidence": check.confidence,
+                        "issues": check.issues,
+                        "extraction": check.extraction,
+                        "llm_cost_usd": check.llm_cost_usd,
+                    },
+                    indent=2, default=str,
+                ),
+                encoding="utf-8",
+            )
+            print(f"{GREEN}JSON written to {args.json}{RESET}")
+
+        return 0 if not any(
+            i["severity"] == "critical" for i in (check.issues or [])
+        ) else 2
+    finally:
+        db.close()
+
+
+def _print_report(check: Check, db) -> None:
+    extraction = check.extraction or {}
+    scoring = extraction.get("scoring", {})
+    band_colour = {"low": GREEN, "moderate": YELLOW, "elevated": YELLOW,
+                   "high": RED}.get(check.risk_band, RESET)
+
+    print()
+    print("=" * 74)
+    print(f"  {BOLD}RISK SCORE: {band_colour}{check.risk_score}/100"
+          f"  ({scoring.get('band_label', '')}){RESET}")
+    print("=" * 74)
+    print(f"\n{check.summary}\n")
+
+    print(f"{BOLD}Documents detected{RESET}")
+    for d in check.documents:
+        conf = d.doc_type_confidence or 0
+        marker = GREEN if conf >= 0.75 else (YELLOW if conf >= 0.5 else RED)
+        print(f"  {marker}●{RESET} {d.filename[:44]:<44} "
+              f"{label_for(d.effective_type):<28} {DIM}{conf:.0%} · {d.ocr_engine}{RESET}")
+
+    issues = check.issues or []
+    if issues:
+        print(f"\n{BOLD}Issues{RESET}")
+        for i, issue in enumerate(issues, start=1):
+            colour = SEV_COLOR.get(issue["severity"], RESET)
+            print(f"\n  {colour}[{issue['severity'].upper()}]{RESET} "
+                  f"{BOLD}{i}. {issue['title']}{RESET}")
+            print(f"     {issue['detail']}")
+            if issue.get("fix"):
+                print(f"     {GREEN}Fix:{RESET} {issue['fix']}")
+            if float(issue.get("confidence", 1)) < 0.6:
+                print(f"     {DIM}(low confidence — verify manually){RESET}")
+
+    passed = extraction.get("passed") or []
+    if passed:
+        print(f"\n{BOLD}Passed ({len(passed)}){RESET}")
+        for p in passed:
+            print(f"  {GREEN}✓{RESET} {p.get('title') or p.get('rule_id')}")
+
+    skipped = extraction.get("skipped") or []
+    if skipped:
+        print(f"\n{BOLD}Not evaluated ({len(skipped)}){RESET} "
+              f"{DIM}— missing or unreadable input; these did NOT pass{RESET}")
+        for s in skipped:
+            print(f"  {DIM}—{RESET} {s.get('title') or s.get('rule_id')}")
+
+    print(f"\n{DIM}LLM cost: ${check.llm_cost_usd:.4f} · "
+          f"{check.tokens_in} in / {check.tokens_out} out tokens · "
+          f"{check.duration_ms}ms · confidence {check.confidence}{RESET}")
+    if extraction.get("degraded_llm"):
+        print(f"{YELLOW}Note: AI letter review did not run (no API key or budget "
+              f"exhausted). Deterministic checks only.{RESET}")
+
+
+def cmd_purge(_args) -> int:
+    db = SessionLocal()
+    try:
+        result = storage.purge_expired(db)
+        print(f"Purged documents for {result['checks_purged']} check(s), "
+              f"{result['files_removed']} file(s) removed "
+              f"(retention: {settings.retention_days} days).")
+    finally:
+        db.close()
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="cli.py", description="VisaGuard command-line runner."
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser("corridors", help="List corridors and their rule pack versions.")
+
+    v = sub.add_parser("validate", help="Validate a rule pack JSON file.")
+    v.add_argument("path")
+
+    c = sub.add_parser("check", help="Run a document bundle through the pipeline.")
+    c.add_argument("files", nargs="+", help="Files or a directory of files.")
+    c.add_argument("--corridor", required=True)
+    c.add_argument("--profile", default="employed",
+                   choices=["employed", "self_employed", "student", "retired"])
+    c.add_argument("--from", dest="from", help="Travel start date, YYYY-MM-DD.")
+    c.add_argument("--to", help="Travel end date, YYYY-MM-DD.")
+    c.add_argument("--pdf", help="Write the PDF report here.")
+    c.add_argument("--json", help="Write the raw result JSON here.")
+
+    sub.add_parser("purge", help="Delete stored documents past the retention window.")
+
+    args = parser.parse_args()
+    settings.storage_dir.mkdir(parents=True, exist_ok=True)
+    init_db()
+
+    return {
+        "corridors": cmd_corridors,
+        "validate": cmd_validate,
+        "check": cmd_check,
+        "purge": cmd_purge,
+    }[args.command](args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
