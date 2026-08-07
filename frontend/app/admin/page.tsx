@@ -134,12 +134,43 @@ export default function AdminOverviewPage() {
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat
+              label="Queue depth"
+              value={data.queue.queued}
+              tone={data.queue.queued > 20 ? "warn" : "default"}
+              hint={`${data.queue.processing} running · ${data.queue.worker_mode} mode`}
+            />
+            <Stat
+              label="Oldest pending"
+              value={
+                data.queue.oldest_pending_seconds != null
+                  ? `${Math.round(data.queue.oldest_pending_seconds / 60)}m`
+                  : "—"
+              }
+              tone={
+                (data.queue.oldest_pending_seconds ?? 0) > 600 ? "critical" : "default"
+              }
+              hint="time in queue"
+            />
+            <Stat
+              label="Free tier AI"
+              value={data.free_tier_ai_enabled ? "on" : "off"}
+              tone={data.free_tier_ai_enabled ? "warn" : "good"}
+              hint={
+                data.free_tier_ai_enabled
+                  ? "free checks cost tokens"
+                  : "free checks cost $0"
+              }
+            />
+            <Stat
               label="Open reviews"
               value={data.open_reviews}
               tone={data.open_reviews > 0 ? "warn" : "default"}
               hint="low-confidence checks awaiting correction"
               href="/admin/reviews"
             />
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Users" value={data.users} href="/admin/users" />
             <Stat label="Organisations" value={data.organizations} />
             <Stat

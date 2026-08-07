@@ -251,6 +251,101 @@ def _print_report(check: Check, db) -> None:
               f"exhausted). Deterministic checks only.{RESET}")
 
 
+def cmd_doctor(_args) -> int:
+    """Verify the OCR engine actually works before trusting it in production.
+
+    The configured engine falls back to Tesseract on any fault, which is the
+    right runtime behaviour but hides a misconfiguration. This proves which
+    engine is really running by putting a synthetic passport through it and
+    checking the MRZ check digits validate.
+    """
+    import tempfile
+    from datetime import date, timedelta
+
+    from app.pipeline.ocr import PaddleOcrProvider, get_provider
+    from app.pipeline.mrz import parse_mrz
+
+    ok = True
+    print(f"{BOLD}Configuration{RESET}")
+    print(f"  OCR provider     : {settings.ocr_provider}")
+    print(f"  worker mode      : {settings.worker_mode}")
+    print(f"  free tier AI     : {'on' if settings.free_tier_ai_enabled else 'off (deterministic only)'}")
+    print(f"  LLM key          : {'set' if settings.anthropic_api_key else 'not set'}")
+    print(f"  retention        : {settings.retention_days} days")
+
+    print(f"\n{BOLD}Engines{RESET}")
+    try:
+        import pytesseract
+
+        print(f"  {GREEN}OK{RESET}   tesseract {pytesseract.get_tesseract_version()}")
+    except Exception as exc:  # noqa: BLE001
+        ok = False
+        print(f"  {RED}FAIL{RESET} tesseract unavailable: {exc}")
+
+    if settings.ocr_provider in ("paddleocr", "paddle"):
+        if PaddleOcrProvider.available():
+            print(f"  {GREEN}OK{RESET}   paddleocr importable")
+        else:
+            ok = False
+            print(f"  {RED}FAIL{RESET} paddleocr NOT importable — checks will silently "
+                  f"fall back to Tesseract.")
+            print(f"         fix: pip install paddlepaddle paddleocr")
+
+    # --- end-to-end: photograph a passport and try to read it back ---
+    print(f"\n{BOLD}Live OCR test{RESET} {DIM}(synthetic passport, simulated phone photo){RESET}")
+    try:
+        from tests.make_fixtures import build_mrz, write_pdf
+        from tests.make_phone_photo import degrade, render_pdf_page
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            dob, expiry = date(1990, 4, 12), date.today() + timedelta(days=1500)
+            l1, l2 = build_mrz("AB1234567", "KHAN", "AHMED RAZA", dob, expiry)
+            write_pdf(tmp / "p.pdf", [
+                "ISLAMIC REPUBLIC OF PAKISTAN", "PASSPORT",
+                "Passport No: AB1234567",
+                f"Date of Birth: {dob.strftime('%d/%m/%Y')}",
+                f"Date of Expiry: {expiry.strftime('%d/%m/%Y')}",
+                "Machine readable zone:", l1, l2,
+            ], mono_from=6)
+
+            photo = tmp / "p.jpg"
+            degrade(render_pdf_page(tmp / "p.pdf"), level="light", seed=7).save(photo, quality=85)
+
+            provider = get_provider(settings.ocr_provider)
+            result = provider.extract(photo, "image/jpeg")
+            mrz = parse_mrz(result.text)
+
+            print(f"  engine actually used : {result.engine}")
+            if result.engine != settings.ocr_provider and settings.ocr_provider != "tesseract":
+                ok = False
+                print(f"  {RED}FAIL{RESET} fell back to '{result.engine}' instead of "
+                      f"'{settings.ocr_provider}'")
+            print(f"  characters recovered : {len(result.text.strip())}")
+            print(f"  lines recovered      : {len(result.text.splitlines())}")
+
+            if mrz.document_number == "AB1234567" and mrz.valid:
+                print(f"  {GREEN}OK{RESET}   MRZ read and all check digits validated")
+            elif mrz.document_number:
+                ok = False
+                print(f"  {YELLOW}WARN{RESET} MRZ found ({mrz.document_number}) but check "
+                      f"digits did not all validate: {mrz.checks}")
+            else:
+                ok = False
+                print(f"  {RED}FAIL{RESET} MRZ not recovered from a lightly degraded photo. "
+                      f"Passport extraction will be unreliable.")
+    except Exception as exc:  # noqa: BLE001
+        ok = False
+        print(f"  {RED}FAIL{RESET} live OCR test errored: {exc}")
+
+    print()
+    if ok:
+        print(f"{GREEN}All checks passed.{RESET}")
+        return 0
+    print(f"{RED}Some checks failed — see above before serving real traffic.{RESET}")
+    return 1
+
+
 def cmd_purge(_args) -> int:
     db = SessionLocal()
     try:
@@ -285,6 +380,7 @@ def main() -> int:
     c.add_argument("--json", help="Write the raw result JSON here.")
 
     sub.add_parser("purge", help="Delete stored documents past the retention window.")
+    sub.add_parser("doctor", help="Verify OCR, config and the pipeline end to end.")
 
     args = parser.parse_args()
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -295,6 +391,7 @@ def main() -> int:
         "validate": cmd_validate,
         "check": cmd_check,
         "purge": cmd_purge,
+        "doctor": cmd_doctor,
     }[args.command](args)
 
 

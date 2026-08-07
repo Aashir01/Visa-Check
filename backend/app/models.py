@@ -42,6 +42,21 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def as_utc(value: datetime | None) -> datetime | None:
+    """Coerce a value read back from the database to an aware UTC datetime.
+
+    SQLite has no native timestamp type, so ``DateTime(timezone=True)`` columns
+    come back naive there while Postgres returns them aware. Subtracting one
+    from :func:`utcnow` therefore raises on SQLite and works on Postgres —
+    a difference that only shows up once deployed.
+    """
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 class Role(str, enum.Enum):
     user = "user"
     agency_admin = "agency_admin"
@@ -75,6 +90,7 @@ class Organization(Base):
     name: Mapped[str] = mapped_column(String(200))
     plan: Mapped[str] = mapped_column(String(40), default="free")
     credits: Mapped[int] = mapped_column(Integer, default=0)
+    ai_credits: Mapped[int] = mapped_column(Integer, default=0)
     # White-label (§2, Line B $199 tier). Report generation reads these.
     brand_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     brand_logo_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -96,6 +112,10 @@ class User(Base):
         ForeignKey("organizations.id"), nullable=True
     )
     credits: Mapped[int] = mapped_column(Integer, default=0)
+    # Full AI analyses remaining. Separate from `credits` because the free
+    # tier runs deterministic checks only (§2) — a user can have checks left
+    # but no AI left, and the report says which they got.
+    ai_credits: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     last_login_at: Mapped[datetime | None] = mapped_column(
@@ -203,6 +223,17 @@ class Check(Base):
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     is_free: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Whether this check was entitled to the AI letter review. Recorded on the
+    # check so an old report always explains which tier produced it.
+    ai_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    tier: Mapped[str] = mapped_column(String(20), default="free")
+
+    # Queue bookkeeping, so a worker that dies mid-check does not strand it.
+    claimed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    claimed_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
     documents_purged_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

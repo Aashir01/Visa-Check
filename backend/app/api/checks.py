@@ -15,8 +15,11 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi import Request
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from .. import entitlements, queue as jobq, ratelimit
 from ..config import settings
 from ..db import SessionLocal, get_db
 from ..deps import active_pack, current_user, owned_check
@@ -31,7 +34,6 @@ from ..models import (
     utcnow,
 )
 from ..pipeline.doctypes import DOC_TYPES, label_for
-from ..pipeline.runner import run_check
 from ..report.pdf import build_report_pdf
 from ..schemas import (
     CheckCreate,
@@ -120,26 +122,8 @@ def _check_out(db: Session, check: Check) -> CheckOut:
 # --------------------------------------------------------------------------
 
 
-def _spend_credit(db: Session, user: User) -> bool:
-    """Deduct one credit. Personal credits first, then the org pool."""
-    if user.role == Role.admin:
-        return True
-    if user.credits > 0:
-        user.credits -= 1
-        db.commit()
-        return True
-    if user.org and user.org.credits > 0:
-        user.org.credits -= 1
-        db.commit()
-        return True
-    return False
-
-
-def _refund_credit(db: Session, user: User) -> None:
-    if user.role == Role.admin:
-        return
-    user.credits += 1
-    db.commit()
+# Credit and tier decisions live in app/entitlements.py so "what does a free
+# check include?" has exactly one answer in the codebase.
 
 
 # --------------------------------------------------------------------------
@@ -194,9 +178,11 @@ def create_check(
 @router.post("/{check_id}/documents", response_model=list[DocumentOut], status_code=201)
 async def upload_documents(
     check_id: str,
+    request: Request,
     files: list[UploadFile] = File(...),
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
+    _rl: None = Depends(ratelimit.limit_upload),
 ):
     check = owned_check(check_id, db, user)
     if check.status not in (CheckStatus.draft, CheckStatus.failed):
@@ -214,6 +200,12 @@ async def upload_documents(
         )
 
     limit = settings.max_upload_mb * 1024 * 1024
+    bundle_limit = settings.max_bundle_mb * 1024 * 1024
+    bundle_bytes = (
+        db.query(func.coalesce(func.sum(Document.size_bytes), 0))
+        .filter(Document.check_id == check.id)
+        .scalar()
+    ) or 0
     created: list[Document] = []
 
     for upload in files:
@@ -232,6 +224,14 @@ async def upload_documents(
             raise HTTPException(
                 status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 f"{upload.filename} exceeds the {settings.max_upload_mb} MB limit.",
+            )
+
+        bundle_bytes += len(raw)
+        if bundle_bytes > bundle_limit:
+            raise HTTPException(
+                status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                f"This check would exceed the {settings.max_bundle_mb} MB total "
+                "limit for one bundle.",
             )
 
         doc = Document(
@@ -300,19 +300,18 @@ def delete_document(
 
 
 def _execute(check_id: str) -> None:
-    """Background worker body. Owns its own session."""
+    """Inline-mode worker body. Owns its own session."""
     db = SessionLocal()
     try:
         check = db.get(Check, check_id)
         if not check:
             return
-        pack = db.get(RulePack, check.rulepack_id)
-        if not pack:
-            check.status = CheckStatus.failed
-            check.error = "The rule pack for this check no longer exists."
-            db.commit()
+        # Claim it the same way a real worker would, so inline and queue modes
+        # cannot both pick up the same job.
+        claimed = jobq.claim_next(db, "inline")
+        if claimed is None or claimed.id != check_id:
             return
-        run_check(db, check, pack.data or {})
+        jobq.execute(db, claimed)
     except Exception:  # noqa: BLE001
         log.exception("background run failed for check %s", check_id)
     finally:
@@ -322,6 +321,7 @@ def _execute(check_id: str) -> None:
 @router.post("/{check_id}/run", response_model=CheckOut)
 def run(
     check_id: str,
+    request: Request,
     background: BackgroundTasks,
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
@@ -339,18 +339,27 @@ def run(
             status.HTTP_400_BAD_REQUEST, "Upload at least one document first."
         )
 
-    # A previously failed check already consumed its credit.
-    if check.status != CheckStatus.failed and not _spend_credit(db, user):
-        raise HTTPException(
-            status.HTTP_402_PAYMENT_REQUIRED,
-            "You have no checks remaining. Add credits from your account page.",
-        )
+    ratelimit.limit_check_run(request, user.id)
 
-    check.status = CheckStatus.queued
-    check.error = None
-    db.commit()
+    # A previously failed check already paid; re-running it must not charge
+    # twice, but it should keep whatever tier it was granted originally.
+    if check.status == CheckStatus.failed:
+        jobq.enqueue(db, check)
+    else:
+        ent = entitlements.evaluate(user)
+        if not ent.allowed:
+            raise HTTPException(
+                status.HTTP_402_PAYMENT_REQUIRED,
+                "You have no checks remaining. Add credits from your account page.",
+            )
+        entitlements.consume(db, user, ent)
+        check.ai_enabled = ent.ai_enabled
+        check.tier = ent.tier
+        jobq.enqueue(db, check)
 
-    background.add_task(_execute, check.id)
+    if settings.worker_mode == "inline":
+        background.add_task(_execute, check.id)
+
     db.refresh(check)
     return _check_out(db, check)
 

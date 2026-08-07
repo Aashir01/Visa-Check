@@ -25,7 +25,7 @@ import {
   formatEvidenceValue,
   titleCase,
 } from "@/lib/format";
-import type { Check, Issue, Severity } from "@/lib/types";
+import type { AiStatus, Check, Issue, Severity } from "@/lib/types";
 
 const GROUPS: { severity: Severity; heading: string; blurb: string }[] = [
   {
@@ -327,12 +327,7 @@ export default function ReportPage() {
             </Card>
           )}
 
-          {extraction.degraded_llm && (
-            <Alert tone="warning" title="AI review did not run">
-              Letter-content findings are not included in this report. Every checklist,
-              identity, financial and photo check still ran.
-            </Alert>
-          )}
+          <AiStatusNotice status={extraction.ai_status} degraded={extraction.degraded_llm} />
 
           <Card className="bg-gray-50 p-5">
             <h2 className="text-sm font-semibold text-ink">Important</h2>
@@ -412,5 +407,57 @@ function IssueCard({ issue, index }: { issue: Issue; index: number }) {
         </p>
       )}
     </Card>
+  );
+}
+
+
+/**
+ * Explain the absence of the AI review precisely. "Not included on your plan"
+ * and "we tried and it broke" are very different things to be told about a
+ * document that decides whether you travel.
+ */
+function AiStatusNotice({
+  status,
+  degraded,
+}: {
+  status?: AiStatus;
+  degraded?: boolean;
+}) {
+  if (status === "included" || status === "not_applicable") return null;
+  if (!status && !degraded) return null;
+
+  if (status === "not_in_tier") {
+    return (
+      <Alert tone="info" title="This was a free check">
+        <p>
+          Every checklist, identity, financial, date and photo rule ran on your
+          documents. What a full check adds is an AI review of your letters —
+          whether your invitation letter names who is paying, whether your
+          employment letter confirms approved leave.
+        </p>
+        <p className="mt-2">
+          <Link href="/account" className="font-medium underline">
+            See your options
+          </Link>
+        </p>
+      </Alert>
+    );
+  }
+
+  if (status === "budget_exhausted") {
+    return (
+      <Alert tone="warning" title="AI review stopped early">
+        This check reached its cost limit part-way through the letter review, so
+        those findings may be incomplete. Every checklist, identity, financial and
+        photo check still ran.
+      </Alert>
+    );
+  }
+
+  return (
+    <Alert tone="warning" title="AI review was unavailable">
+      Letter-content findings are not included in this report. Every checklist,
+      identity, financial and photo check still ran.
+    </Alert>
   );
 }

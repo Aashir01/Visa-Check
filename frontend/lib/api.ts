@@ -222,10 +222,10 @@ export const api = {
 
     users: (q?: string) =>
       request<AdminUser[]>(`/admin/users${q ? `?q=${encodeURIComponent(q)}` : ""}`),
-    grantCredits: (id: string, credits: number) =>
+    grantCredits: (id: string, credits: number, aiCredits = 0) =>
       request<AdminUser>(`/admin/users/${id}/credits`, {
         method: "POST",
-        body: JSON.stringify({ credits }),
+        body: JSON.stringify({ credits, ai_credits: aiCredits }),
       }),
     updateUser: (id: string, body: { role?: string; is_active?: boolean; plan?: string }) =>
       request<AdminUser>(`/admin/users/${id}`, {

@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from .api import admin, auth, checks, corridors
 from .config import settings
-from .db import init_db
+from .db import SessionLocal, init_db
 
 logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
@@ -50,18 +50,61 @@ def _startup() -> None:
             )
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
     init_db()
-    log.info("VisaGuard API ready (env=%s, ocr=%s, llm=%s)",
-             settings.environment, settings.ocr_provider,
-             "on" if settings.anthropic_api_key else "off")
+
+    # Say loudly if the configured OCR engine is not actually usable. It
+    # falls back to Tesseract rather than failing, which is the right runtime
+    # behaviour but exactly the kind of silent downgrade that goes unnoticed
+    # for weeks.
+    from .pipeline.ocr import probe_provider
+
+    probe = probe_provider()
+    if not probe["ready"]:
+        log.warning(
+            "OCR_PROVIDER=%s is NOT working — checks are falling back to '%s', "
+            "which is markedly worse on phone photos. Reason: %s. Fix it "
+            "(pip install paddlepaddle paddleocr, and allow the one-time model "
+            "download) or set OCR_PROVIDER=tesseract to make the choice explicit. "
+            "Run `python cli.py doctor` for a full diagnosis.",
+            probe["requested"], probe["actual"], probe["error"],
+        )
+
+    log.info(
+        "VisaGuard API ready (env=%s, ocr=%s, llm=%s, worker=%s, free_tier_ai=%s)",
+        settings.environment,
+        settings.ocr_provider,
+        "on" if settings.anthropic_api_key else "off",
+        settings.worker_mode,
+        settings.free_tier_ai_enabled,
+    )
 
 
 @app.get("/health")
 def health():
+    from . import queue as jobq
+    from .pipeline.ocr import probe_provider
+
+    probe = probe_provider()
+
+    db = SessionLocal()
+    try:
+        queue_state = jobq.depth(db)
+    except Exception:  # noqa: BLE001 - health must not depend on a clean DB
+        queue_state = None
+    finally:
+        db.close()
+
     return {
         "status": "ok",
         "environment": settings.environment,
         "llm_configured": bool(settings.anthropic_api_key),
         "ocr_provider": settings.ocr_provider,
+        # ready=false means checks are silently running on a fallback engine.
+        "ocr_provider_ready": probe["ready"],
+        "ocr_engine_in_use": probe["actual"],
+        "ocr_error": probe["error"],
+        "free_tier_ai_enabled": settings.free_tier_ai_enabled,
+        "worker_mode": settings.worker_mode,
+        "queue": queue_state,
         "retention_days": settings.retention_days,
     }
 

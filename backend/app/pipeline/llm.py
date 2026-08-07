@@ -88,11 +88,14 @@ def extract_json(text: str) -> dict | list | None:
 
 
 class LlmClient:
-    def __init__(self, usage: LlmUsage | None = None):
+    def __init__(self, usage: LlmUsage | None = None, *, enabled: bool = True):
         self.usage = usage or LlmUsage()
         self.model = settings.llm_model
         self._client = None
-        if settings.llm_enabled and settings.anthropic_api_key:
+        # `enabled` is the per-check tier decision; `settings.llm_enabled` and
+        # the API key are deployment-level. Both must hold for a call to run.
+        self.enabled = enabled
+        if enabled and settings.llm_enabled and settings.anthropic_api_key:
             try:
                 from anthropic import Anthropic
 
@@ -101,8 +104,17 @@ class LlmClient:
                 log.warning("Anthropic client unavailable: %s", exc)
 
     @property
+    def configured(self) -> bool:
+        """Whether the deployment could call the model at all."""
+        return bool(settings.llm_enabled and settings.anthropic_api_key)
+
+    @property
     def available(self) -> bool:
-        return self._client is not None and not self.usage.exhausted()
+        return (
+            self.enabled
+            and self._client is not None
+            and not self.usage.exhausted()
+        )
 
     # -- core call ---------------------------------------------------------
 

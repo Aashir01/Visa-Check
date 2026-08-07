@@ -19,7 +19,10 @@ application will be approved.
 | 3 — Report | Ranked issues with evidence and fix instructions, branded PDF |
 | 4 — Client UI | Landing, new check, upload, report, history, account, auth |
 | 5 — Admin | Overview, versioned rules editor, corridors, review queue, users, costs |
-| 6 — Billing | **Not built.** Credits are tracked and enforced; no payment provider is wired |
+| 6 — Billing | **Not built.** Credits and tiers are tracked and enforced; no payment provider is wired |
+
+Plus, for a free public launch: a free tier that costs $0 per check, a job
+queue, and rate limiting.
 
 ---
 
@@ -33,15 +36,21 @@ Two processes: a FastAPI backend and a Next.js frontend.
 cd backend
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
-# Tesseract is the only system dependency (PDF rasterising uses pypdfium2).
+# Tesseract is the only system dependency (PDF rasterising uses pypdfium2,
+# and PP-OCR ships as a Python wheel).
 sudo apt-get install -y tesseract-ocr
 
 cp .env.example .env          # then edit SECRET_KEY at minimum
 .venv/bin/python -m app.seed --admin-email you@yourdomain.com --admin-password 'a-strong-password'
+.venv/bin/python cli.py doctor        # confirm OCR actually works
 .venv/bin/python -m uvicorn app.main:app --reload --port 8000
 ```
 
 API docs are then at `http://localhost:8000/docs`.
+
+PP-OCR downloads its models on first use, so the machine needs outbound access
+to HuggingFace or ModelScope once. If it cannot reach them, checks fall back to
+Tesseract — `cli.py doctor` and `/health` both tell you when that is happening.
 
 ### Frontend
 
@@ -63,6 +72,71 @@ and the report says so explicitly.
 
 ---
 
+## Tiers: why free traffic is survivable
+
+A free check runs **deterministic rules only** and therefore costs nothing but
+CPU. That is not a crippled product — it is most of the product:
+
+| | Free | Full |
+|---|---|---|
+| Missing documents, per profile | ✓ | ✓ |
+| Name / DOB / passport-number consistency | ✓ | ✓ |
+| Funds vs corridor threshold, with FX | ✓ | ✓ |
+| Statement recency, history, sudden deposits | ✓ | ✓ |
+| Passport & insurance validity windows | ✓ | ✓ |
+| Photo compliance | ✓ | ✓ |
+| AI review of invitation / employment / cover letters | — | ✓ |
+
+On the test bundle a free check produces **21 verified requirements and a
+score of 91 at $0.00**. Only the letter review costs tokens.
+
+Measured spend for a full check (~1,871 in / 1,500 out tokens):
+
+| Model | Per check | 1,000/day | 10,000/day |
+|---|---|---|---|
+| Sonnet 5 | $0.028 | $843/mo | $8,434/mo |
+| Haiku 4.5 | $0.009 | $281/mo | $2,811/mo |
+
+That is the whole argument for the split. New accounts get
+`FREE_AI_CREDITS_PER_USER` full checks so the upsell is a demonstration rather
+than a claim. Set `FREE_TIER_AI_ENABLED=true` to give everyone AI — then watch
+`/admin/costs`, because the bill now scales with traffic.
+
+Reports always say which tier produced them, and distinguish "not included on
+your plan" from "we tried and it failed".
+
+## Running under load
+
+Checks are CPU-bound (OCR), so in production the API should not run them:
+
+```bash
+WORKER_MODE=queue python -m uvicorn app.main:app --port 8000   # API
+WORKER_MODE=queue python worker.py --concurrency 4             # worker(s)
+```
+
+`WORKER_MODE=inline` (the default) runs checks in a FastAPI background task,
+which is fine for development and low volume. The queue is a claim-by-update
+against the `checks` table — no Redis or Celery to deploy. Several workers can
+run at once; a job abandoned by a crashed worker returns to the queue after
+`WORKER_STALE_MINUTES`, and one that fails repeatedly is stopped rather than
+looping forever.
+
+Queue depth and the oldest pending job appear on `/admin` and `/health`.
+
+### Abuse controls
+
+A free upload endpoint on the public internet needs limits. All are
+configurable, and enforced **per process** — exact on one instance, per-instance
+behind several:
+
+| Limit | Default |
+|---|---|
+| Checks per account per day | 20 |
+| Checks per IP per hour | 10 |
+| Uploads per IP per hour | 120 |
+| Auth attempts per IP per hour | 20 |
+| Total bytes per bundle | 60 MB |
+
 ## The CLI
 
 Phase 2 of the blueprint is "CLI only, no UI", because rule packs need testing
@@ -80,7 +154,26 @@ cd backend
     --pdf report.pdf --json result.json \
     ./anonymised-case-01/
 .venv/bin/python cli.py purge                          # delete documents past retention
+.venv/bin/python cli.py doctor                         # verify OCR + config end to end
 ```
+
+`doctor` is the one to run before serving real traffic. Because the OCR layer
+falls back to Tesseract on any fault — right at runtime, misleading in
+practice — `doctor` proves which engine is *actually* running by putting a
+simulated phone photo of a passport through it and checking the MRZ check
+digits validate:
+
+```
+Engines
+  OK   tesseract 5.3.4
+  OK   paddleocr importable
+Live OCR test (synthetic passport, simulated phone photo)
+  engine actually used : tesseract
+  FAIL fell back to 'tesseract' instead of 'paddleocr'
+```
+
+`/health` reports the same thing as `ocr_provider_ready` and
+`ocr_engine_in_use`.
 
 `check` exits `2` when any critical issue is found, so it can be scripted over
 a folder of past cases — which is exactly what §8.4 of the blueprint asks for:
@@ -309,7 +402,7 @@ PDFs, which keep their newlines, kept working and hid the problem in tests.
 ## Tests
 
 ```bash
-cd backend && .venv/bin/python -m pytest -q     # 64 tests
+cd backend && .venv/bin/python -m pytest -q     # 98 tests
 cd frontend && npx tsc --noEmit && npm run build
 ```
 
@@ -317,7 +410,8 @@ The suite covers MRZ check digits and OCR repair, name matching, money and
 date parsing, statement column disambiguation, FX conversion, every rule
 outcome including "could not evaluate", scoring monotonicity and bounds, rule
 pack validation, LLM budget enforcement, and the guard that stops a
-hallucinated criterion becoming a finding.
+hallucinated criterion becoming a finding, the free/paid entitlement split,
+queue claim semantics and stale-job recovery, and rate limiting.
 
 ---
 
@@ -348,8 +442,8 @@ frontend/
   Squeezy integration. §6 recommends a merchant of record for Pakistan.
 - Cover letter generation, re-check after fixes, non-English output, API
   access — all v2 items, explicitly deferred until 20 paying users.
-- Background job queue. Checks run in a FastAPI `BackgroundTask`, which is
-  fine at this volume; move to a real worker before it is not.
+- Anonymous checks. Running a check requires an account, which is a
+  conversion cost on a traffic-first launch but keeps every user attributable.
 
 ---
 

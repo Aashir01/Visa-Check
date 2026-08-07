@@ -44,7 +44,10 @@ def run_check(db: Session, check: Check, pack: dict) -> Check:
     db.commit()
 
     usage = LlmUsage()
-    llm = LlmClient(usage=usage)
+    # The free tier runs deterministic checks only (§2), which is what keeps a
+    # free check's marginal cost at zero. A disabled client makes every LLM
+    # call a no-op rather than requiring each caller to remember the rule.
+    llm = LlmClient(usage=usage, enabled=bool(check.ai_enabled))
 
     try:
         documents = (
@@ -81,15 +84,24 @@ def run_check(db: Session, check: Check, pack: dict) -> Check:
         )
 
         scoring = score_check(issues, pack.get("severity_weights"))
-        degraded = not llm.available and bool(
-            (pack.get("llm_review") or {}).get("criteria")
-        )
+        has_ai_criteria = bool((pack.get("llm_review") or {}).get("criteria"))
+        if not has_ai_criteria:
+            ai_status = "not_applicable"
+        elif not check.ai_enabled:
+            ai_status = "not_in_tier"
+        elif llm.usage.exhausted():
+            ai_status = "budget_exhausted"
+        elif not llm.configured:
+            ai_status = "unavailable"
+        else:
+            ai_status = "included"
+        degraded = ai_status in ("not_in_tier", "budget_exhausted", "unavailable")
 
         check.risk_score = scoring["score"]
         check.risk_band = scoring["band"]
         check.issues = issues
         check.summary = build_summary(
-            scoring, issues, passed, pack, degraded=degraded, skipped=skipped
+            scoring, issues, passed, pack, skipped=skipped, ai_status=ai_status
         )
         check.confidence = overall_confidence(views, issues)
         check.extraction = {
@@ -97,6 +109,8 @@ def run_check(db: Session, check: Check, pack: dict) -> Check:
             "passed": passed,
             "skipped": skipped,
             "degraded_llm": degraded,
+            "ai_status": ai_status,
+            "tier": check.tier,
             "trip_days": ctx.trip_days,
             "travel_start": ctx.effective_travel_start.isoformat()
             if ctx.effective_travel_start else None,

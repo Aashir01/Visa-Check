@@ -49,12 +49,14 @@ class Settings(BaseSettings):
     max_files_per_check: int = 25
 
     # --- OCR ---
+    # "paddleocr"    — default. Self-hosted PP-OCR, robust on phone photos,
+    #                  zero marginal cost. Requires paddlepaddle + a one-time
+    #                  model download; falls back to Tesseract if unavailable.
     # "tesseract"    — no extra install, but falls off a cliff on phone photos
-    # "paddleocr"    — self-hosted PP-OCR, robust on photos, zero marginal cost
     # "claude_vision"— best on the worst inputs, costs tokens per page
     # A rule pack can override this per corridor via `ocr.provider`, so you can
     # pay for accuracy only where it earns its keep.
-    ocr_provider: str = "tesseract"
+    ocr_provider: str = "paddleocr"
     tesseract_lang: str = "eng"
     paddle_lang: str = "en"
     tesseract_timeout_s: int = 60
@@ -81,6 +83,43 @@ class Settings(BaseSettings):
     # --- product ---
     free_checks_per_user: int = 1
     default_plan: str = "free"
+
+    # --- tiering (§2) ---
+    # The free tier runs deterministic checks only, so a free check costs
+    # nothing but CPU. That is what makes unbounded free traffic survivable:
+    # every checklist, identity, financial, date and photo rule still runs —
+    # only the AI review of free-text letters is withheld.
+    free_tier_ai_enabled: bool = False
+    # New accounts get this many full AI analyses, so people can see what the
+    # paid tier actually buys before being asked to pay for it.
+    free_ai_credits_per_user: int = 1
+    # Plans that always get the AI review.
+    paid_plans: str = "starter,agency,white_label"
+
+    # --- abuse controls ---
+    # Rate limits are enforced per process. On a single instance that is
+    # exact; behind multiple instances treat them as per-instance budgets.
+    rate_limit_enabled: bool = True
+    rate_limit_checks_per_day: int = 20        # per account
+    rate_limit_checks_per_hour_ip: int = 10    # per IP
+    rate_limit_uploads_per_hour_ip: int = 120  # per IP
+    rate_limit_auth_per_hour_ip: int = 20      # registrations + logins per IP
+    max_bundle_mb: int = 60                    # total bytes across one check
+
+    # --- background work ---
+    # "inline" runs checks in a FastAPI BackgroundTask — fine for development
+    # and low volume. "queue" leaves them for `python worker.py`, which is
+    # what keeps a traffic spike from saturating the web process.
+    worker_mode: str = "inline"
+    worker_poll_seconds: float = 2.0
+    worker_concurrency: int = 2
+    # A check stuck in `processing` longer than this is considered abandoned
+    # by a dead worker and is returned to the queue.
+    worker_stale_minutes: int = 15
+
+    @property
+    def paid_plan_set(self) -> set[str]:
+        return {p.strip() for p in self.paid_plans.split(",") if p.strip()}
 
     @property
     def cors_origin_list(self) -> list[str]:

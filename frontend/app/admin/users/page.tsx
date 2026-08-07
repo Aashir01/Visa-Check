@@ -17,6 +17,8 @@ import { formatDateTime } from "@/lib/format";
 import type { AdminUser } from "@/lib/types";
 
 const GRANTS = [10, 25, 50, 150];
+// Granting AI adds both a check and the AI entitlement for it.
+const AI_GRANTS = [5, 25];
 
 export default function AdminUsersPage() {
   const [query, setQuery] = useState("");
@@ -39,11 +41,11 @@ export default function AdminUsersPage() {
     setUsers((list) => list?.map((u) => (u.id === updated.id ? updated : u)) ?? null);
   }
 
-  async function grant(user: AdminUser, credits: number) {
+  async function grant(user: AdminUser, credits: number, aiCredits = 0) {
     setBusyId(user.id);
     setError(null);
     try {
-      replace(await api.admin.grantCredits(user.id, credits));
+      replace(await api.admin.grantCredits(user.id, credits, aiCredits));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not grant credits.");
     } finally {
@@ -125,7 +127,8 @@ export default function AdminUsersPage() {
 
                 <p className="mt-1 text-sm text-muted">
                   {user.full_name ?? "No name"} · {user.check_count} checks ·{" "}
-                  <span className="font-medium text-ink">{user.credits} credits</span>
+                  <span className="font-medium text-ink">{user.credits} checks</span> ·{" "}
+                  <span className="font-medium text-ink">{user.ai_credits} AI</span>
                 </p>
                 <p className="mt-0.5 text-xs text-muted">
                   joined {formatDateTime(user.created_at)}
@@ -141,8 +144,21 @@ export default function AdminUsersPage() {
                     size="sm"
                     onClick={() => void grant(user, n)}
                     disabled={busyId === user.id}
+                    title={`Grant ${n} checks (deterministic)`}
                   >
                     +{n}
+                  </Button>
+                ))}
+                {AI_GRANTS.map((n) => (
+                  <Button
+                    key={`ai-${n}`}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void grant(user, n, n)}
+                    disabled={busyId === user.id}
+                    title={`Grant ${n} full checks including AI letter review`}
+                  >
+                    +{n} AI
                   </Button>
                 ))}
 

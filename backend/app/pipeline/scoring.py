@@ -89,8 +89,8 @@ def build_summary(
     passed: list[dict],
     pack: dict,
     *,
-    degraded: bool = False,
     skipped: list[dict] | None = None,
+    ai_status: str = "included",
 ) -> str:
     counts = scoring["counts"]
     version = pack.get("version", "unknown")
@@ -128,12 +128,28 @@ def build_summary(
             "separately and must not be read as having passed."
         )
 
-    if degraded:
-        parts.append(
-            "Note: the AI review step did not run for this check, so letter-content "
-            "findings are not included. All checklist, identity, financial and photo "
-            "checks were still performed."
-        )
+    # Be precise about *why* the AI review is absent. "Not included on your
+    # plan" and "we tried and it broke" are very different messages to receive
+    # about a document that decides whether you travel.
+    note = {
+        "not_in_tier": (
+            "This is a free check, which runs every checklist, identity, financial, "
+            "date and photo rule but does not include the AI review of your letters. "
+            "A full check adds that review."
+        ),
+        "budget_exhausted": (
+            "The AI review stopped early on this check because it reached its cost "
+            "limit, so letter-content findings may be incomplete. Every checklist, "
+            "identity, financial and photo check still ran."
+        ),
+        "unavailable": (
+            "The AI review was unavailable for this check, so letter-content findings "
+            "are not included. Every checklist, identity, financial and photo check "
+            "still ran."
+        ),
+    }.get(ai_status)
+    if note:
+        parts.append(note)
 
     return " ".join(parts)
 

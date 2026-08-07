@@ -16,7 +16,7 @@ import {
 import { api, ApiError } from "@/lib/api";
 import { useRequireAuth } from "@/lib/auth";
 import { formatBytes } from "@/lib/format";
-import type { Check, DocumentOut } from "@/lib/types";
+import type { Check, DocumentOut, Entitlement } from "@/lib/types";
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp";
 const ACCEPTED_MIMES = new Set([
@@ -48,6 +48,7 @@ export default function UploadPage() {
   const [uploading, setUploading] = useState(false);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,6 +61,11 @@ export default function UploadPage() {
         if (c.status === "complete") router.replace(`/check/${checkId}`);
       })
       .catch((e: Error) => setError(e.message));
+
+    api
+      .account()
+      .then((a) => setEntitlement(a.entitlement))
+      .catch(() => setEntitlement(null));
   }, [user, checkId, router]);
 
   const addFiles = useCallback(
@@ -295,6 +301,27 @@ export default function UploadPage() {
 
         {docs.length === 0 && (
           <p className="text-sm text-muted">Upload at least one document to continue.</p>
+        )}
+
+        {entitlement && (
+          <div className="w-full max-w-xl">
+            <Alert tone={entitlement.ai_included ? "success" : "info"}>
+              {entitlement.ai_included ? (
+                <>
+                  <strong>Full check.</strong> Every checklist, identity, financial, date
+                  and photo rule, plus the AI review of your letters.
+                  {!entitlement.ai_always_included && (
+                    <> You have {entitlement.ai_credits_remaining} full check(s) left.</>
+                  )}
+                </>
+              ) : (
+                <>
+                  <strong>Free check.</strong> Every checklist, identity, financial, date
+                  and photo rule runs. The AI review of your letters is not included.
+                </>
+              )}
+            </Alert>
+          </div>
         )}
 
         <p className="text-xs leading-relaxed text-muted">

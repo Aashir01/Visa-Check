@@ -490,6 +490,54 @@ class PaddleOcrProvider:
             return TesseractProvider().extract(path, mime)
 
 
+_probe_cache: dict[str, object] | None = None
+
+
+def probe_provider(name: str | None = None, *, force: bool = False) -> dict:
+    """Find out which engine will *actually* be used, by running one.
+
+    Importability is not readiness: PaddleOCR imports fine and then fails at
+    first use if its models cannot be fetched, silently falling back to
+    Tesseract. Only putting an image through the provider reveals that, so the
+    result is probed once and cached for the health endpoint to report.
+    """
+    global _probe_cache
+    if _probe_cache is not None and not force:
+        return dict(_probe_cache)
+
+    requested = (name or settings.ocr_provider or "tesseract").lower()
+    result = {"requested": requested, "actual": None, "ready": False, "error": None}
+
+    if requested == "claude_vision":
+        # Probing this would spend tokens; trust the configuration instead.
+        result.update(actual=requested, ready=bool(settings.anthropic_api_key))
+        _probe_cache = result
+        return dict(result)
+
+    import tempfile
+
+    try:
+        from PIL import Image, ImageDraw
+
+        img = Image.new("RGB", (640, 160), (255, 255, 255))
+        ImageDraw.Draw(img).text((20, 60), "PASSPORT AB1234567", fill=(0, 0, 0))
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=True) as tmp:
+            img.save(tmp.name, format="PNG")
+            outcome = get_provider(requested).extract(tmp.name, "image/png")
+        result["actual"] = outcome.engine
+        result["ready"] = outcome.engine == requested or requested == "tesseract"
+        if not result["ready"]:
+            result["error"] = (
+                f"requested '{requested}' but the pipeline fell back to "
+                f"'{outcome.engine}'"
+            )
+    except Exception as exc:  # noqa: BLE001 - a probe must never break startup
+        result["error"] = str(exc)[:200]
+
+    _probe_cache = result
+    return dict(result)
+
+
 def get_provider(name: str | None = None):
     choice = (name or settings.ocr_provider or "tesseract").lower()
     if choice == "claude_vision":

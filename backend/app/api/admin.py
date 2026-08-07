@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from .. import queue as jobq
 from ..config import settings
 from ..db import get_db
 from ..deps import admin_user
@@ -101,6 +102,8 @@ def overview(days: int = Query(7, ge=1, le=90), db: Session = Depends(get_db)):
         "organizations": db.query(Organization).count(),
         "corridors_enabled": db.query(Corridor).filter(Corridor.enabled.is_(True)).count(),
         "budget_per_check_usd": settings.llm_budget_usd_per_check,
+        "queue": jobq.depth(db),
+        "free_tier_ai_enabled": settings.free_tier_ai_enabled,
     }
 
 
@@ -421,6 +424,7 @@ def list_users(
             full_name=u.full_name,
             role=u.role.value,
             credits=u.credits,
+            ai_credits=u.ai_credits,
             is_active=u.is_active,
             org_name=orgs.get(u.org_id),
             check_count=counts.get(u.id, 0),
@@ -437,10 +441,12 @@ def grant_credits(user_id: str, payload: CreditGrant, db: Session = Depends(get_
     if not user:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
     user.credits = max(0, user.credits + payload.credits)
+    if payload.ai_credits:
+        user.ai_credits = max(0, user.ai_credits + payload.ai_credits)
     db.commit()
     return AdminUserOut(
         id=user.id, email=user.email, full_name=user.full_name, role=user.role.value,
-        credits=user.credits, is_active=user.is_active,
+        credits=user.credits, ai_credits=user.ai_credits, is_active=user.is_active,
         org_name=user.org.name if user.org else None,
         check_count=db.query(Check).filter(Check.user_id == user.id).count(),
         created_at=user.created_at, last_login_at=user.last_login_at,
@@ -477,7 +483,7 @@ def update_user(
 
     return AdminUserOut(
         id=user.id, email=user.email, full_name=user.full_name, role=user.role.value,
-        credits=user.credits, is_active=user.is_active,
+        credits=user.credits, ai_credits=user.ai_credits, is_active=user.is_active,
         org_name=user.org.name if user.org else None,
         check_count=db.query(Check).filter(Check.user_id == user.id).count(),
         created_at=user.created_at, last_login_at=user.last_login_at,

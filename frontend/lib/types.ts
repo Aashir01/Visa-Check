@@ -18,7 +18,25 @@ export interface User {
   full_name?: string | null;
   role: "user" | "agency_admin" | "admin";
   credits: number;
+  ai_credits: number;
   org?: Org | null;
+}
+
+export type AiStatus =
+  | "included"
+  | "not_in_tier"
+  | "budget_exhausted"
+  | "unavailable"
+  | "not_applicable";
+
+export interface Entitlement {
+  tier: "free" | "paid" | "admin";
+  plan: string;
+  checks_remaining: number;
+  ai_credits_remaining: number;
+  ai_included: boolean;
+  ai_always_included: boolean;
+  reason: string;
 }
 
 export interface Corridor {
@@ -115,6 +133,8 @@ export interface Extraction {
   passed?: RuleOutcome[];
   skipped?: RuleOutcome[];
   degraded_llm?: boolean;
+  ai_status?: AiStatus;
+  tier?: string;
   trip_days?: number | null;
   travel_start?: string | null;
   travel_end?: string | null;
@@ -222,6 +242,7 @@ export interface AdminUser {
   full_name?: string | null;
   role: string;
   credits: number;
+  ai_credits: number;
   is_active: boolean;
   org_name?: string | null;
   check_count: number;
@@ -245,6 +266,13 @@ export interface Overview {
   organizations: number;
   corridors_enabled: number;
   budget_per_check_usd: number;
+  free_tier_ai_enabled: boolean;
+  queue: {
+    queued: number;
+    processing: number;
+    oldest_pending_seconds: number | null;
+    worker_mode: string;
+  };
 }
 
 export interface Costs {
@@ -277,4 +305,7 @@ export interface Account {
   org_checks_run: number;
   team_seats: number;
   retention_days: number;
+  entitlement: Entitlement;
+  daily_check_limit: number;
+  checks_left_today: number;
 }

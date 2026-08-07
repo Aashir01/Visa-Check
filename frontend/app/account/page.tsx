@@ -52,6 +52,19 @@ export default function AccountPage() {
               hint={account.org_credits > 0 ? `+ ${account.org_credits} in the team pool` : undefined}
             />
             <Stat label="Checks run" value={account.checks_run} />
+            <Stat
+              label="Full AI checks left"
+              value={
+                account.entitlement.ai_always_included
+                  ? "unlimited"
+                  : account.entitlement.ai_credits_remaining
+              }
+              hint={
+                account.entitlement.ai_always_included
+                  ? "included on your plan"
+                  : "free checks are deterministic only"
+              }
+            />
             {account.user.org ? (
               <>
                 <Stat label="Team checks run" value={account.org_checks_run} />
@@ -59,9 +72,9 @@ export default function AccountPage() {
               </>
             ) : (
               <Stat
-                label="Document retention"
-                value={`${account.retention_days} days`}
-                hint="Then deleted automatically"
+                label="Checks left today"
+                value={account.checks_left_today}
+                hint={`daily limit ${account.daily_check_limit}`}
               />
             )}
           </div>
@@ -101,6 +114,17 @@ export default function AccountPage() {
                 <Badge className="border-brand-600/25 bg-brand-50 text-brand-700">
                   {account.plan}
                 </Badge>
+              </div>
+
+              <div className="mt-3 rounded-lg border border-line bg-gray-50 p-3 text-sm">
+                <p className="font-medium text-ink">What a free check includes</p>
+                <p className="mt-1 leading-relaxed text-muted">
+                  Every checklist, identity, financial, date and photo rule — missing
+                  documents, name and date mismatches across your files, funds against
+                  the corridor threshold, passport and insurance validity, and photo
+                  compliance. A full check adds an AI review of your invitation,
+                  employment and cover letters.
+                </p>
               </div>
 
               <p className="mt-3 text-sm leading-relaxed text-muted">

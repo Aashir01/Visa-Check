@@ -51,6 +51,7 @@ class UserOut(BaseModel):
     full_name: str | None = None
     role: str
     credits: int
+    ai_credits: int = 0
     org: OrgOut | None = None
 
     class Config:
@@ -283,6 +284,7 @@ class AdminUserOut(BaseModel):
     full_name: str | None = None
     role: str
     credits: int
+    ai_credits: int = 0
     is_active: bool
     org_name: str | None = None
     check_count: int = 0
@@ -294,7 +296,10 @@ class AdminUserOut(BaseModel):
 
 
 class CreditGrant(BaseModel):
-    credits: int = Field(ge=-10_000, le=10_000)
+    credits: int = Field(default=0, ge=-10_000, le=10_000)
+    # AI credits are granted separately because the free tier is deterministic
+    # only — giving someone checks is not the same as giving them AI review.
+    ai_credits: int = Field(default=0, ge=-10_000, le=10_000)
     reason: str | None = None
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from .. import entitlements, ratelimit
 from ..config import settings
 from ..db import get_db
 from ..deps import current_user
@@ -27,7 +28,11 @@ def _user_out(user: User) -> UserOut:
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+def register(
+    payload: RegisterRequest,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(ratelimit.limit_auth),
+):
     email = payload.email.lower().strip()
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "That email is already registered.")
@@ -45,6 +50,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         role=Role.agency_admin if org else Role.user,
         org_id=org.id if org else None,
         credits=settings.free_checks_per_user,
+        # A taste of the paid tier, so the upsell is a demonstration rather
+        # than a claim.
+        ai_credits=settings.free_ai_credits_per_user,
         last_login_at=utcnow(),
     )
     db.add(user)
@@ -58,7 +66,11 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+def login(
+    payload: LoginRequest,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(ratelimit.limit_auth),
+):
     user = db.query(User).filter(User.email == payload.email.lower().strip()).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect email or password.")
@@ -97,4 +109,7 @@ def account(user: User = Depends(current_user), db: Session = Depends(get_db)):
         "org_checks_run": org_total,
         "team_seats": seats,
         "retention_days": settings.retention_days,
+        "entitlement": entitlements.describe(user),
+        "daily_check_limit": settings.rate_limit_checks_per_day,
+        "checks_left_today": ratelimit.remaining_today(user.id),
     }

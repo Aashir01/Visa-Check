@@ -21,6 +21,12 @@ pypdf==5.1.0
 pdfplumber==0.11.4
 pypdfium2==4.30.0          # PDF rasterisation, no system poppler needed
 pytesseract==0.3.13
+# PP-OCR is the default engine (OCR_PROVIDER=paddleocr) because Tesseract
+# fails on the phone photos applicants actually upload. Large, but it keeps
+# the marginal cost of a check at zero. Drop both lines and set
+# OCR_PROVIDER=tesseract for a slimmer image at the cost of accuracy.
+paddlepaddle==3.3.1
+paddleocr==3.7.0
 Pillow==11.0.0
 numpy==2.2.1
 opencv-python-headless==4.10.0.84
