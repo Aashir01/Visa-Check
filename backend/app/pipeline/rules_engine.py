@@ -956,7 +956,16 @@ class RulesEngine:
         sev = rule.get("severity", "warning")
         min_dpi = p.get("min_dpi")
 
-        def flag(title: str, detail: str, fix: str, conf: float = 0.75, severity=None):
+        def flag(
+            title: str,
+            detail: str,
+            fix: str,
+            conf: float = 0.75,
+            severity=None,
+            measured: list[tuple[str, object]] | None = None,
+        ):
+            # Cite only the measurement this finding rests on. Dumping the whole
+            # metrics dict onto every photo issue tells the reader nothing.
             issues.append(
                 make_issue(
                     rule_id=f"{rule['id']}.{title[:24].lower().replace(' ', '_')}",
@@ -965,7 +974,7 @@ class RulesEngine:
                     title=title,
                     detail=detail,
                     fix=fix,
-                    evidence=[_ev(doc, "image_metrics", m)],
+                    evidence=[_ev(doc, field, value) for field, value in (measured or [])],
                     documents=[doc.id],
                     confidence=conf,
                 )
@@ -985,6 +994,8 @@ class RulesEngine:
                     "Cropping to the right shape now avoids a rejection at the counter.",
                     f"Crop or re-shoot to {want_w}mm × {want_h}mm.",
                     0.85,
+                    measured=[("aspect_ratio", f"{ratio:.2f}"),
+                              ("required_ratio", f"{target:.2f}")],
                 )
 
         # --- resolution ---
@@ -994,6 +1005,7 @@ class RulesEngine:
                 f"The file reports {m['dpi']} DPI; {min_dpi} DPI is expected.",
                 f"Ask the studio for a {min_dpi} DPI file, or re-scan at that setting.",
                 0.7,
+                measured=[("dpi", m["dpi"]), ("required_dpi", min_dpi)],
             )
         # Derive the pixel floor from the physical spec so the two cannot
         # contradict each other: 45mm at 300 DPI is 531px, so a hard-coded
@@ -1010,6 +1022,7 @@ class RulesEngine:
                 f"least {min_px}px tall to print correctly.",
                 "Use the original full-size file rather than a resized or messaged copy.",
                 0.8,
+                measured=[("height_px", m["height_px"]), ("required_px", min_px)],
             )
 
         # --- face ---
@@ -1022,6 +1035,7 @@ class RulesEngine:
                 "Upload a straight-on photo with the full face visible, eyes open, "
                 "no headwear except for religious reasons and never covering the face.",
                 0.6,
+                measured=[("faces_detected", 0)],
             )
         elif faces > 1:
             flag(
@@ -1029,6 +1043,7 @@ class RulesEngine:
                 f"{faces} faces were detected. A visa photo must show only the applicant.",
                 "Re-shoot against a plain wall with nobody else in frame.",
                 0.6,
+                measured=[("faces_detected", faces)],
             )
         else:
             fr = m.get("face_height_ratio")
@@ -1043,6 +1058,8 @@ class RulesEngine:
                        else "The head is too large and may be cropped at the counter."),
                     "Reframe so the head, chin to crown, fills the required proportion.",
                     0.6,
+                    measured=[("head_height_share", f"{fr * 100:.0f}%"),
+                              ("accepted_range", f"{lo * 100:.0f}-{hi * 100:.0f}%")],
                 )
             offset = m.get("face_centre_offset")
             if offset is not None and offset > float(p.get("max_centre_offset", 0.25)):
@@ -1051,6 +1068,7 @@ class RulesEngine:
                     f"The face sits noticeably off-centre (offset {offset:.2f}).",
                     "Centre the head horizontally in the frame.",
                     0.55,
+                    measured=[("centre_offset", f"{offset:.2f}")],
                 )
 
         # --- background ---
@@ -1065,6 +1083,8 @@ class RulesEngine:
                     "Re-shoot against a plain, evenly lit light-coloured wall with no "
                     "shadow behind the head.",
                     0.6,
+                    measured=[("background_uniformity", m["background_uniformity"]),
+                              ("required_minimum", min_uniform)],
                 )
         bg_range = p.get("background_lightness_range")
         if bg_range and m.get("background_lightness") is not None:
@@ -1078,6 +1098,8 @@ class RulesEngine:
                     "than the requirement).",
                     "Use a plain white or light-grey background as the corridor requires.",
                     0.6,
+                    measured=[("background_lightness", m["background_lightness"]),
+                              ("accepted_range", f"{lo:.2f}-{hi:.2f}")],
                 )
 
         # --- technical quality ---
@@ -1090,6 +1112,7 @@ class RulesEngine:
                 "Upload the original studio file. Avoid photos sent over WhatsApp, "
                 "which are heavily compressed.",
                 0.65,
+                measured=[("sharpness", m["sharpness"]), ("required_minimum", min_sharp)],
             )
         if p.get("must_be_colour") and m.get("is_greyscale"):
             flag(
@@ -1098,6 +1121,7 @@ class RulesEngine:
                 "required.",
                 "Submit the colour original.",
                 0.7,
+                measured=[("is_greyscale", True)],
             )
         return issues
 

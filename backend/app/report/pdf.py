@@ -83,13 +83,15 @@ class ScoreBar(Flowable):
         super().__init__()
         self.score = max(0, min(100, int(score)))
         self.width = width
-        self.height = 26
+        # Tall enough that the scale labels sit inside the flowable rather
+        # than overlapping whatever follows it.
+        self.height = 34
         self.colour = colour
 
     def draw(self):
         c = self.canv
         track_h = 7
-        y = self.height - track_h - 10
+        y = self.height - track_h - 6
 
         c.setFillColor(colors.HexColor("#F3F4F6"))
         c.roundRect(0, y, self.width, track_h, 3.5, stroke=0, fill=1)
@@ -143,6 +145,21 @@ def _esc(text) -> str:
         .replace("<", "&lt;")
         .replace(">", "&gt;")
     )
+
+
+def _fmt_value(value) -> str:
+    """Render an evidence value the way a reader expects to see it.
+
+    Extracted amounts arrive as floats, so a balance would otherwise print as
+    "552000.0" in the middle of a sentence about money.
+    """
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if isinstance(value, (int, float)):
+        if float(value).is_integer():
+            return f"{int(value):,}"
+        return f"{value:,.2f}"
+    return str(value)
 
 
 def build_report_pdf(*, check, corridor, pack: dict, documents: list, brand: dict | None = None) -> bytes:
@@ -467,7 +484,9 @@ def _issue_block(n: int, issue: dict, width: float, S: dict) -> KeepTogether:
         for e in evidence[:5]:
             source = e.get("document_label") or e.get("document_type") or "—"
             field = (e.get("field") or "").replace("_", " ")
-            value = str(e.get("value"))
+            value = _fmt_value(e.get("value"))
+            if e.get("currency"):
+                value = f"{e['currency']} {value}"
             if len(value) > 120:
                 value = value[:117] + "…"
             lines.append(f"{_esc(source)} &middot; {_esc(field)}: <b>{_esc(value)}</b>")

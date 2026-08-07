@@ -27,7 +27,10 @@ class Settings(BaseSettings):
 
     # --- server ---
     api_prefix: str = "/api"
-    cors_origins: str = "http://localhost:3000"
+    # Browsers treat localhost and 127.0.0.1 as distinct origins, so allow
+    # both by default — otherwise local development fails CORS depending on
+    # which host name the developer happens to type.
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     # --- database ---
     database_url: str = f"sqlite:///{BASE_DIR / 'visaguard.db'}"

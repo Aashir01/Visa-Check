@@ -117,6 +117,20 @@ def seed(db: Session, *, admin_email: str | None = None,
 
     if admin_email and admin_password:
         email = admin_email.lower().strip()
+        # The login endpoint validates with EmailStr, which rejects reserved
+        # TLDs such as .local. Without the same check here, seeding happily
+        # creates an admin account that can never sign in.
+        try:
+            from email_validator import validate_email
+
+            validate_email(email, check_deliverability=False)
+        except Exception as exc:  # noqa: BLE001
+            raise SystemExit(
+                f"Refusing to seed admin '{email}': {exc}\n"
+                "Use a normal address such as admin@yourdomain.com — reserved "
+                "domains like .local are rejected at login."
+            ) from exc
+
         user = db.query(User).filter(User.email == email).first()
         if user:
             user.role = Role.admin
