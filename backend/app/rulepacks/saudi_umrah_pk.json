@@ -1,28 +1,47 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "corridor_key": "saudi_umrah_pk",
-  "version": "0.1.0-draft",
+  "version": "0.2.0-sourced",
   "title": "Saudi Arabia Umrah visa from Pakistan",
   "unverified": true,
-  "effective_date": "2026-08-07",
+  "effective_date": "2026-08-08",
   "currency": "SAR",
   "default_trip_days": 14,
   "review_cadence_days": 30,
+
+  "provenance": {
+    "researched_at": "2026-08-08",
+    "verified_against_casework": false,
+    "summary": "Umrah requirements are set by the Saudi Ministry of Hajj and Umrah and administered through the Nusuk platform. They change per season and more often than the Schengen or UK rules, so this pack needs the shortest review cadence of the three.",
+    "sources": [
+      { "title": "Nusuk — official Saudi Ministry of Hajj and Umrah platform", "url": "https://www.nusuk.sa/" },
+      { "title": "UK FCDO — Saudi Arabia travel advice: pilgrimage", "url": "https://www.gov.uk/foreign-travel-advice/saudi-arabia/pilgrimage" },
+      { "title": "NaTHNaC — Hajj and Umrah health requirements", "url": "https://travelhealthpro.org.uk/factsheet/19/hajj-and-umrah" },
+      { "title": "Meningitis Now — vaccination for Hajj and Umrah pilgrims", "url": "https://www.meningitisnow.org/meningitis-explained/how-to-catch-meningitis/hajj-and-umrah-pilgrims/" },
+      { "title": "Umrah visa from Pakistan 2026 — requirements overview", "url": "https://visaindex.com/visa/saudi-arabia-visa/umrah-visa/pakistan/" }
+    ]
+  },
+
   "source_notes": [
-    "DRAFT — AI-assembled from published Saudi Ministry of Hajj and Umrah / Nusuk guidance. NOT verified against live casework.",
-    "Umrah requirements change frequently and are often announced per-season. Treat every threshold here as provisional.",
-    "Meningococcal ACWY vaccination is a long-standing entry requirement for pilgrims; confirm the current validity window and any seasonal additions before each season.",
-    "The mahram requirement for women has been relaxed in recent years. This pack treats it as informational, not blocking. Confirm current policy.",
-    "Umrah is commonly processed through licensed agents and the Nusuk platform rather than a consulate counter, so document handling differs from the Schengen and UK corridors.",
-    "This corridor is high-volume and low-margin: verify carefully before selling checks against it."
+    "STILL UNVERIFIED against live casework, and the most volatile of the three corridors — Umrah rules are announced per season. Review this pack before every season, not just monthly.",
+    "Meningococcal ACWY vaccination is mandatory for all pilgrims. The certificate must be issued at least 10 days before arrival and must state which vaccine was given. Without it, the Umrah visa and the Nusuk permit are not granted, and it is checked again on arrival.",
+    "ACWY validity depends on the vaccine type: the conjugate vaccine is generally accepted for 5 years and the older polysaccharide vaccine for 3 years. This pack uses the conservative 3-year window; raise it to 1825 days only if you confirm the pilgrim received the conjugate vaccine.",
+    "MAHRAM RULE UPDATED. Women of all ages may now perform Umrah without a mahram, provided they travel with a licensed, organised group. The earlier under-45 restriction no longer applies. Relationship proof is still commonly requested by agents for family group bookings, so it stays optional rather than required.",
+    "Passport must be valid for at least 6 months from the intended date of entry and contain at least 2 blank pages. This is enforced strictly and is the most common reason an Umrah booking is rejected before it reaches the ministry.",
+    "There is NO published financial threshold for Umrah, so this pack deliberately contains no funds rule. Agents commonly ask for evidence that the trip is funded; that is an agent practice, not a ministry requirement, so the bank statement stays optional.",
+    "Umrah is normally processed through a licensed agent or the Nusuk platform rather than at a consulate counter, so document handling differs from the Schengen and UK corridors. Medical insurance is usually bundled into the visa fee.",
+    "Photograph: a recent colour photograph on a plain WHITE background. The white-background requirement is stricter than Schengen's light-background rule."
   ],
+
   "disclaimer": "This is a document completeness check against a named checklist. It is not immigration advice and does not predict whether a visa will be granted.",
+
   "fx": {
     "base": "SAR",
-    "updated": "2026-08-07",
-    "note": "Indicative rates for threshold comparison only. Edit in /admin/rules.",
+    "updated": "2026-08-08",
+    "note": "Indicative rates for threshold comparison only. No funds rule uses them at present.",
     "rates": { "PKR": 77.0, "EUR": 0.245, "GBP": 0.205, "USD": 0.267, "AED": 0.98 }
   },
+
   "severity_weights": { "critical": 22, "warning": 8, "info": 2 },
   "profiles": {
     "employed": "Employed",
@@ -39,7 +58,9 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
-      "why": "The passport must be machine-readable and valid for at least 6 months from the intended date of entry.",
+      "authority": "official_guidance",
+      "sources": ["https://www.nusuk.sa/"],
+      "why": "The passport must be machine-readable, valid for at least 6 months from the intended date of entry, and contain at least 2 blank pages.",
       "fix": "Upload a clear scan of the bio-data page including the two machine-readable lines at the bottom."
     },
     {
@@ -48,6 +69,8 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
+      "authority": "official_guidance",
+      "sources": ["https://www.nusuk.sa/"],
       "why": "A recent colour photograph on a plain white background is required for the visa record.",
       "fix": "Upload a recent colour photograph on a plain white background with the full face visible."
     },
@@ -57,8 +80,13 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
-      "why": "Proof of meningococcal ACWY vaccination is an entry requirement for pilgrims and is checked on arrival as well as at visa stage.",
-      "fix": "Get the ACWY vaccination at an authorised centre and upload the certificate. It must be administered within the validity window required for the season and at least 10 days before travel."
+      "authority": "law",
+      "sources": [
+        "https://travelhealthpro.org.uk/factsheet/19/hajj-and-umrah",
+        "https://www.meningitisnow.org/meningitis-explained/how-to-catch-meningitis/hajj-and-umrah-pilgrims/"
+      ],
+      "why": "Proof of meningococcal ACWY vaccination is a mandatory entry requirement for pilgrims. Without it the Nusuk permit is not issued, and it is checked again on arrival.",
+      "fix": "Get the ACWY vaccination at an authorised centre and upload the certificate. It must be given at least 10 days before arrival and must state clearly which vaccine you received."
     },
     {
       "key": "flight_ticket",
@@ -66,6 +94,8 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
+      "authority": "official_guidance",
+      "sources": ["https://www.nusuk.sa/"],
       "why": "A confirmed return booking is required to evidence the intended departure date.",
       "fix": "Add your confirmed round-trip flight booking covering the intended travel dates."
     },
@@ -75,6 +105,8 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
+      "authority": "official_guidance",
+      "sources": ["https://www.nusuk.sa/"],
       "why": "Confirmed accommodation for the pilgrimage period is required and is normally arranged through the licensed agent or the Nusuk platform.",
       "fix": "Add the confirmed hotel booking covering every night of the pilgrimage."
     },
@@ -84,16 +116,20 @@
       "required": true,
       "severity": "warning",
       "profiles": ["*"],
+      "authority": "official_guidance",
+      "sources": ["https://visaindex.com/visa/saudi-arabia-visa/umrah-visa/pakistan/"],
       "why": "Pakistani applicants are normally required to provide their CNIC alongside the passport.",
       "fix": "Add a clear copy of both sides of your CNIC."
     },
     {
       "key": "mahram_proof",
-      "label": "Mahram relationship proof",
+      "label": "Mahram / relationship proof (group bookings)",
       "required": false,
       "recommend_if_missing": true,
       "profiles": ["*"],
-      "why": "Saudi Arabia has relaxed the mahram requirement for women performing Umrah, but relationship proof is still commonly requested by agents when travelling as a family group.",
+      "authority": "official_guidance",
+      "sources": ["https://www.gov.uk/foreign-travel-advice/saudi-arabia/pilgrimage"],
+      "why": "Women of all ages may now perform Umrah without a mahram when travelling with a licensed organised group, so this is no longer a blocking requirement. Agents still commonly request relationship proof for family group bookings.",
       "fix": "If travelling as a family group, include a marriage certificate, birth certificate or family registration certificate showing the relationship."
     },
     {
@@ -102,6 +138,8 @@
       "required": false,
       "recommend_if_missing": true,
       "profiles": ["*"],
+      "authority": "official_guidance",
+      "sources": ["https://www.nusuk.sa/"],
       "why": "Medical cover is normally bundled into the Umrah visa fee, but a separate policy is still commonly recommended and sometimes requested.",
       "fix": "Consider adding a travel medical insurance certificate covering the pilgrimage dates."
     },
@@ -111,6 +149,7 @@
       "required": false,
       "recommend_if_missing": true,
       "profiles": ["*"],
+      "authority": "heuristic",
       "why": "There is no published financial threshold for Umrah, but agents commonly ask for evidence that the trip is funded.",
       "fix": "Consider adding a recent bank statement showing you can cover the trip."
     },
@@ -120,6 +159,7 @@
       "required": false,
       "recommend_if_missing": false,
       "profiles": ["*"],
+      "authority": "heuristic",
       "why": "Required only when relationship proof is needed for a group booking.",
       "fix": "Include the nikah nama or marriage certificate if travelling with a spouse."
     }
@@ -133,6 +173,8 @@
       "title": "Your name is not written the same way on every document",
       "category": "consistency",
       "passed_label": "Name matches across all documents",
+      "authority": "official_guidance",
+      "sources": ["https://www.nusuk.sa/"],
       "params": {
         "field": "full_name",
         "mode": "name",
@@ -152,6 +194,7 @@
       "title": "Passport number does not match across documents",
       "category": "consistency",
       "passed_label": "Passport number matches across documents",
+      "authority": "heuristic",
       "params": {
         "field": "passport_number",
         "mode": "exact",
@@ -166,6 +209,8 @@
       "title": "Passport validity",
       "category": "validity",
       "passed_label": "Passport meets the 6-month validity requirement",
+      "authority": "official_guidance",
+      "sources": ["https://www.nusuk.sa/"],
       "params": { "min_days_after_return": 180 },
       "fix": "Your passport must be valid for at least 6 months. Renew it before booking — this is enforced strictly and is the most common reason an Umrah booking is rejected."
     },
@@ -176,8 +221,11 @@
       "title": "Vaccination certificate may be outside its validity window",
       "category": "validity",
       "passed_label": "Vaccination certificate is within its validity window",
+      "authority": "official_guidance",
+      "sources": ["https://travelhealthpro.org.uk/factsheet/19/hajj-and-umrah"],
       "params": { "document": "vaccination_certificate", "field": "dose_date", "max_age_days": 1095 },
-      "fix": "The ACWY vaccination has a limited validity period that depends on the vaccine type. Check the expiry with the vaccination centre and re-vaccinate if it has lapsed."
+      "detail": "This uses the conservative 3-year window that applies to the older polysaccharide vaccine. The conjugate vaccine is generally accepted for 5 years.",
+      "fix": "Check the vaccine type and expiry with the vaccination centre, and re-vaccinate if it has lapsed. The dose must also be at least 10 days before arrival."
     },
     {
       "id": "itinerary.accommodation_covers_stay",
@@ -186,6 +234,7 @@
       "title": "Accommodation does not start by your arrival date",
       "category": "consistency",
       "passed_label": "Accommodation dates line up with your flights",
+      "authority": "heuristic",
       "params": {
         "a_document": "hotel_booking",
         "a_field": "check_in",
@@ -203,6 +252,7 @@
       "title": "Travel insurance does not cover the whole trip",
       "category": "validity",
       "passed_label": "Insurance covers the full travel period",
+      "authority": "heuristic",
       "params": {
         "document": "travel_insurance",
         "from_field": "valid_from",
@@ -217,18 +267,21 @@
       "title": "Photograph compliance",
       "category": "photo",
       "passed_label": "Photograph meets the specification",
+      "authority": "official_guidance",
+      "sources": ["https://www.nusuk.sa/"],
       "params": {
         "width_mm": 40,
         "height_mm": 60,
         "aspect_tolerance": 0.1,
-        "min_height_px": 600,
         "face_height_ratio": [0.6, 0.85],
         "max_centre_offset": 0.25,
         "min_background_uniformity": 0.8,
-        "background_lightness_range": [0.75, 1.0],
+        "background_lightness_range": [0.85, 1.0],
         "min_sharpness": 60,
         "must_be_colour": true
-      }
+      },
+      "detail": "Umrah requires a plain WHITE background, which is stricter than the light background Schengen accepts.",
+      "fix": "Re-shoot against a plain white background in colour, with the full face visible."
     }
   ],
 

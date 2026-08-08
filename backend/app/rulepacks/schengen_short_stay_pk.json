@@ -1,26 +1,47 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "corridor_key": "schengen_short_stay_pk",
-  "version": "0.1.0-draft",
+  "version": "0.2.0-sourced",
   "title": "Schengen short-stay (Type C) from Pakistan",
   "unverified": true,
-  "effective_date": "2026-08-07",
+  "effective_date": "2026-08-08",
   "currency": "EUR",
   "default_trip_days": 10,
   "review_cadence_days": 30,
+
+  "provenance": {
+    "researched_at": "2026-08-08",
+    "verified_against_casework": false,
+    "summary": "EU-wide rules are taken from Regulation (EC) No 810/2009 (the Visa Code) and are hard law, identical across all member states. Financial thresholds are set per member state and are cited individually. Anything marked 'heuristic' is our own calibration and is NOT an official requirement.",
+    "sources": [
+      { "title": "Regulation (EC) No 810/2009 — Community Code on Visas (Visa Code)", "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810" },
+      { "title": "Your Europe — Travel documents for non-EU nationals", "url": "https://europa.eu/youreurope/citizens/travel/entry-exit/non-eu-nationals/index_en.htm" },
+      { "title": "Schengen means of subsistence, amount required by each member state", "url": "https://schengenvisainfo.com/means-of-subsistence/" },
+      { "title": "Spain SMI 2026 (basis of the Spanish funds formula)", "url": "https://www.lamoncloa.gob.es/serviciosdeprensa/notasprensa/trabajo14/paginas/2023/140223-salario-minimo-interprofesional.aspx" },
+      { "title": "France Diplomatie — EES live from 10 April 2026", "url": "https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/ees-the-new-european-border-entryexit-system-goes-live-on-10-april-2026" }
+    ]
+  },
+
   "source_notes": [
-    "DRAFT — AI-assembled from published EU Visa Code and consulate guidance. NOT verified against live casework.",
-    "Financial thresholds vary by Schengen member state and are revised annually. The per-day figure here is an indicative placeholder.",
-    "Verify against the specific consulate handling the application (main destination / longest stay) before relying on any finding.",
-    "Replace this pack with your own casework-derived version before selling checks against it."
+    "STILL UNVERIFIED against live casework. The EU-level rules below are hard law and can be relied on; the per-state financial figures are published reference amounts that change without notice; the 'heuristic' rules are ours and are not official.",
+    "Passport rules (3 months' validity beyond departure, 2 blank pages, issued within the previous 10 years) are Visa Code Art. 12 and identical in every member state.",
+    "Insurance (EUR 30,000, emergency treatment, hospitalisation, repatriation for illness and for remains, valid across all Schengen states) is Visa Code Art. 15.",
+    "Funds are NOT harmonised. Published reference amounts range from EUR 34/day (Netherlands) to EUR 122.10/day (Spain), so this pack resolves the figure from the destination member state. Set applicant_meta.destination_country (ISO-3166 alpha-2) on the check; without it the pack falls back to Spain, the operator's main casework corridor.",
+    "Spain's amount is not a fixed number: Orden PRE/1282/2007 sets it at 10% of gross SMI per person per day, with a floor of 90% of gross SMI. SMI 2026 is EUR 1,221/month, giving EUR 122.10/day and a floor of EUR 1,098.90. When SMI changes each January, update only these two numbers.",
+    "EES (biometric Entry/Exit System) has been live at all Schengen external borders since 10 April 2026 and applies to visa holders too — expect fingerprint and facial capture on first entry. It is a border process, not a visa document, so it adds nothing to this checklist.",
+    "ETIAS (expected Q4 2026) applies only to visa-EXEMPT nationals. Pakistani passport holders need a visa, so ETIAS does NOT apply to them. Do not add it to this checklist.",
+    "Consulates commonly expect a margin above the bare minimum rather than an exact figure; the buffer wording in the funds rule reflects that and is deliberately not a hard threshold."
   ],
+
   "disclaimer": "This is a document completeness check against a named checklist. It is not immigration advice and does not predict whether a visa will be granted.",
+
   "fx": {
     "base": "EUR",
-    "updated": "2026-08-07",
-    "note": "Indicative rates for threshold comparison only. Edit in /admin/rules.",
+    "updated": "2026-08-08",
+    "note": "Indicative rates for threshold comparison only. Refresh periodically in /admin/rules; a stale rate makes the funds check wrong in both directions.",
     "rates": { "PKR": 315.0, "GBP": 0.84, "USD": 1.09, "SAR": 4.09, "AED": 4.0, "TRY": 38.0 }
   },
+
   "severity_weights": { "critical": 22, "warning": 8, "info": 2 },
   "profiles": {
     "employed": "Employed",
@@ -37,8 +58,10 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
-      "why": "The passport bio-data page is the identity anchor for the whole application. Every other document is checked against it.",
-      "fix": "Upload a clear scan or photo of the bio-data page, including the two machine-readable lines at the bottom of the page."
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
+      "why": "Visa Code Art. 12 requires a travel document valid for at least three months after the intended departure from the Schengen area, containing at least two blank pages, and issued within the previous ten years.",
+      "fix": "Upload a clear scan or photo of the bio-data page, including the two machine-readable lines at the bottom."
     },
     {
       "key": "application_form",
@@ -46,7 +69,9 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
-      "why": "The signed harmonised application form is mandatory at submission.",
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
+      "why": "Visa Code Art. 11 requires the harmonised application form, completed and signed.",
       "fix": "Complete and sign the Schengen visa application form for your destination consulate and include it in the bundle."
     },
     {
@@ -55,8 +80,10 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
-      "why": "A compliant biometric photograph is required. Non-compliant photos are the most common reason a submission is rejected at the counter.",
-      "fix": "Upload the digital photograph file supplied by the photo studio, 35mm x 45mm, taken within the last 6 months."
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
+      "why": "Visa Code Art. 13 requires a photograph meeting ICAO standards. A non-compliant photo is the most common reason a submission is rejected at the counter rather than refused later.",
+      "fix": "Upload the digital photograph supplied by the studio: 35mm x 45mm, colour, plain light background, taken within the last 6 months."
     },
     {
       "key": "travel_insurance",
@@ -64,8 +91,10 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
-      "why": "Schengen rules require medical cover of at least EUR 30,000 including repatriation, valid across all Schengen states for the whole stay.",
-      "fix": "Buy a Schengen-compliant policy covering EUR 30,000 including repatriation, valid from departure to return."
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
+      "why": "Visa Code Art. 15 requires cover of at least EUR 30,000 for emergency medical treatment, hospitalisation, and repatriation for medical reasons or death, valid throughout the Schengen area for the whole stay.",
+      "fix": "Buy a Schengen-compliant policy covering EUR 30,000 including repatriation, valid from departure to return. Most Pakistani insurers sell a specific 'Schengen' product."
     },
     {
       "key": "bank_statement",
@@ -74,8 +103,10 @@
       "severity": "critical",
       "profiles": ["*"],
       "satisfied_by": ["bank_letter"],
-      "why": "Proof of sufficient means of subsistence for the intended stay is mandatory.",
-      "fix": "Obtain a bank statement covering the last 6 months, stamped and signed by the bank, showing the closing balance."
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
+      "why": "Visa Code Art. 14 requires evidence of sufficient means of subsistence for the intended stay and for the return journey.",
+      "fix": "Obtain a bank statement covering the last 6 months, stamped and signed by the bank, showing your name and the closing balance."
     },
     {
       "key": "flight_ticket",
@@ -83,8 +114,10 @@
       "required": true,
       "severity": "critical",
       "profiles": ["*"],
-      "why": "A round-trip reservation showing intended entry and exit dates is required. A reservation, not a purchased ticket, is normally sufficient.",
-      "fix": "Add a round-trip flight reservation covering your intended travel dates."
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
+      "why": "Visa Code Art. 14 requires documents indicating the purpose of the journey, which for tourism means a round-trip itinerary showing intended entry and exit.",
+      "fix": "Add a round-trip flight reservation covering your intended travel dates. A reservation is normally sufficient; you do not need to buy the ticket before a decision."
     },
     {
       "key": "hotel_booking",
@@ -93,8 +126,10 @@
       "severity": "critical",
       "profiles": ["*"],
       "satisfied_by": ["invitation_letter"],
-      "why": "Proof of where you will stay for every night of the trip is required. A hotel booking or a host's invitation both satisfy this.",
-      "fix": "Add a hotel booking covering every night, or an invitation letter from your host with their address."
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
+      "why": "Visa Code Art. 14 requires proof of accommodation for the whole stay. A hotel booking or a host's formal invitation both satisfy this.",
+      "fix": "Add a hotel booking covering every night, or an invitation letter from your host with their full address."
     },
     {
       "key": "cover_letter",
@@ -102,8 +137,10 @@
       "required": true,
       "severity": "warning",
       "profiles": ["*"],
-      "why": "A cover letter explaining the purpose of travel, itinerary and who is funding the trip is expected by most consulates and materially helps the officer read the file.",
-      "fix": "Write a one-page letter stating the purpose of travel, your dates, where you will stay, who is paying, and your ties to Pakistan."
+      "authority": "official_guidance",
+      "sources": ["https://schengenvisainfo.com/requirements/"],
+      "why": "Not required by the Visa Code, but expected by most consulates and the single best place to explain the trip, the funding and your ties before the officer has to infer them.",
+      "fix": "Write a one-page letter stating the purpose of travel, your exact dates, where you will stay, who is paying, and your ties to Pakistan."
     },
     {
       "key": "employment_letter",
@@ -112,7 +149,9 @@
       "severity": "critical",
       "profiles": ["employed"],
       "satisfied_by": ["salary_slip"],
-      "why": "Proof of employment and approved leave demonstrates ties to Pakistan and reason to return.",
+      "authority": "official_guidance",
+      "sources": ["https://schengenvisainfo.com/requirements/"],
+      "why": "Evidence of employment and approved leave is the ordinary way to show both your income and your reason to return.",
       "fix": "Ask your employer for a letter on company letterhead stating your position, salary, joining date, and that your leave is approved for the travel dates."
     },
     {
@@ -122,8 +161,10 @@
       "severity": "critical",
       "profiles": ["self_employed"],
       "satisfied_by": ["tax_return"],
-      "why": "Self-employed applicants must evidence their business and its income.",
-      "fix": "Include your business registration or NTN certificate and your most recent tax return."
+      "authority": "official_guidance",
+      "sources": ["https://schengenvisainfo.com/requirements/"],
+      "why": "Self-employed applicants must evidence the business that funds the trip and that they return to.",
+      "fix": "Include your business registration or NTN certificate together with your most recent tax return."
     },
     {
       "key": "student_enrollment",
@@ -131,7 +172,9 @@
       "required": true,
       "severity": "critical",
       "profiles": ["student"],
-      "why": "Students must prove current enrolment and approved leave from the institution.",
+      "authority": "official_guidance",
+      "sources": ["https://schengenvisainfo.com/requirements/"],
+      "why": "Students must evidence current enrolment and that the institution has no objection to the travel.",
       "fix": "Ask your institution for a bonafide certificate confirming enrolment and no objection to your travel."
     },
     {
@@ -141,6 +184,8 @@
       "severity": "critical",
       "profiles": ["retired"],
       "satisfied_by": ["bank_letter"],
+      "authority": "official_guidance",
+      "sources": ["https://schengenvisainfo.com/requirements/"],
       "why": "Retired applicants must evidence their ongoing income.",
       "fix": "Include your pension payment order or recent pension credit statements."
     },
@@ -150,7 +195,8 @@
       "required": false,
       "recommend_if_missing": true,
       "profiles": ["employed", "self_employed"],
-      "why": "A filed tax return corroborates declared income and strengthens the financial picture.",
+      "authority": "heuristic",
+      "why": "A filed return corroborates declared income and is one of the few Pakistani documents a consulate can cross-check independently.",
       "fix": "Add your most recent FBR tax return acknowledgement."
     },
     {
@@ -159,6 +205,7 @@
       "required": false,
       "recommend_if_missing": true,
       "profiles": ["*"],
+      "authority": "heuristic",
       "why": "Evidence of assets in Pakistan supports the case that you intend to return.",
       "fix": "Consider adding property papers or other asset documentation."
     },
@@ -168,7 +215,8 @@
       "required": false,
       "recommend_if_missing": true,
       "profiles": ["*"],
-      "why": "A record of prior compliant travel is one of the strongest positive signals available to an applicant from a high-refusal corridor.",
+      "authority": "heuristic",
+      "why": "A record of prior compliant travel is among the strongest positive signals available to an applicant from a high-refusal corridor.",
       "fix": "Include copies of previous visas and entry/exit stamps if you have them."
     }
   ],
@@ -181,6 +229,7 @@
       "title": "Your name is not written the same way on every document",
       "category": "consistency",
       "passed_label": "Name matches across all documents",
+      "authority": "heuristic",
       "profiles": ["*"],
       "params": {
         "field": "full_name",
@@ -203,6 +252,7 @@
       "title": "Passport number does not match across documents",
       "category": "consistency",
       "passed_label": "Passport number matches across documents",
+      "authority": "heuristic",
       "params": {
         "field": "passport_number",
         "mode": "exact",
@@ -217,6 +267,7 @@
       "title": "Date of birth does not match across documents",
       "category": "consistency",
       "passed_label": "Date of birth matches across documents",
+      "authority": "heuristic",
       "params": {
         "field": "date_of_birth",
         "mode": "date",
@@ -230,8 +281,11 @@
       "severity": "critical",
       "title": "Passport validity",
       "category": "validity",
-      "passed_label": "Passport validity meets the requirement",
-      "params": { "min_days_after_return": 90, "max_issue_age_years": 10 }
+      "passed_label": "Passport validity meets Visa Code Art. 12",
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
+      "params": { "min_days_after_return": 90, "max_issue_age_years": 10 },
+      "fix": "Renew your passport before applying. Visa Code Art. 12 requires validity for at least three months beyond your intended departure from the Schengen area, and the passport must have been issued within the previous ten years. Neither can be waived except in a justified emergency."
     },
     {
       "id": "financial.sufficiency",
@@ -239,16 +293,34 @@
       "severity": "critical",
       "title": "Means of subsistence",
       "category": "financial",
-      "passed_label": "Bank balance meets the indicative threshold",
+      "passed_label": "Bank balance meets the destination's published amount",
+      "authority": "member_state",
+      "sources": [
+        "https://schengenvisainfo.com/means-of-subsistence/",
+        "https://www.lamoncloa.gob.es/serviciosdeprensa/notasprensa/trabajo14/paginas/2023/140223-salario-minimo-interprofesional.aspx"
+      ],
       "params": {
         "method": "per_day",
-        "per_day_amount": 100,
-        "minimum_total": 800,
-        "currency": "EUR",
         "balance_field": "closing_balance",
-        "source_documents": ["bank_statement", "bank_letter"]
+        "source_documents": ["bank_statement", "bank_letter"],
+        "currency": "EUR",
+        "default_destination": "ES",
+        "per_day_amount": 122.1,
+        "minimum_total": 1098.9,
+        "per_destination": {
+          "ES": { "per_day_amount": 122.1, "minimum_total": 1098.9 },
+          "FR": { "per_day_amount": 65.0, "minimum_total": 0 },
+          "DE": { "per_day_amount": 45.0, "minimum_total": 0 },
+          "IT": { "per_day_amount": 120.0, "minimum_total": 0 },
+          "NL": { "per_day_amount": 34.0, "minimum_total": 0 },
+          "GR": { "per_day_amount": 50.0, "minimum_total": 0 },
+          "BE": { "per_day_amount": 45.0, "minimum_total": 0 },
+          "PT": { "per_day_amount": 40.0, "minimum_total": 0 },
+          "AT": { "per_day_amount": 100.0, "minimum_total": 0 },
+          "CH": { "per_day_amount": 100.0, "minimum_total": 0 }
+        }
       },
-      "fix": "Build the balance well before you submit — funds that appear days before the appointment are read as borrowed. If someone else is funding the trip, add a sponsorship affidavit and the sponsor's own statements."
+      "fix": "Build the balance well before you submit — funds that appear days before the appointment are read as borrowed. If someone else is funding the trip, add a sponsorship affidavit and the sponsor's own statements. France's figure drops to EUR 65/day when you hold proof of accommodation and rises to EUR 120/day when you do not."
     },
     {
       "id": "financial.recency",
@@ -257,7 +329,10 @@
       "title": "Bank statement recency",
       "category": "financial",
       "passed_label": "Bank statement is recent",
-      "params": { "document": "bank_statement", "field": "statement_date", "max_age_days": 30 }
+      "authority": "official_guidance",
+      "sources": ["https://schengenvisainfo.com/requirements/"],
+      "params": { "document": "bank_statement", "field": "statement_date", "max_age_days": 30 },
+      "fix": "Download a fresh statement, ideally stamped and signed by the bank, dated within the last few days before your appointment."
     },
     {
       "id": "financial.history",
@@ -265,8 +340,11 @@
       "severity": "warning",
       "title": "Bank statement history length",
       "category": "financial",
-      "passed_label": "Bank statement covers the required period",
-      "params": { "document": "bank_statement", "min_months": 6 }
+      "passed_label": "Bank statement covers the expected period",
+      "authority": "official_guidance",
+      "sources": ["https://schengenvisainfo.com/requirements/"],
+      "params": { "document": "bank_statement", "min_months": 6 },
+      "fix": "Request a statement covering the full last 6 months. Most consulates in this corridor have moved from a 3-month to a 6-month expectation."
     },
     {
       "id": "financial.sudden_deposit",
@@ -275,7 +353,9 @@
       "title": "Sudden large deposit",
       "category": "financial",
       "passed_label": "No single deposit dominates the balance",
-      "params": { "document": "bank_statement", "ratio": 0.4 }
+      "authority": "heuristic",
+      "params": { "document": "bank_statement", "ratio": 0.4 },
+      "fix": "Unexplained top-ups shortly before an application are among the most frequently cited refusal triggers in this corridor. Include documentary proof of where the money came from — a property sale deed, gratuity letter, or the sender's own statement. If it was a gift, add a sponsorship affidavit."
     },
     {
       "id": "insurance.coverage",
@@ -283,14 +363,16 @@
       "severity": "critical",
       "title": "Travel insurance cover is below EUR 30,000",
       "category": "validity",
-      "passed_label": "Insurance cover meets EUR 30,000",
+      "passed_label": "Insurance cover meets the EUR 30,000 minimum",
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
       "params": {
         "document": "travel_insurance",
         "field": "coverage_amount",
         "min": 30000,
         "currency": "EUR"
       },
-      "fix": "Buy a policy with at least EUR 30,000 of medical cover. Most Pakistani insurers sell a specific 'Schengen' product that meets this."
+      "fix": "Visa Code Art. 15 sets EUR 30,000 as the minimum and it is not negotiable. Buy a policy that meets it; most Pakistani insurers sell a specific 'Schengen' product."
     },
     {
       "id": "insurance.dates",
@@ -299,12 +381,14 @@
       "title": "Travel insurance does not cover the whole trip",
       "category": "validity",
       "passed_label": "Insurance covers the full travel period",
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
       "params": {
         "document": "travel_insurance",
         "from_field": "valid_from",
         "to_field": "valid_to"
       },
-      "fix": "Ask the insurer to reissue the certificate covering every day from departure to return inclusive."
+      "fix": "Visa Code Art. 15 requires cover for the entire period of the intended stay. Ask the insurer to reissue the certificate covering every day from departure to return inclusive."
     },
     {
       "id": "insurance.repatriation",
@@ -313,8 +397,10 @@
       "title": "Insurance does not mention repatriation cover",
       "category": "validity",
       "passed_label": "Insurance includes repatriation",
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
       "params": { "document": "travel_insurance", "field": "covers_repatriation", "expected": true },
-      "detail": "Schengen rules require the policy to cover repatriation for medical reasons and death. The certificate must say so explicitly.",
+      "detail": "Visa Code Art. 15 requires the policy to cover repatriation for medical reasons and repatriation of remains. The certificate must state this explicitly — an officer will not assume it.",
       "fix": "Ask the insurer for a certificate that states repatriation cover in writing."
     },
     {
@@ -324,6 +410,7 @@
       "title": "Accommodation does not start by your arrival date",
       "category": "consistency",
       "passed_label": "Accommodation dates line up with your flights",
+      "authority": "heuristic",
       "params": {
         "a_document": "hotel_booking",
         "a_field": "check_in",
@@ -342,6 +429,7 @@
       "title": "Employment letter is too old",
       "category": "validity",
       "passed_label": "Employment letter is recently dated",
+      "authority": "heuristic",
       "profiles": ["employed"],
       "params": { "document": "employment_letter", "field": "issue_date", "max_age_days": 30 },
       "fix": "Ask your employer to reissue the letter dated within a month of your appointment."
@@ -353,6 +441,8 @@
       "title": "No proof of income for your stated status",
       "category": "missing_document",
       "passed_label": "Proof of income provided",
+      "authority": "official_guidance",
+      "sources": ["https://schengenvisainfo.com/requirements/"],
       "profiles": ["employed"],
       "params": { "any_of": ["employment_letter", "salary_slip", "tax_return"] },
       "detail": "You selected 'employed', so the file needs documentary proof of that employment and its income.",
@@ -365,19 +455,21 @@
       "title": "Photograph compliance",
       "category": "photo",
       "passed_label": "Photograph meets the specification",
+      "authority": "law",
+      "sources": ["https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"],
       "params": {
         "width_mm": 35,
         "height_mm": 45,
         "aspect_tolerance": 0.06,
         "min_dpi": 300,
-        "min_height_px": 600,
         "face_height_ratio": [0.7, 0.8],
         "max_centre_offset": 0.25,
         "min_background_uniformity": 0.75,
         "background_lightness_range": [0.6, 1.0],
         "min_sharpness": 60,
         "must_be_colour": true
-      }
+      },
+      "fix": "Photographs must meet ICAO standards under Visa Code Art. 13. Ask the studio for a compliant 35x45mm digital file taken within the last 6 months."
     }
   ],
 

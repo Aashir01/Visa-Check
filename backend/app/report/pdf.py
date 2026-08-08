@@ -509,6 +509,21 @@ def _issue_block(n: int, issue: dict, width: float, S: dict) -> KeepTogether:
         ]))
         parts.append(fix)
 
+    authority = issue.get("authority")
+    if authority:
+        label = {
+            "law": "This is a legal requirement.",
+            "member_state": "This figure is published by the destination state.",
+            "official_guidance": "Based on published official guidance.",
+            "heuristic": "This is our own guidance, not an official requirement.",
+        }.get(authority)
+        if label:
+            src = (issue.get("sources") or [None])[0]
+            parts.append(Spacer(1, 1.5 * mm))
+            parts.append(Paragraph(
+                _esc(label) + (f" Source: {_esc(src)}" if src else ""), S["small"]
+            ))
+
     if float(issue.get("confidence", 1.0)) < 0.6:
         parts.append(Spacer(1, 1.5 * mm))
         parts.append(Paragraph(

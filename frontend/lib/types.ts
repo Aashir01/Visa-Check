@@ -83,9 +83,13 @@ export interface Evidence {
   currency?: string;
 }
 
+export type Authority = "law" | "member_state" | "official_guidance" | "heuristic";
+
 export interface Issue {
   id: string;
   rule_id: string;
+  authority?: Authority | null;
+  sources?: string[];
   severity: Severity;
   category: string;
   title: string;

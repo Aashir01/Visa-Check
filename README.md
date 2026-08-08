@@ -266,17 +266,67 @@ Published packs are **immutable**. Each check snapshots the version it ran
 against, so editing a rule can never rewrite an existing report. To change a
 published pack, save a new version — old reports keep theirs.
 
-### ⚠️ The bundled packs are drafts
+### Provenance: law vs our opinion
 
-They were assembled from published requirements and are marked
-`"unverified": true`, which makes every report carry a visible draft banner.
-**They are not verified against live casework.** Before selling checks against
-them:
+Every rule and document declares an `authority`, and reports show it:
+
+| Authority | Meaning |
+|---|---|
+| `law` | Statute or regulation, e.g. EU Visa Code Art. 15. Cites its source. |
+| `member_state` | A state's own published figure, e.g. Spain's SMI-linked amount. Cites its source. |
+| `official_guidance` | Published consulate or ministry guidance. |
+| `heuristic` | **Our own calibration. Not an official requirement.** |
+
+The validator refuses to save a pack where a rule claims `law` or
+`member_state` without citing a source, so nothing can be presented as
+official without saying where it is written. On the test bundle a Schengen
+report cites the Visa Code on 11 findings and flags 5 as our own guidance.
+
+### Schengen funds are per member state
+
+Published reference amounts range from **EUR 34/day (Netherlands) to
+EUR 122.10/day (Spain)** — a factor of three. The pack therefore resolves the
+figure from the destination:
+
+```json
+"per_destination": {
+  "ES": { "per_day_amount": 122.10, "minimum_total": 1098.90 },
+  "NL": { "per_day_amount": 34.00 },
+  "DE": { "per_day_amount": 45.00 }
+}
+```
+
+Set `applicant_meta.destination_country` (ISO-3166 alpha-2) on the check.
+Without it the pack falls back to Spain.
+
+Spain's figure is not a fixed number: Orden PRE/1282/2007 sets it at 10% of
+gross SMI per day with a floor of 90% of SMI. SMI 2026 is EUR 1,221/month,
+giving EUR 122.10/day and a EUR 1,098.90 floor. **When SMI changes each
+January, update those two numbers and Spain is current again.**
+
+### What the research changed
+
+| | Before | After | Why |
+|---|---|---|---|
+| Schengen funds | EUR 100/day flat, EUR 800 floor | Per state; ES EUR 122.10/day, EUR 1,098.90 floor | Amounts are set per member state, not EU-wide |
+| UK funds floor | GBP 1,500 | GBP 800 | The old figure was ~2x what practitioners describe; UK sets no official minimum at all |
+| UK TB certificate | absent | Optional, >6-month stays only | Not required for a standard 6-month visit |
+| Saudi mahram | "relaxed", vague | Optional, all ages, licensed group | Policy now permits women of any age without a mahram |
+| Passport rules | asserted | Cited to Visa Code Art. 12 | 3 months beyond departure, 2 blank pages, issued within 10 years |
+| EES / ETIAS | absent | Documented in pack notes | EES live since 10 Apr 2026; ETIAS is for visa-*exempt* nationals, so it does **not** apply to Pakistani applicants |
+
+### ⚠️ The bundled packs are still drafts
+
+They are now researched and sourced against official material — the EU Visa
+Code, UKVI Appendix V, GOV.UK, and Saudi Ministry of Hajj / Nusuk guidance —
+but they are still marked `"unverified": true` and every report carries a
+draft banner. Sourced is not the same as verified: requirements change without
+notice, vary between consulates, and the only thing that closes that gap is
+your own casework. Before selling checks against them:
 
 - Correct each pack from your own files in `/admin/rules`.
-- Verify the financial thresholds — Schengen figures are set per member state
-  and revised annually; the UK sets no fixed threshold at all, and the number
-  in that pack is an internal heuristic, not an official requirement.
+- Re-check the per-state Schengen amounts and Spain's SMI each January.
+- Replace the UK funds heuristic with a figure from your own refusal data.
 - Re-check the FX rates, which are indicative placeholders.
 - Run your 20 past refusals through the CLI. If fewer than 15 are caught, fix
   the rules before going further.
@@ -402,7 +452,7 @@ PDFs, which keep their newlines, kept working and hid the problem in tests.
 ## Tests
 
 ```bash
-cd backend && .venv/bin/python -m pytest -q     # 98 tests
+cd backend && .venv/bin/python -m pytest -q     # 126 tests
 cd frontend && npx tsc --noEmit && npm run build
 ```
 
@@ -411,7 +461,8 @@ date parsing, statement column disambiguation, FX conversion, every rule
 outcome including "could not evaluate", scoring monotonicity and bounds, rule
 pack validation, LLM budget enforcement, and the guard that stops a
 hallucinated criterion becoming a finding, the free/paid entitlement split,
-queue claim semantics and stale-job recovery, and rate limiting.
+queue claim semantics and stale-job recovery, rate limiting, rule-pack
+provenance, and per-destination funds thresholds.
 
 ---
 

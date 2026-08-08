@@ -65,6 +65,7 @@ def run_check(db: Session, check: Check, pack: dict) -> Check:
             travel_start=parse_date(check.travel_from),
             travel_end=parse_date(check.travel_to),
             submission_date=date.today(),
+            destination_country=(check.applicant_meta or {}).get("destination_country"),
         )
 
         engine = RulesEngine(pack)

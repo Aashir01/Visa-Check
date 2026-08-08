@@ -52,6 +52,11 @@ class CheckContext:
     travel_start: date | None = None
     travel_end: date | None = None
     submission_date: date | None = None
+    # ISO-3166 alpha-2 of the member state handling the application. Schengen
+    # funds thresholds are set per member state and range from €34/day
+    # (Netherlands) to €122/day (Spain), so one number for "Schengen" is wrong
+    # by a factor of three at the extremes.
+    destination_country: str | None = None
 
     def __post_init__(self):
         self.submission_date = self.submission_date or date.today()
@@ -138,10 +143,17 @@ def make_issue(
     evidence: list | None = None,
     documents: list | None = None,
     confidence: float = 0.9,
+    authority: str | None = None,
+    sources: list | None = None,
 ) -> dict:
     return {
         "id": uuid.uuid4().hex[:12],
         "rule_id": rule_id,
+        # Where this requirement comes from: EU/UK/Saudi law, a member state's
+        # published figure, or our own heuristic. A user deserves to know
+        # whether "you need EUR 30,000 insurance" is statute or our opinion.
+        "authority": authority,
+        "sources": sources or [],
         "severity": severity if severity in SEVERITY_ORDER else "warning",
         "category": category,
         "title": title,
@@ -215,6 +227,14 @@ def money(value: float | None, ccy: str | None) -> str:
 # --------------------------------------------------------------------------
 # engine
 # --------------------------------------------------------------------------
+
+
+def _prov(rule: dict) -> dict:
+    """Provenance kwargs for make_issue, taken from the rule that fired."""
+    return {
+        "authority": rule.get("authority"),
+        "sources": rule.get("sources") or [],
+    }
 
 
 class RulesEngine:
@@ -317,6 +337,7 @@ class RulesEngine:
                     issues.append(
                         make_issue(
                             rule_id=f"doc.{key}",
+                            **_prov(spec),
                             severity="info",
                             category="missing_document",
                             title=f"Optional: {spec.get('label') or label_for(key)} not included",
@@ -337,6 +358,7 @@ class RulesEngine:
             issues.append(
                 make_issue(
                     rule_id=f"doc.{key}",
+                    **_prov(spec),
                     severity=spec.get("severity", "critical"),
                     category="missing_document",
                     title=f"Missing: {label}",
@@ -400,6 +422,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "critical"),
                 category="consistency",
                 title=rule.get("title") or f"{field_name.replace('_', ' ').title()} does not match across documents",
@@ -435,6 +458,7 @@ class RulesEngine:
             return [
                 make_issue(
                     rule_id=rule["id"],
+                    **_prov(rule),
                     severity=rule.get("severity", "critical"),
                     category="financial",
                     title="Bank balance could not be read",
@@ -456,6 +480,11 @@ class RulesEngine:
         balance = float(balance)
         source_ccy = doc.get("currency")
 
+        # Schengen funds thresholds are set per member state, so resolve the
+        # applicable figure before computing anything. Falling back to the
+        # pack default keeps single-destination corridors (UK, Saudi) simple.
+        p = self._resolve_destination_amounts(p, ctx)
+
         days = ctx.trip_days
         method = p.get("method", "per_day")
         if method == "per_day":
@@ -463,6 +492,7 @@ class RulesEngine:
                 return [
                     make_issue(
                         rule_id=rule["id"],
+                        **_prov(rule),
                         severity="warning",
                         category="financial",
                         title="Trip length unknown, funds requirement not verified",
@@ -488,6 +518,7 @@ class RulesEngine:
             return [
                 make_issue(
                     rule_id=rule["id"],
+                    **_prov(rule),
                     severity="warning",
                     category="financial",
                     title="Bank statement currency unclear",
@@ -509,6 +540,7 @@ class RulesEngine:
             return [
                 make_issue(
                     rule_id=rule["id"],
+                    **_prov(rule),
                     severity="warning",
                     category="financial",
                     title="Funds could not be compared to the requirement",
@@ -535,6 +567,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "critical"),
                 category="financial",
                 title="Bank balance is below the requirement for this trip",
@@ -542,8 +575,11 @@ class RulesEngine:
                     f"Your statement shows {money(balance, source_ccy)}"
                     + (f" (≈ {money(converted, target_ccy)}{', ' + note if note else ''})"
                        if source_ccy != target_ccy else "")
-                    + f". For {days} day(s) this corridor expects about "
-                    f"{money(required, target_ccy)}, leaving a shortfall of "
+                    + f". For {days} day(s) "
+                    + (f"{p['_resolved_destination']} expects about "
+                       if p.get("_resolved_destination")
+                       else "this corridor expects about ")
+                    + f"{money(required, target_ccy)}, leaving a shortfall of "
                     f"{money(shortfall, target_ccy)}.{buffer_note}"
                 ),
                 fix=rule.get("fix") or (
@@ -561,6 +597,29 @@ class RulesEngine:
             )
         ]
 
+    @staticmethod
+    def _resolve_destination_amounts(p: dict, ctx: CheckContext) -> dict:
+        """Overlay the destination member state's published amounts, if any.
+
+        ``per_destination`` maps ISO-3166 alpha-2 to that state's own figures.
+        The Netherlands asks EUR 34/day and Spain EUR 122.10/day for the same
+        trip, so applying one "Schengen" number would be wrong by a factor of
+        three at the extremes.
+        """
+        table = p.get("per_destination")
+        if not table:
+            return p
+
+        country = (ctx.destination_country or p.get("default_destination") or "").upper()
+        override = table.get(country)
+        if not override:
+            return p
+
+        merged = dict(p)
+        merged.update(override)
+        merged["_resolved_destination"] = country
+        return merged
+
     def _rule_statement_recency(self, rule: dict, ctx: CheckContext) -> list[dict]:
         p = rule.get("params", {})
         max_age = int(p.get("max_age_days", 30))
@@ -577,6 +636,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "warning"),
                 category="financial",
                 title="Bank statement is out of date",
@@ -608,6 +668,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "warning"),
                 category="financial",
                 title=f"Bank statement covers less than {min_months} months",
@@ -648,6 +709,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "warning"),
                 category="financial",
                 title="A single large deposit dominates the balance",
@@ -682,6 +744,7 @@ class RulesEngine:
             return [
                 make_issue(
                     rule_id=rule["id"],
+                    **_prov(rule),
                     severity="warning",
                     category="validity",
                     title="Passport expiry date could not be read",
@@ -702,6 +765,7 @@ class RulesEngine:
             issues.append(
                 make_issue(
                     rule_id=rule["id"],
+                    **_prov(rule),
                     severity=rule.get("severity", "critical"),
                     category="validity",
                     title="Passport does not stay valid long enough after your return",
@@ -728,6 +792,8 @@ class RulesEngine:
                 issues.append(
                     make_issue(
                         rule_id=rule["id"] + ".issue_age",
+                        **_prov(rule),
+                        **_prov(rule),
                         severity="warning",
                         category="validity",
                         title=f"Passport was issued more than {max_age_years} years ago",
@@ -776,6 +842,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "critical"),
                 category="validity",
                 title=rule.get("title") or f"{label_for(dtype)} does not cover the whole trip",
@@ -819,6 +886,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "critical"),
                 category="validity",
                 title=rule.get("title") or f"{label_for(dtype)} is below the required minimum",
@@ -848,6 +916,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "warning"),
                 category="validity",
                 title=rule.get("title") or "A required feature is missing from a document",
@@ -885,6 +954,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "warning"),
                 category="consistency",
                 title=rule.get("title") or "Dates do not line up across your documents",
@@ -916,6 +986,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "warning"),
                 category="validity",
                 title=rule.get("title") or f"{label_for(dtype)} is too old",
@@ -941,6 +1012,7 @@ class RulesEngine:
             return [
                 make_issue(
                     rule_id=rule["id"],
+                    **_prov(rule),
                     severity="warning",
                     category="photo",
                     title="Photograph could not be analysed",
@@ -969,6 +1041,7 @@ class RulesEngine:
             issues.append(
                 make_issue(
                     rule_id=f"{rule['id']}.{title[:24].lower().replace(' ', '_')}",
+                    **_prov(rule),
                     severity=severity or sev,
                     category="photo",
                     title=title,
@@ -1134,6 +1207,7 @@ class RulesEngine:
         return [
             make_issue(
                 rule_id=rule["id"],
+                **_prov(rule),
                 severity=rule.get("severity", "critical"),
                 category="missing_document",
                 title=rule.get("title") or "No proof of your stated status was found",

@@ -25,7 +25,15 @@ import {
   formatEvidenceValue,
   titleCase,
 } from "@/lib/format";
-import type { AiStatus, Check, Issue, Severity } from "@/lib/types";
+import type { AiStatus, Authority, Check, Issue, Severity } from "@/lib/types";
+
+/** Tell the user whether a finding rests on law or on our own judgement. */
+const AUTHORITY_LABEL: Record<Authority, string> = {
+  law: "This is a legal requirement.",
+  member_state: "This figure is published by the destination country.",
+  official_guidance: "Based on published official guidance.",
+  heuristic: "Our own guidance, not an official requirement.",
+};
 
 const GROUPS: { severity: Severity; heading: string; blurb: string }[] = [
   {
@@ -401,10 +409,32 @@ function IssueCard({ issue, index }: { issue: Issue; index: number }) {
         </div>
       )}
 
-      {lowConfidence && (
-        <p className="border-t border-line px-4 py-2 text-xs text-muted">
-          Lower confidence finding — please verify this yourself before acting on it.
-        </p>
+      {(issue.authority || lowConfidence) && (
+        <div className="border-t border-line px-4 py-2 text-xs text-muted">
+          {issue.authority && (
+            <p>
+              <span className="font-medium text-ink">{AUTHORITY_LABEL[issue.authority]}</span>
+              {issue.sources?.[0] && (
+                <>
+                  {" "}
+                  <a
+                    href={issue.sources[0]}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="text-brand-700 underline"
+                  >
+                    Source
+                  </a>
+                </>
+              )}
+            </p>
+          )}
+          {lowConfidence && (
+            <p className={issue.authority ? "mt-1" : undefined}>
+              Lower confidence finding — please verify this yourself before acting on it.
+            </p>
+          )}
+        </div>
       )}
     </Card>
   );

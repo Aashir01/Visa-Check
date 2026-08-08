@@ -27,6 +27,15 @@ RULE_TYPES = {
 }
 SEVERITIES = {"critical", "warning", "info"}
 
+# Where a requirement comes from. Recorded per rule so a report can tell the
+# user whether a finding rests on law or on our own judgement.
+AUTHORITIES = {
+    "law",            # statute or regulation, e.g. EU Visa Code Art. 15
+    "member_state",   # a state's own published figure, e.g. Spain's SMI rule
+    "official_guidance",  # published consulate / ministry guidance
+    "heuristic",      # our own calibration, not an official requirement
+}
+
 REQUIRED_PARAMS: dict[str, list[str]] = {
     "field_consistency": ["field", "across"],
     "financial_sufficiency": ["method"],
@@ -125,6 +134,21 @@ def validate_pack(pack: dict) -> list[str]:
 
         if rule.get("severity", "warning") not in SEVERITIES:
             errors.append(f"{where}: severity must be one of {sorted(SEVERITIES)}.")
+
+        authority = rule.get("authority")
+        if authority is not None and authority not in AUTHORITIES:
+            errors.append(
+                f"{where}: authority must be one of {sorted(AUTHORITIES)}."
+            )
+        srcs = rule.get("sources")
+        if srcs is not None and not isinstance(srcs, list):
+            errors.append(f"{where}: 'sources' must be a list of URLs.")
+        # A rule presented as law must say where that law is written.
+        if authority in ("law", "member_state") and not srcs:
+            errors.append(
+                f"{where}: authority '{authority}' requires at least one entry in "
+                "'sources' — a requirement claimed as official must cite it."
+            )
 
         params = rule.get("params") or {}
         if not isinstance(params, dict):
@@ -246,6 +270,23 @@ def _validate_ranges(where: str, rtype: str, params: dict) -> list[str]:
             errors.append(f"{where}: method '{method}' requires params.per_day_amount.")
         if method in ("fixed", "per_day_plus_fixed") and params.get("amount") is None:
             errors.append(f"{where}: method '{method}' requires params.amount.")
+
+    if rtype == "financial_sufficiency":
+        table = params.get("per_destination")
+        if table is not None:
+            if not isinstance(table, dict):
+                errors.append(f"{where}: params.per_destination must be an object.")
+            else:
+                for code, override in table.items():
+                    if len(code) != 2 or not code.isalpha():
+                        errors.append(
+                            f"{where}: per_destination key '{code}' must be an "
+                            "ISO-3166 alpha-2 country code."
+                        )
+                    if not isinstance(override, dict):
+                        errors.append(
+                            f"{where}: per_destination.{code} must be an object."
+                        )
 
     if rtype == "sudden_deposit":
         ratio = params.get("ratio")
