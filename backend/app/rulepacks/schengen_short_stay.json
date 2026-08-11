@@ -1,0 +1,580 @@
+{
+  "schema_version": 2,
+  "corridor_key": "schengen_short_stay",
+  "version": "1.0.0",
+  "title": "Schengen short-stay (Type C) \u00e2\u20ac\u201d Global",
+  "unverified": true,
+  "effective_date": "2026-08-11",
+  "currency": "EUR",
+  "default_trip_days": 10,
+  "review_cadence_days": 30,
+  "provenance": {
+    "researched_at": "2026-08-11",
+    "verified_against_casework": false,
+    "summary": "EU-wide rules from Regulation (EC) No 810/2009 (Visa Code). Covers 29 Schengen countries. Funds are per member state \u00e2\u20ac\u201d set destination_country (ISO alpha-2) in applicant_meta.",
+    "sources": [
+      {
+        "title": "Regulation (EC) No 810/2009 \u00e2\u20ac\u201d Visa Code",
+        "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      },
+      {
+        "title": "Your Europe \u00e2\u20ac\u201d Travel documents for non-EU nationals",
+        "url": "https://europa.eu/youreurope/citizens/travel/entry-exit/non-eu-nationals/index_en.htm"
+      }
+    ]
+  },
+  "source_notes": [
+    "Covers all 29 Schengen countries. Check if your nationality needs a visa at EU regulation 1806/2018.",
+    "Passport: valid 3+ months beyond departure, issued within 10 years, 2 blank pages (Visa Code Art. 12).",
+    "Insurance: \u00e2\u201a\u00ac30,000+ cover, emergency, hospitalisation, repatriation (Visa Code Art. 15).",
+    "Funds: vary by member state. Defaults to Spain (\u00e2\u201a\u00ac122.10/day). Set destination_country for correct threshold.",
+    "EES live since 10 April 2026 at all Schengen external borders."
+  ],
+  "disclaimer": "Document completeness check. Not immigration advice.",
+  "fx": {
+    "base": "EUR",
+    "updated": "2026-08-11",
+    "rates": {
+      "USD": 1.09,
+      "GBP": 0.84,
+      "INR": 92,
+      "PKR": 315,
+      "SAR": 4.09,
+      "AED": 4.0,
+      "TRY": 38,
+      "CNY": 7.8,
+      "NGN": 1750,
+      "RUB": 95,
+      "CAD": 1.48,
+      "AUD": 1.65,
+      "JPY": 158
+    }
+  },
+  "severity_weights": {
+    "critical": 22,
+    "warning": 8,
+    "info": 2
+  },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed",
+    "student": "Student",
+    "retired": "Retired",
+    "unemployed": "Unemployed"
+  },
+  "ocr": {
+    "provider": null
+  },
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport (bio-data page)",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "why": "Valid 3+ months beyond departure, issued within 10 years, 2 blank pages.",
+      "fix": "Upload clear scan of bio-data page with MRZ."
+    },
+    {
+      "key": "application_form",
+      "label": "Schengen visa application form",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "why": "Visa Code Art. 11: harmonised form, completed and signed.",
+      "fix": "Complete and sign the form."
+    },
+    {
+      "key": "photo",
+      "label": "Passport photograph (ICAO)",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "why": "35x45mm, colour, light background, recent (6 months).",
+      "fix": "Upload studio photograph."
+    },
+    {
+      "key": "travel_insurance",
+      "label": "Travel medical insurance",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "why": "\u00e2\u201a\u00ac30,000+ cover, emergency, hospitalisation, repatriation, valid across Schengen.",
+      "fix": "Purchase Schengen-compliant policy."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement (3-6 months)",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "bank_letter"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "why": "Proof of sufficient means (Visa Code Art. 14).",
+      "fix": "Bank statement showing regular income and balance."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Round-trip flight reservation",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "why": "Round-trip itinerary showing entry and exit.",
+      "fix": "Flight reservation \u00e2\u20ac\u201d do not purchase before decision."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Proof of accommodation",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "invitation_letter"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "why": "Accommodation for every night.",
+      "fix": "Hotel booking or host invitation with address."
+    },
+    {
+      "key": "cover_letter",
+      "label": "Cover letter",
+      "required": true,
+      "severity": "warning",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "Explains itinerary, funding, ties to home.",
+      "fix": "One-page letter with purpose, dates, funding, return reasons."
+    },
+    {
+      "key": "employment_letter",
+      "label": "Employment letter / NOC",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "Confirms position, salary, leave, return.",
+      "fix": "Letter on letterhead with role, salary, leave dates."
+    },
+    {
+      "key": "business_registration",
+      "label": "Business registration / licence",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "Proves business ownership and income.",
+      "fix": "Upload registration, licence, tax returns."
+    },
+    {
+      "key": "student_enrollment",
+      "label": "Student enrolment letter",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "student"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "Confirms enrolment and approved absence.",
+      "fix": "Letter from institution."
+    },
+    {
+      "key": "pension_statement",
+      "label": "Pension / retirement proof",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "retired"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "Stable income for retired applicants.",
+      "fix": "Upload pension statements."
+    },
+    {
+      "key": "sponsor_letter",
+      "label": "Sponsorship letter",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "student",
+        "unemployed",
+        "retired"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "If funded by another person.",
+      "fix": "Sponsor's letter + bank statements + ID copy."
+    },
+    {
+      "key": "invitation_letter",
+      "label": "Invitation letter",
+      "required": false,
+      "severity": "info",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "If staying with host.",
+      "fix": "Host's signed invitation with address and ID."
+    },
+    {
+      "key": "tax_return",
+      "label": "Income tax return",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "employed",
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "Strengthens economic ties.",
+      "fix": "Upload recent tax returns."
+    },
+    {
+      "key": "marriage_certificate",
+      "label": "Marriage certificate",
+      "required": false,
+      "severity": "info",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://schengenvisainfo.com/requirements/"
+      ],
+      "why": "Family ties evidence.",
+      "fix": "Upload marriage certificate."
+    }
+  ],
+  "rules": [
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport meets Schengen requirements",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "params": {
+        "min_days_after_return": 90,
+        "max_issue_age_years": 10
+      },
+      "fix": "Renew passport. Must be valid 3+ months beyond departure, issued within 10 years."
+    },
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Name consistency",
+      "category": "consistency",
+      "passed_label": "Name matches across documents",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": [
+          "passport",
+          "bank_statement",
+          "flight_ticket",
+          "travel_insurance",
+          "application_form",
+          "employment_letter"
+        ]
+      },
+      "fix": "Every document must show name exactly as in passport."
+    },
+    {
+      "id": "consistency.dob",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Date of birth consistency",
+      "category": "consistency",
+      "passed_label": "DOB matches across documents",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "date_of_birth",
+        "mode": "date",
+        "across": [
+          "passport",
+          "application_form"
+        ]
+      },
+      "fix": "Correct date of birth to match passport."
+    },
+    {
+      "id": "consistency.passport_number",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Passport number consistency",
+      "category": "consistency",
+      "passed_label": "Passport number matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "passport_number",
+        "mode": "exact",
+        "across": [
+          "passport",
+          "application_form",
+          "travel_insurance",
+          "flight_ticket"
+        ]
+      },
+      "fix": "Correct passport number on all documents."
+    },
+    {
+      "id": "financial.sufficiency",
+      "type": "financial_sufficiency",
+      "severity": "critical",
+      "title": "Means of subsistence",
+      "category": "financial",
+      "passed_label": "Funds meet destination threshold",
+      "authority": "member_state",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://schengenvisainfo.com/means-of-subsistence/"
+      ],
+      "params": {
+        "method": "per_day",
+        "balance_field": "closing_balance",
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ],
+        "currency": "EUR",
+        "default_destination": "ES",
+        "per_day_amount": 122.1,
+        "minimum_total": 1098.9,
+        "per_destination": {
+          "ES": {
+            "per_day_amount": 122.1,
+            "minimum_total": 1098.9
+          },
+          "FR": {
+            "per_day_amount": 65,
+            "minimum_total": 0
+          },
+          "DE": {
+            "per_day_amount": 45,
+            "minimum_total": 0
+          },
+          "IT": {
+            "per_day_amount": 50,
+            "minimum_total": 0
+          },
+          "NL": {
+            "per_day_amount": 34,
+            "minimum_total": 0
+          },
+          "BE": {
+            "per_day_amount": 95,
+            "minimum_total": 0
+          },
+          "AT": {
+            "per_day_amount": 100,
+            "minimum_total": 0
+          },
+          "GR": {
+            "per_day_amount": 50,
+            "minimum_total": 0
+          },
+          "PT": {
+            "per_day_amount": 75,
+            "minimum_total": 0
+          },
+          "CH": {
+            "per_day_amount": 100,
+            "minimum_total": 0
+          }
+        }
+      },
+      "fix": "Build balance well before applying. Sudden large deposits are flagged."
+    },
+    {
+      "id": "financial.recency",
+      "type": "statement_recency",
+      "severity": "warning",
+      "title": "Bank statement recency",
+      "category": "financial",
+      "passed_label": "Statement is within 30 days",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "max_age_days": 30,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "Provide statement no older than 30 days."
+    },
+    {
+      "id": "financial.history",
+      "type": "statement_history",
+      "severity": "warning",
+      "title": "Statement period",
+      "category": "financial",
+      "passed_label": "Statement covers 3+ months",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "min_months": 3,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "Provide statements covering at least 3 months."
+    },
+    {
+      "id": "financial.sudden",
+      "type": "sudden_deposit",
+      "severity": "warning",
+      "title": "Large sudden deposit",
+      "category": "financial",
+      "passed_label": "No suspicious deposits",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "ratio": 0.25,
+        "source_documents": [
+          "bank_statement"
+        ]
+      },
+      "fix": "Explain any deposit exceeding 25% of balance."
+    }
+  ],
+  "llm_review": {
+    "note": "AI review of free-text documents.",
+    "criteria": [
+      {
+        "id": "cover_purpose",
+        "question": "Does the cover letter clearly state the purpose of travel?",
+        "document": "cover_letter",
+        "label": "cover_purpose",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "cover_funding",
+        "question": "Does the cover letter state who is paying?",
+        "document": "cover_letter",
+        "label": "cover_funding",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "cover_ties",
+        "question": "Does the cover letter describe ties to home country?",
+        "document": "cover_letter",
+        "label": "cover_ties",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "employment_leave",
+        "question": "Does employment letter confirm approved leave?",
+        "document": "cover_letter",
+        "label": "employment_leave",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      }
+    ]
+  }
+}

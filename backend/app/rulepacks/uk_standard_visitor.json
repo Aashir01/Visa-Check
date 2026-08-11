@@ -1,0 +1,459 @@
+{
+  "schema_version": 2,
+  "corridor_key": "uk_standard_visitor",
+  "version": "1.0.0",
+  "title": "UK Standard Visitor \u00e2\u20ac\u201d Global",
+  "unverified": true,
+  "effective_date": "2026-08-11",
+  "currency": "GBP",
+  "default_trip_days": 14,
+  "review_cadence_days": 30,
+  "provenance": {
+    "researched_at": "2026-08-11",
+    "verified_against_casework": false,
+    "summary": "UK Standard Visitor rules under Appendix V of the Immigration Rules. Up to 6 months for tourism, family visits, business, short study. Visa required, ETA (\u00c2\u00a310), or visa-free depending on nationality. No fixed financial minimum published.",
+    "sources": [
+      {
+        "title": "GOV.UK \u00e2\u20ac\u201d Visit the UK as a Standard Visitor",
+        "url": "https://www.gov.uk/standard-visitor"
+      },
+      {
+        "title": "Check if you need a UK visa",
+        "url": "https://www.gov.uk/check-uk-visa"
+      }
+    ]
+  },
+  "source_notes": [
+    "Visa fee: \u00c2\u00a3135 for up to 6 months. Apply online at gov.uk. Earliest: 3 months before travel.",
+    "ETA (\u00c2\u00a310, 2-year validity): for EU/EEA, USA, Canada, Australia, Japan, and other visa-free nationals.",
+    "No fixed financial minimum. Must show ability to support yourself + return journey.",
+    "Passport valid for entire stay. No minimum beyond departure date.",
+    "NHS not free for visitors \u00e2\u20ac\u201d charged 150% of tariff. Travel insurance strongly recommended."
+  ],
+  "disclaimer": "Document completeness check. Not immigration advice.",
+  "fx": {
+    "base": "GBP",
+    "updated": "2026-08-11",
+    "rates": {
+      "USD": 1.3,
+      "EUR": 1.19,
+      "INR": 109,
+      "PKR": 375,
+      "NGN": 2080,
+      "SAR": 4.87,
+      "AED": 4.76,
+      "CNY": 9.3,
+      "RUB": 113,
+      "TRY": 45,
+      "CAD": 1.76,
+      "AUD": 1.96,
+      "JPY": 188
+    }
+  },
+  "severity_weights": {
+    "critical": 22,
+    "warning": 8,
+    "info": 2
+  },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed",
+    "student": "Student",
+    "retired": "Retired",
+    "unemployed": "Unemployed"
+  },
+  "ocr": {
+    "provider": null
+  },
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Valid for duration of stay.",
+      "fix": "Upload clear scan of bio-data page."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement (3-6 months)",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "bank_letter"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Show you can support yourself + return journey.",
+      "fix": "Bank statement showing regular income and balance."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Travel itinerary",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Planned entry and exit from UK.",
+      "fix": "Round-trip flight reservation."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Accommodation proof",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "invitation_letter"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Where you will stay.",
+      "fix": "Hotel booking or host invitation with address."
+    },
+    {
+      "key": "cover_letter",
+      "label": "Cover letter",
+      "required": true,
+      "severity": "warning",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Purpose, dates, funding, ties to home.",
+      "fix": "One-page letter explaining your visit."
+    },
+    {
+      "key": "employment_letter",
+      "label": "Employment letter",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Confirms position, salary, leave, return.",
+      "fix": "Letter on letterhead with role, salary, leave dates."
+    },
+    {
+      "key": "business_registration",
+      "label": "Business documents",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Proves business ownership.",
+      "fix": "Upload registration, licence, tax returns."
+    },
+    {
+      "key": "student_enrollment",
+      "label": "Student enrolment letter",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "student"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Confirms enrolment.",
+      "fix": "Letter from institution."
+    },
+    {
+      "key": "pension_statement",
+      "label": "Pension proof",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "retired"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Stable income for retired.",
+      "fix": "Upload pension statements."
+    },
+    {
+      "key": "sponsor_letter",
+      "label": "Sponsorship letter",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "student",
+        "unemployed",
+        "retired"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "If funded by another person.",
+      "fix": "Sponsor's letter + bank statements."
+    },
+    {
+      "key": "invitation_letter",
+      "label": "Invitation from UK host",
+      "required": false,
+      "severity": "info",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "If staying with host.",
+      "fix": "Host's invitation with address and UK status."
+    },
+    {
+      "key": "tax_return",
+      "label": "Tax return",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "employed",
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "why": "Strengthens economic ties.",
+      "fix": "Upload recent tax returns."
+    }
+  ],
+  "rules": [
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport valid for stay",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://www.gov.uk/standard-visitor"
+      ],
+      "params": {
+        "min_days_after_return": 0
+      },
+      "fix": "Passport must be valid for entire stay."
+    },
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Name consistency",
+      "category": "consistency",
+      "passed_label": "Name matches across documents",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": [
+          "passport",
+          "bank_statement",
+          "flight_ticket",
+          "employment_letter"
+        ]
+      },
+      "fix": "Name must match passport exactly."
+    },
+    {
+      "id": "consistency.dob",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "DOB consistency",
+      "category": "consistency",
+      "passed_label": "DOB matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "date_of_birth",
+        "mode": "date",
+        "across": [
+          "passport"
+        ]
+      },
+      "fix": "Correct DOB to match passport."
+    },
+    {
+      "id": "consistency.passport_number",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Passport number consistency",
+      "category": "consistency",
+      "passed_label": "Passport number matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "passport_number",
+        "mode": "exact",
+        "across": [
+          "passport",
+          "flight_ticket"
+        ]
+      },
+      "fix": "Correct passport number."
+    },
+    {
+      "id": "financial.sufficiency",
+      "type": "financial_sufficiency",
+      "severity": "critical",
+      "title": "Financial means",
+      "category": "financial",
+      "passed_label": "Funds appear sufficient",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "method": "per_day",
+        "balance_field": "closing_balance",
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ],
+        "currency": "GBP",
+        "per_day_amount": 100,
+        "minimum_total": 500
+      },
+      "fix": "\u00c2\u00a3100/day heuristic. UK publishes no fixed minimum."
+    },
+    {
+      "id": "financial.recency",
+      "type": "statement_recency",
+      "severity": "warning",
+      "title": "Statement recency",
+      "category": "financial",
+      "passed_label": "Statement within 30 days",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "max_age_days": 30,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "Provide recent statement."
+    },
+    {
+      "id": "financial.history",
+      "type": "statement_history",
+      "severity": "warning",
+      "title": "Statement period",
+      "category": "financial",
+      "passed_label": "3+ months covered",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "min_months": 3,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "Provide 3-6 months of statements."
+    },
+    {
+      "id": "financial.sudden",
+      "type": "sudden_deposit",
+      "severity": "warning",
+      "title": "Large deposit",
+      "category": "financial",
+      "passed_label": "No suspicious deposits",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "ratio": 0.25,
+        "source_documents": [
+          "bank_statement"
+        ]
+      },
+      "fix": "Explain deposits exceeding 25% of balance."
+    }
+  ],
+  "llm_review": {
+    "note": "AI review of free-text documents.",
+    "criteria": [
+      {
+        "id": "cover_purpose",
+        "question": "Is the purpose of the UK visit clearly stated?",
+        "document": "cover_letter",
+        "label": "cover_purpose",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "cover_ties",
+        "question": "Does the letter explain ties to home country?",
+        "document": "cover_letter",
+        "label": "cover_ties",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "employment_leave",
+        "question": "Does employment letter confirm leave and return?",
+        "document": "cover_letter",
+        "label": "employment_leave",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      }
+    ]
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "schema_version": 2,
+  "corridor_key": "turkey_tourist",
+  "version": "1.0.0",
+  "title": "Turkey Tourist / e-Visa \u00e2\u20ac\u201d Global",
+  "unverified": true,
+  "effective_date": "2026-08-11",
+  "currency": "TRY",
+  "default_trip_days": 10,
+  "review_cadence_days": 30,
+  "provenance": {
+    "researched_at": "2026-08-11",
+    "verified_against_casework": false,
+    "summary": "Turkey e-Visa (online at evisa.gov.tr) and tourist visa. e-Visa eligible for many nationalities. Visa-free for EU, Japan, Korea etc. Sticker visa from embassy for India, Pakistan, Nigeria, etc. 6-month passport validity required.",
+    "sources": [
+      {
+        "title": "Turkey e-Visa",
+        "url": "https://www.evisa.gov.tr/"
+      },
+      {
+        "title": "MFA Turkey \u00e2\u20ac\u201d Visa Information",
+        "url": "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa"
+      }
+    ]
+  },
+  "source_notes": [
+    "e-Visa: online, $20-80 USD, multiple/single entry.",
+    "Visa-free: most EU, Japan, South Korea, Singapore, etc.",
+    "Visa-required (embassy): India, Pakistan, Philippines, Nigeria.",
+    "Passport 6+ months from entry.",
+    "e-Visa needs only passport + payment. Sticker visa needs standard documents."
+  ],
+  "disclaimer": "Document completeness check. Verify at evisa.gov.tr.",
+  "fx": {
+    "base": "TRY",
+    "updated": "2026-08-11",
+    "rates": {
+      "USD": 0.029,
+      "EUR": 0.026,
+      "GBP": 0.022,
+      "INR": 2.44,
+      "PKR": 8.3,
+      "SAR": 0.109,
+      "NGN": 46.5
+    }
+  },
+  "severity_weights": {
+    "critical": 22,
+    "warning": 8,
+    "info": 2
+  },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed",
+    "student": "Student",
+    "retired": "Retired",
+    "unemployed": "Unemployed"
+  },
+  "ocr": {
+    "provider": null
+  },
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://www.evisa.gov.tr/"
+      ],
+      "why": "6+ months validity from entry.",
+      "fix": "Upload bio-data page."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Round-trip flight",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.evisa.gov.tr/"
+      ],
+      "why": "Round-trip booking.",
+      "fix": "Flight reservation."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Accommodation",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.evisa.gov.tr/"
+      ],
+      "why": "Where you will stay.",
+      "fix": "Hotel booking."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa"
+      ],
+      "why": "For embassy visa applications.",
+      "fix": "3 months bank statement."
+    },
+    {
+      "key": "employment_letter",
+      "label": "Employment letter",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa"
+      ],
+      "why": "For embassy applications.",
+      "fix": "Employer letter."
+    }
+  ],
+  "rules": [
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport valid 6+ months",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://www.evisa.gov.tr/"
+      ],
+      "params": {
+        "min_days_after_return": 180
+      },
+      "fix": "Passport must be valid 6+ months from entry."
+    },
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Name consistency",
+      "category": "consistency",
+      "passed_label": "Name matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": [
+          "passport"
+        ]
+      },
+      "fix": "Name must match passport."
+    }
+  ],
+  "llm_review": {
+    "enabled": false,
+    "targets": [],
+    "criteria": []
+  }
+}

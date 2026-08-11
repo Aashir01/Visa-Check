@@ -1,0 +1,405 @@
+{
+  "schema_version": 2,
+  "corridor_key": "japan_tourist",
+  "version": "1.0.0",
+  "title": "Japan Temporary Visitor Visa \u00e2\u20ac\u201d Global",
+  "unverified": true,
+  "effective_date": "2026-08-11",
+  "currency": "JPY",
+  "default_trip_days": 10,
+  "review_cadence_days": 30,
+  "provenance": {
+    "researched_at": "2026-08-11",
+    "verified_against_casework": false,
+    "summary": "Japan Temporary Visitor visa for tourism (up to 90 days). Visa-waiver for 71 countries (UK, USA, EU, etc.). Others apply at Japanese embassy. Unique: requires day-by-day itinerary.",
+    "sources": [
+      {
+        "title": "MOFA Japan \u00e2\u20ac\u201d Visa for Temporary Visitors",
+        "url": "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      }
+    ]
+  },
+  "source_notes": [
+    "Visa-free (90 days): UK, USA, Canada, Australia, NZ, most EU, Singapore, South Korea, etc.",
+    "Visa-required: India, China, Pakistan, Philippines, Russia, Nigeria, most of Africa.",
+    "Fee: \u00c2\u00a53,000-6,000. Day-by-day itinerary is mandatory for visa applications.",
+    "No fixed financial minimum. ~\u00c2\u00a515,000/day budget travel benchmark.",
+    "Passport valid for entire stay."
+  ],
+  "disclaimer": "Document completeness check. Verify with Japanese embassy.",
+  "fx": {
+    "base": "JPY",
+    "updated": "2026-08-11",
+    "rates": {
+      "USD": 0.0069,
+      "EUR": 0.0063,
+      "GBP": 0.0053,
+      "INR": 0.58,
+      "PKR": 1.99,
+      "NGN": 12.0,
+      "AUD": 0.0105,
+      "CAD": 0.0093
+    }
+  },
+  "severity_weights": {
+    "critical": 22,
+    "warning": 8,
+    "info": 2
+  },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed",
+    "student": "Student",
+    "retired": "Retired",
+    "unemployed": "Unemployed"
+  },
+  "ocr": {
+    "provider": null
+  },
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Valid for entire stay.",
+      "fix": "Upload bio-data page."
+    },
+    {
+      "key": "application_form",
+      "label": "Visa application form",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Standard form from Japanese embassy.",
+      "fix": "Complete and sign form."
+    },
+    {
+      "key": "photo",
+      "label": "Passport photograph (45x35mm)",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "45mm x 35mm, white background.",
+      "fix": "Upload recent photo."
+    },
+    {
+      "key": "cover_letter",
+      "label": "Daily itinerary / schedule of stay",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Japan uniquely requires a day-by-day schedule of activities and accommodation. Mandatory.",
+      "fix": "Create daily schedule: date, city, activities, accommodation for each day."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement (3-6 months)",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "bank_letter"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Proof of sufficient funds.",
+      "fix": "Bank statements."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Flight itinerary",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Round-trip reservation.",
+      "fix": "Flight booking."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Hotel bookings",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Accommodation for entire stay.",
+      "fix": "Hotel reservations for every night."
+    },
+    {
+      "key": "employment_letter",
+      "label": "Employment certificate",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Confirms position, salary, leave.",
+      "fix": "Letter on letterhead."
+    },
+    {
+      "key": "tax_return",
+      "label": "Income tax return",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "employed",
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Required by Japan embassies in many countries.",
+      "fix": "Upload 1-2 years tax returns."
+    },
+    {
+      "key": "business_registration",
+      "label": "Business registration",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Proves business.",
+      "fix": "Registration and tax returns."
+    },
+    {
+      "key": "student_enrollment",
+      "label": "Student enrolment letter",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "student"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "why": "Confirms enrolment.",
+      "fix": "Letter from institution."
+    }
+  ],
+  "rules": [
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport valid for stay",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://www.mofa.go.jp/j_info/visit/visa/index.html"
+      ],
+      "params": {
+        "min_days_after_return": 0
+      },
+      "fix": "Passport valid for entire stay."
+    },
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Name consistency",
+      "category": "consistency",
+      "passed_label": "Name matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": [
+          "passport",
+          "bank_statement",
+          "flight_ticket",
+          "employment_letter",
+          "application_form"
+        ]
+      },
+      "fix": "Name must match passport."
+    },
+    {
+      "id": "consistency.dob",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "DOB consistency",
+      "category": "consistency",
+      "passed_label": "DOB matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "date_of_birth",
+        "mode": "date",
+        "across": [
+          "passport",
+          "application_form"
+        ]
+      },
+      "fix": "Correct DOB."
+    },
+    {
+      "id": "consistency.passport_number",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Passport number consistency",
+      "category": "consistency",
+      "passed_label": "Passport number matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "passport_number",
+        "mode": "exact",
+        "across": [
+          "passport",
+          "application_form",
+          "flight_ticket"
+        ]
+      },
+      "fix": "Correct passport number."
+    },
+    {
+      "id": "financial.sufficiency",
+      "type": "financial_sufficiency",
+      "severity": "critical",
+      "title": "Financial means",
+      "category": "financial",
+      "passed_label": "Funds appear sufficient",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "method": "per_day",
+        "balance_field": "closing_balance",
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ],
+        "currency": "JPY",
+        "per_day_amount": 15000,
+        "minimum_total": 100000
+      },
+      "fix": "~\u00c2\u00a515,000/day benchmark."
+    },
+    {
+      "id": "financial.recency",
+      "type": "statement_recency",
+      "severity": "warning",
+      "title": "Statement recency",
+      "category": "financial",
+      "passed_label": "Within 30 days",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "max_age_days": 30,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "Recent statement."
+    },
+    {
+      "id": "financial.history",
+      "type": "statement_history",
+      "severity": "warning",
+      "title": "Statement period",
+      "category": "financial",
+      "passed_label": "3+ months",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "min_months": 3,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "3-6 months."
+    }
+  ],
+  "llm_review": {
+    "note": "AI review.",
+    "criteria": [
+      {
+        "id": "itinerary_feasibility",
+        "question": "Is the day-by-day itinerary realistic and consistent?",
+        "document": "cover_letter",
+        "label": "itinerary_feasibility",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "itinerary_dates",
+        "question": "Do itinerary dates match flight booking and leave?",
+        "document": "cover_letter",
+        "label": "itinerary_dates",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      }
+    ]
+  }
+}

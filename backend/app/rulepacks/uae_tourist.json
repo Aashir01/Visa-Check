@@ -1,0 +1,195 @@
+{
+  "schema_version": 2,
+  "corridor_key": "uae_tourist",
+  "version": "1.0.0",
+  "title": "UAE Tourist / Visit Visa \u00e2\u20ac\u201d Global",
+  "unverified": true,
+  "effective_date": "2026-08-11",
+  "currency": "AED",
+  "default_trip_days": 7,
+  "review_cadence_days": 30,
+  "provenance": {
+    "researched_at": "2026-08-11",
+    "verified_against_casework": false,
+    "summary": "UAE tourist and visit visa for Dubai, Abu Dhabi etc. Visa-free/on-arrival for many (UK, EU, USA, etc.). Others apply via airlines (Emirates, Etihad), hotels, or agencies. 30 or 90 day options.",
+    "sources": [
+      {
+        "title": "UAE Government \u00e2\u20ac\u201d Tourist visa",
+        "url": "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
+      }
+    ]
+  },
+  "source_notes": [
+    "Passport 6+ months validity from entry.",
+    "Visa-free/on-arrival: UK, EU, USA, Canada, Australia, Japan, and many others.",
+    "Visa-required: India, Pakistan, Bangladesh, Nigeria, many African/Asian countries. Apply via airline or agency.",
+    "Travel insurance mandatory for visa applications."
+  ],
+  "disclaimer": "Document completeness check. UAE rules change frequently.",
+  "fx": {
+    "base": "AED",
+    "updated": "2026-08-11",
+    "rates": {
+      "USD": 0.272,
+      "EUR": 0.25,
+      "GBP": 0.21,
+      "INR": 22.9,
+      "PKR": 78.5,
+      "SAR": 1.0,
+      "NGN": 436
+    }
+  },
+  "severity_weights": {
+    "critical": 22,
+    "warning": 8,
+    "info": 2
+  },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed",
+    "student": "Student",
+    "retired": "Retired",
+    "unemployed": "Unemployed"
+  },
+  "ocr": {
+    "provider": null
+  },
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
+      ],
+      "why": "6+ months validity from entry.",
+      "fix": "Upload bio-data page."
+    },
+    {
+      "key": "photo",
+      "label": "Passport photograph",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
+      ],
+      "why": "White background, colour.",
+      "fix": "Upload recent passport photo."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Confirmed round-trip flight",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
+      ],
+      "why": "Confirmed booking normally required.",
+      "fix": "Upload flight booking."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Hotel booking / host details",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
+      ],
+      "why": "Accommodation proof.",
+      "fix": "Hotel reservation or host details."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
+      ],
+      "why": "Sometimes required.",
+      "fix": "Bank statement (3 months)."
+    },
+    {
+      "key": "travel_insurance",
+      "label": "Travel insurance",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
+      ],
+      "why": "Mandatory for UAE visa.",
+      "fix": "Upload insurance policy."
+    }
+  ],
+  "rules": [
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport valid 6+ months",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
+      ],
+      "params": {
+        "min_days_after_return": 180
+      },
+      "fix": "Passport must be valid 6+ months from entry."
+    },
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Name consistency",
+      "category": "consistency",
+      "passed_label": "Name matches passport",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": [
+          "passport"
+        ]
+      },
+      "fix": "Name must match passport."
+    }
+  ],
+  "llm_review": {
+    "enabled": false,
+    "targets": [],
+    "criteria": []
+  }
+}

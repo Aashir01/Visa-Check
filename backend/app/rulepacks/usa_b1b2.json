@@ -1,0 +1,474 @@
+{
+  "schema_version": 2,
+  "corridor_key": "usa_b1b2",
+  "version": "1.0.0",
+  "title": "USA B1/B2 Visitor Visa \u00e2\u20ac\u201d Global",
+  "unverified": true,
+  "effective_date": "2026-08-11",
+  "currency": "USD",
+  "default_trip_days": 14,
+  "review_cadence_days": 30,
+  "provenance": {
+    "researched_at": "2026-08-11",
+    "verified_against_casework": false,
+    "summary": "US B1/B2 visitor visa under INA. B1 (business) or B2 (tourism). Visa-required for most nationals; ESTA (VWP) for eligible countries. Key: overcome presumption of immigrant intent (INA \u00c2\u00a7214b) by showing ties to home country.",
+    "sources": [
+      {
+        "title": "US Dept of State \u00e2\u20ac\u201d Visitor Visa",
+        "url": "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      },
+      {
+        "title": "Visa Waiver Program \u00e2\u20ac\u201d ESTA",
+        "url": "https://esta.cbp.dhs.gov/"
+      }
+    ]
+  },
+  "source_notes": [
+    "B1/B2 fee: $185. Interview required at US embassy/consulate. Check wait times at travel.state.gov.",
+    "Visa Waiver Program (ESTA $21, 2 years): UK, most EU, Australia, Japan, South Korea, Singapore, Chile, etc.",
+    "Canada/Bermuda citizens: generally visa-exempt for visits.",
+    "\u00c2\u00a7214(b) INA: every B1/B2 applicant presumed intending immigrant. Must prove otherwise.",
+    "NO published minimum bank balance. Evidence of ties (job, family, property) matters more.",
+    "Passport typically 6 months beyond stay. Check country-specific agreements.",
+    "DS-160 online form is mandatory for all B1/B2 applicants."
+  ],
+  "disclaimer": "Document completeness check. Not immigration advice.",
+  "fx": {
+    "base": "USD",
+    "updated": "2026-08-11",
+    "rates": {
+      "EUR": 0.92,
+      "GBP": 0.77,
+      "INR": 84,
+      "PKR": 288,
+      "NGN": 1600,
+      "SAR": 3.75,
+      "AED": 3.67,
+      "CNY": 7.15,
+      "RUB": 87,
+      "TRY": 34.5,
+      "CAD": 1.35,
+      "AUD": 1.51,
+      "JPY": 145,
+      "KRW": 1270
+    }
+  },
+  "severity_weights": {
+    "critical": 22,
+    "warning": 8,
+    "info": 2
+  },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed",
+    "student": "Student",
+    "retired": "Retired",
+    "unemployed": "Unemployed"
+  },
+  "ocr": {
+    "provider": null
+  },
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Valid passport, typically 6+ months beyond stay.",
+      "fix": "Upload clear scan of bio-data page."
+    },
+    {
+      "key": "application_form",
+      "label": "DS-160 confirmation page",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "DS-160 Online Nonimmigrant Visa Application is mandatory.",
+      "fix": "Complete DS-160 at ceac.state.gov and upload confirmation with barcode."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement (3-6 months)",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "bank_letter"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Evidence of ability to fund trip. No fixed minimum.",
+      "fix": "Bank statements showing regular income and balance."
+    },
+    {
+      "key": "employment_letter",
+      "label": "Employment verification letter",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Strongest tie document. Shows position, salary, approved leave, return.",
+      "fix": "Letter on letterhead: role, salary, hire date, approved leave, return confirmation."
+    },
+    {
+      "key": "business_registration",
+      "label": "Business documents",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Proves legitimate business you would not abandon.",
+      "fix": "Registration, licence, tax returns, company bank statements."
+    },
+    {
+      "key": "student_enrollment",
+      "label": "Student enrolment verification",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "student"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Shows intent to return and complete studies.",
+      "fix": "Letter from institution confirming enrolment and expected completion."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Round-trip flight itinerary",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Planned entry and exit. Reservation sufficient.",
+      "fix": "Round-trip flight reservation."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Accommodation proof",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "invitation_letter"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Where you will stay.",
+      "fix": "Hotel booking or host invitation."
+    },
+    {
+      "key": "cover_letter",
+      "label": "Cover letter / travel plan",
+      "required": true,
+      "severity": "warning",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Summarises purpose, itinerary, and \u00e2\u20ac\u201d critically \u00e2\u20ac\u201d reasons to return.",
+      "fix": "One-page letter: purpose, dates, funding, compelling reasons to return."
+    },
+    {
+      "key": "property_document",
+      "label": "Property ownership proof",
+      "required": false,
+      "severity": "info",
+      "profiles": [
+        "*"
+      ],
+      "authority": "heuristic",
+      "sources": [],
+      "why": "Strong tie evidence. Highly persuasive at interview.",
+      "fix": "Upload property deed or title."
+    },
+    {
+      "key": "marriage_certificate",
+      "label": "Marriage / family documents",
+      "required": false,
+      "severity": "info",
+      "profiles": [
+        "*"
+      ],
+      "authority": "heuristic",
+      "sources": [],
+      "why": "Family ties key to overcoming 214(b).",
+      "fix": "Upload marriage certificate."
+    },
+    {
+      "key": "tax_return",
+      "label": "Income tax returns (1-3 years)",
+      "required": false,
+      "severity": "warning",
+      "profiles": [
+        "employed",
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "Strong economic ties evidence.",
+      "fix": "Upload recent filed tax returns."
+    },
+    {
+      "key": "invitation_letter",
+      "label": "Invitation (from US host)",
+      "required": false,
+      "severity": "info",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "why": "If visiting friends/family.",
+      "fix": "Host's letter with dates, address, US status."
+    }
+  ],
+  "rules": [
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport meets US requirements",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html"
+      ],
+      "params": {
+        "min_days_after_return": 180
+      },
+      "fix": "Renew passport. US generally requires 6 months validity beyond stay."
+    },
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Name consistency",
+      "category": "consistency",
+      "passed_label": "Name matches across documents",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": [
+          "passport",
+          "bank_statement",
+          "flight_ticket",
+          "employment_letter",
+          "application_form"
+        ]
+      },
+      "fix": "Name must match passport exactly."
+    },
+    {
+      "id": "consistency.dob",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "DOB consistency",
+      "category": "consistency",
+      "passed_label": "DOB matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "date_of_birth",
+        "mode": "date",
+        "across": [
+          "passport",
+          "application_form"
+        ]
+      },
+      "fix": "Correct DOB to match passport."
+    },
+    {
+      "id": "consistency.passport_number",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Passport number consistency",
+      "category": "consistency",
+      "passed_label": "Passport number matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "passport_number",
+        "mode": "exact",
+        "across": [
+          "passport",
+          "application_form",
+          "flight_ticket"
+        ]
+      },
+      "fix": "Correct passport number."
+    },
+    {
+      "id": "financial.sufficiency",
+      "type": "financial_sufficiency",
+      "severity": "critical",
+      "title": "Financial means",
+      "category": "financial",
+      "passed_label": "Funds appear sufficient",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "method": "per_day",
+        "balance_field": "closing_balance",
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ],
+        "currency": "USD",
+        "per_day_amount": 200,
+        "minimum_total": 1500
+      },
+      "fix": "$200/day heuristic. US has no published minimum. Ties matter more than balance."
+    },
+    {
+      "id": "financial.recency",
+      "type": "statement_recency",
+      "severity": "warning",
+      "title": "Statement recency",
+      "category": "financial",
+      "passed_label": "Within 30 days",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "max_age_days": 30,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "Provide recent statement."
+    },
+    {
+      "id": "financial.history",
+      "type": "statement_history",
+      "severity": "warning",
+      "title": "Statement period",
+      "category": "financial",
+      "passed_label": "3+ months covered",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "min_months": 3,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "3-6 months of statements."
+    },
+    {
+      "id": "financial.sudden",
+      "type": "sudden_deposit",
+      "severity": "warning",
+      "title": "Large deposit",
+      "category": "financial",
+      "passed_label": "No suspicious deposits",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "ratio": 0.2,
+        "source_documents": [
+          "bank_statement"
+        ]
+      },
+      "fix": "Large sudden deposits are a red flag for 214(b)."
+    }
+  ],
+  "llm_review": {
+    "note": "AI review of free-text documents.",
+    "criteria": [
+      {
+        "id": "cover_ties",
+        "question": "Does the cover letter present compelling reasons to return home? (Key 214b factor)",
+        "document": "cover_letter",
+        "label": "cover_ties",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "cover_purpose",
+        "question": "Is US visit purpose clearly and credibly stated?",
+        "document": "cover_letter",
+        "label": "cover_purpose",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "employment_tenure",
+        "question": "Does employment letter show stable long-term employment?",
+        "document": "cover_letter",
+        "label": "employment_tenure",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      }
+    ]
+  }
+}

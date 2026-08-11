@@ -1,0 +1,385 @@
+{
+  "schema_version": 2,
+  "corridor_key": "australia_visitor",
+  "version": "1.0.0",
+  "title": "Australia Visitor Visa \u00e2\u20ac\u201d Global",
+  "unverified": true,
+  "effective_date": "2026-08-11",
+  "currency": "AUD",
+  "default_trip_days": 14,
+  "review_cadence_days": 30,
+  "provenance": {
+    "researched_at": "2026-08-11",
+    "verified_against_casework": false,
+    "summary": "Australia Visitor visa (subclass 600) for tourism, family visits, business. ETA (601) for eligible nationals, eVisitor (651) for EU/EEA. Subclass 600 ($195 AUD) for visa-required nationals.",
+    "sources": [
+      {
+        "title": "Home Affairs \u00e2\u20ac\u201d Visitor visa (subclass 600)",
+        "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      }
+    ]
+  },
+  "source_notes": [
+    "Subclass 600: $195 AUD. ETA: $20 AUD online. eVisitor: free for EU/EEA.",
+    "Rough funds guide: AUD 1,000-1,500/month + travel costs.",
+    "Genuine Temporary Entrant (GTE) requirement: must satisfy officer of genuine temporary stay.",
+    "Health insurance strongly recommended."
+  ],
+  "disclaimer": "Document completeness check. Not immigration advice.",
+  "fx": {
+    "base": "AUD",
+    "updated": "2026-08-11",
+    "rates": {
+      "USD": 0.66,
+      "EUR": 0.61,
+      "GBP": 0.51,
+      "INR": 55.7,
+      "PKR": 191,
+      "NGN": 1060,
+      "SAR": 2.48,
+      "AED": 2.43,
+      "CNY": 4.73,
+      "JPY": 96,
+      "CAD": 0.89
+    }
+  },
+  "severity_weights": {
+    "critical": 22,
+    "warning": 8,
+    "info": 2
+  },
+  "profiles": {
+    "employed": "Employed",
+    "self_employed": "Self-employed",
+    "student": "Student",
+    "retired": "Retired",
+    "unemployed": "Unemployed"
+  },
+  "ocr": {
+    "provider": null
+  },
+  "documents": [
+    {
+      "key": "passport",
+      "label": "Passport",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "Valid for duration of stay.",
+      "fix": "Upload bio-data page."
+    },
+    {
+      "key": "bank_statement",
+      "label": "Bank statement (3-6 months)",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "bank_letter"
+      ],
+      "authority": "law",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "AUD 1,000-1,500/month + travel costs guide.",
+      "fix": "Bank statements with regular income."
+    },
+    {
+      "key": "flight_ticket",
+      "label": "Round-trip travel itinerary",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "Planned entry and exit.",
+      "fix": "Flight reservation."
+    },
+    {
+      "key": "hotel_booking",
+      "label": "Accommodation",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "*"
+      ],
+      "satisfied_by": [
+        "invitation_letter"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "Where you will stay.",
+      "fix": "Hotel booking or host invitation."
+    },
+    {
+      "key": "cover_letter",
+      "label": "Cover letter",
+      "required": true,
+      "severity": "warning",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "GTE assessment: purpose, ties to home.",
+      "fix": "One-page letter."
+    },
+    {
+      "key": "employment_letter",
+      "label": "Employment letter",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "Critical for GTE: job ties.",
+      "fix": "Letter on letterhead."
+    },
+    {
+      "key": "business_registration",
+      "label": "Business documents",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "self_employed"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "Proves business ownership.",
+      "fix": "Registration and tax returns."
+    },
+    {
+      "key": "student_enrollment",
+      "label": "Student enrolment letter",
+      "required": true,
+      "severity": "critical",
+      "profiles": [
+        "student"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "Confirms enrolment.",
+      "fix": "Letter from institution."
+    },
+    {
+      "key": "invitation_letter",
+      "label": "Invitation (Australian host)",
+      "required": false,
+      "severity": "info",
+      "profiles": [
+        "*"
+      ],
+      "authority": "official_guidance",
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "why": "If visiting friends/family.",
+      "fix": "Host's letter with address and Australian status."
+    }
+  ],
+  "rules": [
+    {
+      "id": "passport.validity",
+      "type": "passport_validity",
+      "severity": "critical",
+      "title": "Passport validity",
+      "category": "validity",
+      "passed_label": "Passport valid for stay",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
+      ],
+      "params": {
+        "min_days_after_return": 0
+      },
+      "fix": "Passport valid for entire stay."
+    },
+    {
+      "id": "consistency.name",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Name consistency",
+      "category": "consistency",
+      "passed_label": "Name matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "full_name",
+        "mode": "name",
+        "across": [
+          "passport",
+          "bank_statement",
+          "flight_ticket",
+          "employment_letter"
+        ]
+      },
+      "fix": "Name must match passport."
+    },
+    {
+      "id": "consistency.dob",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "DOB consistency",
+      "category": "consistency",
+      "passed_label": "DOB matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "date_of_birth",
+        "mode": "date",
+        "across": [
+          "passport"
+        ]
+      },
+      "fix": "Correct DOB."
+    },
+    {
+      "id": "consistency.passport_number",
+      "type": "field_consistency",
+      "severity": "critical",
+      "title": "Passport number consistency",
+      "category": "consistency",
+      "passed_label": "Passport number matches",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "field": "passport_number",
+        "mode": "exact",
+        "across": [
+          "passport",
+          "flight_ticket"
+        ]
+      },
+      "fix": "Correct passport number."
+    },
+    {
+      "id": "financial.sufficiency",
+      "type": "financial_sufficiency",
+      "severity": "critical",
+      "title": "Financial means",
+      "category": "financial",
+      "passed_label": "Funds appear sufficient",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "method": "per_day",
+        "balance_field": "closing_balance",
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ],
+        "currency": "AUD",
+        "per_day_amount": 120,
+        "minimum_total": 800
+      },
+      "fix": "~AUD 120/day heuristic."
+    },
+    {
+      "id": "financial.recency",
+      "type": "statement_recency",
+      "severity": "warning",
+      "title": "Statement recency",
+      "category": "financial",
+      "passed_label": "Within 30 days",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "max_age_days": 30,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "Recent statement."
+    },
+    {
+      "id": "financial.history",
+      "type": "statement_history",
+      "severity": "warning",
+      "title": "Statement period",
+      "category": "financial",
+      "passed_label": "3+ months covered",
+      "authority": "heuristic",
+      "profiles": [
+        "*"
+      ],
+      "params": {
+        "min_months": 3,
+        "source_documents": [
+          "bank_statement",
+          "bank_letter"
+        ]
+      },
+      "fix": "3-6 months of statements."
+    }
+  ],
+  "llm_review": {
+    "note": "AI review.",
+    "criteria": [
+      {
+        "id": "cover_purpose",
+        "question": "Purpose clearly stated?",
+        "document": "cover_letter",
+        "label": "cover_purpose",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "cover_ties",
+        "question": "Ties to home country (GTE)?",
+        "document": "cover_letter",
+        "label": "cover_ties",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      },
+      {
+        "id": "employment_leave",
+        "question": "Leave and return confirmed?",
+        "document": "cover_letter",
+        "label": "employment_leave",
+        "severity": "warning",
+        "passed_label": "Review passed",
+        "fix": "Address the issue noted in the review."
+      }
+    ]
+  }
+}

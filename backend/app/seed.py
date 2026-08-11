@@ -18,17 +18,34 @@ log = logging.getLogger(__name__)
 PACK_DIR = Path(__file__).parent / "rulepacks"
 
 CORRIDORS = [
+    # ── Schengen ──
+    {
+        "key": "schengen_short_stay",
+        "origin_country": "GLOBAL",
+        "destination": "Schengen Area",
+        "visa_type": "short_stay_c",
+        "label": "Schengen short-stay (Type C) — Global",
+        "description": "Tourism, family visit or business travel of up to 90 days in any 180-day period. Covers all 29 Schengen countries. Visa-required or visa-free depending on your nationality.",
+        "pack": "schengen_short_stay.json",
+    },
     {
         "key": "schengen_short_stay_pk",
         "origin_country": "PK",
         "destination": "Schengen Area",
         "visa_type": "short_stay_c",
         "label": "Schengen short-stay (Type C) — from Pakistan",
-        "description": (
-            "Tourism, family visit or business travel of up to 90 days in any "
-            "180-day period."
-        ),
+        "description": "Tourism, family visit or business travel of up to 90 days in any 180-day period.",
         "pack": "schengen_short_stay_pk.json",
+    },
+    # ── United Kingdom ──
+    {
+        "key": "uk_standard_visitor",
+        "origin_country": "GLOBAL",
+        "destination": "United Kingdom",
+        "visa_type": "standard_visitor",
+        "label": "UK Standard Visitor — Global",
+        "description": "Tourism, family visit, business meetings, or short study (up to 6 months). Visa-required, ETA, or visa-free depending on nationality.",
+        "pack": "uk_standard_visitor.json",
     },
     {
         "key": "uk_visitor_pk",
@@ -39,6 +56,67 @@ CORRIDORS = [
         "description": "Tourism, family visit or business visit of up to 6 months.",
         "pack": "uk_visitor_pk.json",
     },
+    # ── United States ──
+    {
+        "key": "usa_b1b2",
+        "origin_country": "GLOBAL",
+        "destination": "United States of America",
+        "visa_type": "b1_b2",
+        "label": "USA B1/B2 Visitor Visa — Global",
+        "description": "Tourism, visiting family/friends, business meetings, or medical treatment. B1/B2 visa or ESTA (Visa Waiver Program) depending on nationality.",
+        "pack": "usa_b1b2.json",
+    },
+    # ── Canada ──
+    {
+        "key": "canada_visitor",
+        "origin_country": "GLOBAL",
+        "destination": "Canada",
+        "visa_type": "temporary_resident",
+        "label": "Canada Visitor Visa (TRV) — Global",
+        "description": "Tourism, visiting family/friends, or business visits. TRV, eTA, or visa-exempt depending on nationality.",
+        "pack": "canada_visitor.json",
+    },
+    # ── Australia ──
+    {
+        "key": "australia_visitor",
+        "origin_country": "GLOBAL",
+        "destination": "Australia",
+        "visa_type": "visitor_600",
+        "label": "Australia Visitor Visa — Global",
+        "description": "Tourism, visiting family/friends, or business visitor activities. Subclass 600, ETA (601), or eVisitor (651) depending on nationality.",
+        "pack": "australia_visitor.json",
+    },
+    # ── UAE ──
+    {
+        "key": "uae_tourist",
+        "origin_country": "GLOBAL",
+        "destination": "United Arab Emirates",
+        "visa_type": "tourist",
+        "label": "UAE Tourist / Visit Visa — Global",
+        "description": "Tourism and visiting in Dubai, Abu Dhabi, and other emirates. Visa-on-arrival, visa-free, or pre-arranged visa depending on nationality.",
+        "pack": "uae_tourist.json",
+    },
+    # ── Japan ──
+    {
+        "key": "japan_tourist",
+        "origin_country": "GLOBAL",
+        "destination": "Japan",
+        "visa_type": "temporary_visitor",
+        "label": "Japan Temporary Visitor Visa — Global",
+        "description": "Tourism, visiting friends/family, or short business trips (up to 90 days). Visa-free for 71 nationalities; visa required for others.",
+        "pack": "japan_tourist.json",
+    },
+    # ── Turkey ──
+    {
+        "key": "turkey_tourist",
+        "origin_country": "GLOBAL",
+        "destination": "Turkey",
+        "visa_type": "tourist",
+        "label": "Turkey Tourist / e-Visa — Global",
+        "description": "Tourism and visiting in Turkey. e-Visa (online, most nationalities), visa-free, or sticker visa from embassy depending on nationality.",
+        "pack": "turkey_tourist.json",
+    },
+    # ── Saudi Arabia ──
     {
         "key": "saudi_umrah_pk",
         "origin_country": "PK",
