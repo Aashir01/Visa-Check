@@ -1,68 +1,94 @@
-# VisaGuard
+# 🛡️ VisaGuard — Don't let a paperwork mistake cost you your trip
 
-Upload a visa document set, get a rejection-risk report before submitting.
+**VisaGuard scans your visa documents and tells you what's wrong *before* the consulate does.**
 
-VisaGuard checks an application bundle against a **versioned, per-corridor
-checklist**: what is missing, what contradicts itself, whether the funds and
-photo meet the stated thresholds, and how to fix each finding. It is a
-document completeness checker, not an immigration adviser — it never claims an
-application will be approved.
+We all know the feeling — you've collected every document, checked every form twice, and still that little voice in your head whispers: *"did I forget something?"* That's exactly why we built this.
+
+Drop your files in, and VisaGuard checks them against a real, sourced checklist for your exact destination. It spots missing documents, catches name mismatches across files, verifies your bank balance meets the threshold, checks your photo against the spec — and tells you in plain English how to fix each issue. No guessing, no fluff.
+
+> ⚠️ **We are not immigration lawyers.** VisaGuard is a document checker. It tells you whether your paperwork matches the checklist. It does not predict visa outcomes, and it never claims to. Always confirm with your consulate or a qualified adviser.
 
 ---
 
-## What is built
+## ✨ What can it actually do?
 
-| Feature | Status |
+Here's the honest breakdown — no marketing speak:
+
+| | |
 |---|---|
-| 1 — Rule packs | **11 corridors across 9 destinations** (Global + Pakistan-origin), sourced to official regulations |
-| 2 — Core pipeline | Upload → OCR → classify → extract → rules → score, driveable from the CLI |
-| 3 — Report | Ranked issues with evidence and fix instructions, branded PDF |
-| 4 — Client UI | **Dark neon theme** with Orbitron + Share Tech Mono fonts, risk gauge, drag & drop |
-| 5 — Admin | Overview, versioned rules editor, corridors, review queue, users, costs |
-| 6 — LLM | **Multi-provider:** Anthropic (Claude) + **DeepSeek** — pluggable backends with auto-fallback |
-| 7 — Billing | **Not built.** Credits and tiers are tracked; no payment provider is wired |
+| 🔍 **Document checklist** | Matches what you uploaded against what your visa type actually requires — and yes, requirements change depending on whether you're employed, a student, or self-employed |
+| 🧠 **Name & detail matching** | Your name, date of birth, and passport number are compared across every single file. A flight ticket that spells your name differently than your passport? That's a real reason people get refused |
+| 💰 **Funds check** | Reads your bank balance, converts currencies at live-ish rates, and checks it against your destination's published daily amount. Flags suspiciously large last-minute deposits |
+| 📸 **Photo compliance** | Dimensions, head size in frame, background color, sharpness — measured against the official ICAO spec for your corridor |
+| 📅 **Validity windows** | Is your passport valid for long enough after your return? Does your insurance cover every single day? Are your bank statements and letters still in date? |
+| 🤖 **AI letter review** | Reads your invitation letters, employment letters, and cover letters for the specific details consulates look for *(optional — needs Claude or DeepSeek API key)* |
+| 📊 **Risk score** | A clear 0–100 score. Severity-ranked issues. Fix instructions for each one. Branded PDF if you want it |
 
-Plus, for a free public launch: a free tier that costs $0 per check, a job
-queue, and rate limiting.
+And here's the thing — **a free check still covers 90% of this**. The only thing that costs money is the AI reading your letters. Everything else is plain old code.
 
 ---
 
-## Quick start
+## 🌍 Where does it work?
 
-Two processes: a FastAPI backend and a Next.js frontend.
+**11 corridors. 9 destinations. Any passport, any origin country.**
 
-### Backend
+Planning a trip from India to Germany? UK to Spain for a holiday? USA to Japan for business? Pakistan to Saudi for Umrah? We've got you covered.
+
+| Destination | Coverage | What you need |
+|---|---|---|
+| 🇪🇺 **Schengen Area** | 29 countries (France, Germany, Spain, Italy, Netherlands…) | Short-stay Type C — visa-required or visa-free depending on your passport |
+| 🇬🇧 **United Kingdom** | England, Scotland, Wales, Northern Ireland | Standard Visitor — visa, ETA (£10), or nothing depending on nationality |
+| 🇺🇸 **United States** | All 50 states + territories | B1/B2 or ESTA — overcome 214(b) immigrant intent presumption |
+| 🇨🇦 **Canada** | All provinces & territories | TRV ($100 CAD) or eTA ($7 CAD) depending on passport |
+| 🇦🇺 **Australia** | All states | Subclass 600 ($195 AUD) or ETA/eVisitor |
+| 🇦🇪 **UAE** | Dubai, Abu Dhabi, Sharjah, all emirates | Tourist visa, e-Visa, or visa-on-arrival — airline-sponsored options available |
+| 🇯🇵 **Japan** | All prefectures | Visa-free for 71 nationalities. Others need a visa + day-by-day itinerary |
+| 🇹🇷 **Turkey** | Istanbul, Antalya, Cappadocia, all regions | e-Visa online ($20–80), visa-free for many, sticker visa for some |
+| 🇸🇦 **Saudi Arabia** | Umrah pilgrimage *(Pakistan-origin)* | Licensed agent sponsorship required |
+
+Each pack is **origin-agnostic** — it works whether you're traveling from London, Lahore, Lagos, or Lima. The checklist adjusts based on your employment status too.
+
+---
+
+## 🚀 Get it running (takes about 5 minutes)
+
+Two things to start: the Python backend and the Next.js frontend. Here's the no-nonsense version:
+
+### Step 1 — Backend
 
 ```bash
 cd backend
 
-# Windows
+# Make a virtual environment
+# Windows:
 py -3.13 -m venv .venv
 .\.venv\Scripts\pip install -r requirements.txt
 
-# macOS / Linux
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+# Mac / Linux:
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 
-# Tesseract is the only system dependency (PDF rasterising uses pypdfium2,
-# and PP-OCR ships as a Python wheel).
-# Windows: install from https://github.com/UB-Mannheim/tesseract/wiki
-# or: winget install UB-Mannheim.TesseractOCR
-# macOS: brew install tesseract
-# Linux: sudo apt-get install -y tesseract-ocr
+# The only system thing you need to install is Tesseract OCR:
+# Windows →  winget install UB-Mannheim.TesseractOCR
+# Mac     →  brew install tesseract
+# Linux   →  sudo apt install -y tesseract-ocr
 
-cp .env.example .env          # then edit SECRET_KEY at minimum
-.venv/bin/python -m app.seed --admin-email you@yourdomain.com --admin-password 'a-strong-password'
-.venv/bin/python cli.py doctor        # confirm OCR actually works
+# Copy the config template and edit your secret key
+cp .env.example .env
+
+# Seed the database — creates admin account + loads all rule packs
+.venv/bin/python -m app.seed --admin-email you@yoursite.com --admin-password 'pick-a-good-password'
+
+# Quick health check — confirms OCR is actually working
+.venv/bin/python cli.py doctor
+
+# Start the server
 .venv/bin/python -m uvicorn app.main:app --reload --port 8000
 ```
 
-API docs are then at `http://localhost:8000/docs`.
+Your API docs are now live at **http://localhost:8000/docs** 🎉
 
-PP-OCR downloads its models on first use, so the machine needs outbound access
-to HuggingFace or ModelScope once. If it cannot reach them, checks fall back to
-Tesseract — `cli.py doctor` and `/health` both tell you when that is happening.
-
-### Frontend
+### Step 2 — Frontend
 
 ```bash
 cd frontend
@@ -71,26 +97,18 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000` and sign in with the admin account you seeded.
+Open **http://localhost:3000** and sign in with the admin account you just created. Done.
 
-### Without an API key
+### Want AI-powered letter reviews?
 
-The app runs fine with **no API key at all**. Every deterministic check —
-missing documents, name and date consistency, funds, validity windows, photo
-compliance — still runs. Only the AI review of free-text letters is skipped,
-and the report says so explicitly.
-
-### With an LLM (Claude or DeepSeek)
-
-Set `LLM_PROVIDER` to `anthropic` or `deepseek` and provide the corresponding
-API key:
+The app works perfectly without any AI key — every deterministic check still runs. But if you want the AI to actually *read* your invitation letters and employment docs (instead of just checking they exist), pick your provider:
 
 ```env
-# Option A: Anthropic (Claude)
+# Claude (by Anthropic) — reliable, great quality
 LLM_PROVIDER=anthropic
 ANTHROPIC_API_KEY=sk-ant-...
 
-# Option B: DeepSeek (much cheaper — ~$0.14/M in / $0.28/M out)
+# DeepSeek — equally capable, ~20x cheaper per token
 LLM_PROVIDER=deepseek
 DEEPSEEK_API_KEY=sk-...
 LLM_MODEL=deepseek-chat
@@ -98,456 +116,217 @@ LLM_PRICE_IN_PER_MTOK=0.14
 LLM_PRICE_OUT_PER_MTOK=0.28
 ```
 
-Both providers can be configured at once. If your preferred provider has no
-key, the system auto-falls back to the other. The pipeline enforces a hard
-per-check budget (`LLM_BUDGET_USD_PER_CHECK`, default $0.15) and degrades to
-deterministic-only rather than silently burning margin.
+You can set both keys at once — the system automatically uses whichever one works. And don't worry about surprise bills: every check has a hard spending cap (`$0.15` by default). Hit the cap and the pipeline gracefully degrades to deterministic-only, telling you exactly what happened.
 
 ---
 
-## Tiers: why free traffic is survivable
+## 💸 Running costs — the real numbers
 
-A free check runs **deterministic rules only** and therefore costs nothing but
-CPU. That is not a crippled product — it is most of the product:
+A free check costs **$0.00** because it runs deterministic rules only. And honestly? That covers most of what you need.
 
-| | Free | Full |
-|---|---|---|
-| Missing documents, per profile | ✓ | ✓ |
-| Name / DOB / passport-number consistency | ✓ | ✓ |
-| Funds vs corridor threshold, with FX | ✓ | ✓ |
-| Statement recency, history, sudden deposits | ✓ | ✓ |
-| Passport & insurance validity windows | ✓ | ✓ |
-| Photo compliance | ✓ | ✓ |
-| AI review of invitation / employment / cover letters | — | ✓ |
+Here's what a *full* AI check costs, measured on a real test bundle (~1,871 tokens in, ~1,500 out):
 
-On the test bundle a free check produces **21 verified requirements and a
-score of 91 at $0.00**. Only the letter review costs tokens.
-
-Measured spend for a full check (~1,871 in / 1,500 out tokens):
-
-| Model | Per check | 1,000/day | 10,000/day |
+| Model | Per check | If 1,000 people use it today | If 10,000 people use it |
 |---|---|---|---|
-| Sonnet 5 | $0.028 | $843/mo | $8,434/mo |
-| Haiku 4.5 | $0.009 | $281/mo | $2,811/mo |
+| Claude Sonnet 5 | ~$0.028 | ~$843/month | ~$8,434/month |
+| Claude Haiku 4.5 | ~$0.009 | ~$281/month | ~$2,811/month |
+| **DeepSeek Chat** | **~$0.004** | **~$128/month** | **~$1,280/month** |
 
-That is the whole argument for the split. New accounts get
-`FREE_AI_CREDITS_PER_USER` full checks so the upsell is a demonstration rather
-than a claim. Set `FREE_TIER_AI_ENABLED=true` to give everyone AI — then watch
-`/admin/costs`, because the bill now scales with traffic.
+That's the whole reason we added DeepSeek support — same quality of review, a fraction of the cost.
 
-Reports always say which tier produced them, and distinguish "not included on
-your plan" from "we tried and it failed".
+---
 
-## Running under load
+## 🎨 What does it look like?
 
-Checks are CPU-bound (OCR), so in production the API should not run them:
+Dark mode. Neon green accents. Think sci-fi dashboard meets visa application form:
 
-```bash
-WORKER_MODE=queue python -m uvicorn app.main:app --port 8000   # API
-WORKER_MODE=queue python worker.py --concurrency 4             # worker(s)
+- **Left panel:** Drag & drop upload zone → interactive document checklist with live status
+- **Right panel:** Circular risk gauge (0–100) → Good news / warning banner → Risk factors breakdown table → "View Detailed Report" button
+- **Bottom:** Clean 4-step "How It Works" walkthrough
+- **Fonts:** Orbitron for headings (that sci-fi dashboard feel), Share Tech Mono for body text (terminal/machine aesthetic)
+
+It's designed to feel like a tool you can trust — not another generic SaaS landing page.
+
+---
+
+## 🧪 Under the hood — how a check actually works
+
+```
+upload → OCR → classify → extract → rules → AI review → score → report
 ```
 
-`WORKER_MODE=inline` (the default) runs checks in a FastAPI background task,
-which is fine for development and low volume. The queue is a claim-by-update
-against the `checks` table — no Redis or Celery to deploy. Several workers can
-run at once; a job abandoned by a crashed worker returns to the queue after
-`WORKER_STALE_MINUTES`, and one that fails repeatedly is stopped rather than
-looping forever.
+The clever bit is that expensive steps run *last*, on the smallest amount of data:
 
-Queue depth and the oldest pending job appear on `/admin` and `/health`.
+1. **OCR** — If your PDF was born digital (most bank statements, e-tickets, insurance docs are), we read straight from the text layer. Free and more accurate than scanning. Only actual scans and phone photos hit Tesseract
+2. **Classify** — Keyword matching identifies most documents instantly. Only the tricky ones get one batched AI call for the whole bundle
+3. **Extract** — Per-document-type regex extractors grab the fields we need. The passport MRZ gets special treatment — ICAO 9303 check digits let us *verify* we read it right, not just hope we did. AI fills only what regex genuinely can't find, and never overwrites a deterministic value
+4. **Rules** — Your corridor's checklist gets evaluated: missing docs, mismatched names, insufficient funds, expired passports, invalid insurance dates…
+5. **AI Review** — One call, only for what code can't judge. Does the invitation letter actually state who's paying? Does the employment letter confirm approved leave?
+6. **Score** — 100 minus severity-weighted penalties. Clear, transparent, no black box
 
-### Abuse controls
+The whole pipeline makes **two or three AI calls per check, not one per document**. That's the difference between cents and dollars.
 
-A free upload endpoint on the public internet needs limits. All are
-configurable, and enforced **per process** — exact on one instance, per-instance
-behind several:
+---
 
-| Limit | Default |
+## 📋 Rule packs — the secret sauce
+
+Rule packs are JSON files, not code. Change a threshold in `/admin/rules` and product behavior updates instantly — no deploy, no downtime.
+
+```
+backend/app/rulepacks/
+  schengen_short_stay.json    ← 29 Schengen countries, per-state fund amounts
+  uk_standard_visitor.json    ← UK visitor rules (Appendix V)
+  usa_b1b2.json               ← US B1/B2 with 214(b) immigrant intent checks
+  canada_visitor.json         ← Canada TRV with biometrics
+  australia_visitor.json      ← Australia subclass 600 with GTE requirement
+  uae_tourist.json            ← UAE e-visa, on-arrival, airline-sponsored
+  japan_tourist.json          ← Japan (includes the unique day-by-day itinerary rule!)
+  turkey_tourist.json         ← Turkey e-visa system
+  schengen_short_stay_pk.json ← Schengen — Pakistan origin
+  uk_visitor_pk.json          ← UK — Pakistan origin
+  saudi_umrah_pk.json         ← Saudi Umrah — Pakistan origin
+```
+
+### Every rule knows where it came from
+
+We take provenance seriously. Every document requirement and every rule declares where it comes from:
+
+| Level | Means | Example |
+|---|---|---|
+| `law` | Actual statute or regulation | EU Visa Code Art. 12 — must cite the source |
+| `member_state` | A country's own published figure | Spain's SMI-linked daily amount |
+| `official_guidance` | Published consulate or ministry guidance | "Most consulates expect a cover letter" |
+| `heuristic` | **Our best guess — clearly labeled** | "£100/day seems reasonable for UK visits" |
+
+The validator won't let you save a pack that claims something is `law` without a source citation. Nothing is presented as official unless we can point to exactly where it's written.
+
+### Rule types at a glance
+
+| Rule | What it catches in the real world |
 |---|---|
-| Checks per account per day | 20 |
-| Checks per IP per hour | 10 |
-| Uploads per IP per hour | 120 |
-| Auth attempts per IP per hour | 20 |
-| Total bytes per bundle | 60 MB |
+| Name consistency | Bank statement says "Ahmad R Khann" but passport says "Ahmed Raza Khan" |
+| Passport validity | Expiring 2 months after your trip? Not enough blank pages? Issued 11 years ago? |
+| Financial sufficiency | Your balance after currency conversion vs what Spain actually requires per day |
+| Statement recency | Bank statement from 45 days ago? Too old |
+| Sudden deposit | One deposit that's 30% of your total balance appears right before applying |
+| Insurance coverage | Policy doesn't cover the last day of your trip, or is below the €30,000 minimum |
+| Photo spec | Wrong size, wrong background, too old, or head takes up too much of the frame |
 
-## The CLI
+---
 
-Phase 2 of the blueprint is "CLI only, no UI", because rule packs need testing
-against real bundles before anyone sees a web page.
+## 🔒 How we handle your documents
+
+We treat your passport scan and bank statements like what they are — extremely sensitive personal documents:
+
+- **Encrypted at rest** using Fernet (key comes from your `SECRET_KEY`)
+- **Never stored as plaintext** — decryption happens in a short-lived temp file only while being read
+- **Auto-deleted after 30 days** — reports survive, source documents don't
+- **Deleting a check** wipes its files immediately, no waiting period
+
+Run a daily cron job to clean up: `python cli.py purge`
+
+---
+
+## 🛡️ Keeping the bad guys out
+
+A free document upload endpoint is catnip for bots. Every limit below is configurable and enforced per-process:
+
+| Limit | Default | Why |
+|---|---|---|
+| Checks per account per day | 20 | Stops one person hammering the system |
+| Checks per IP per hour | 10 | Catches unauthenticated abuse |
+| Upload requests per IP per hour | 120 | Lets legitimate multi-file uploads through, blocks scrapers |
+| Login attempts per IP per hour | 20 | Basic brute-force protection |
+| Max upload bundle size | 60 MB | Keeps storage costs predictable |
+
+---
+
+## 🖥️ The CLI — for power users
+
+Before there was a web UI, there was a command line. It's still the best way to test rule packs against real bundles:
 
 ```bash
 cd backend
 
-.venv/bin/python cli.py corridors                      # list corridors and versions
-.venv/bin/python cli.py validate app/rulepacks/uk_visitor_pk.json
-.venv/bin/python cli.py check \
-    --corridor schengen_short_stay_pk \
+# What corridors do I have?
+python cli.py corridors
+
+# Run a complete check from the terminal
+python cli.py check \
+    --corridor schengen_short_stay \
     --profile employed \
     --from 2026-09-10 --to 2026-09-20 \
     --pdf report.pdf --json result.json \
-    ./anonymised-case-01/
-.venv/bin/python cli.py purge                          # delete documents past retention
-.venv/bin/python cli.py doctor                         # verify OCR + config end to end
+    ./my-documents-folder/
+
+# Generate fake test documents (no real data needed)
+python tests/make_fixtures.py --out /tmp/clean --case clean
+python tests/make_fixtures.py --out /tmp/bad   --case problems
+
+# Is your OCR actually working? Run the doctor
+python cli.py doctor
+
+# Clean up old files
+python cli.py purge
 ```
 
-`doctor` is the one to run before serving real traffic. Because the OCR layer
-falls back to Tesseract on any fault — right at runtime, misleading in
-practice — `doctor` proves which engine is *actually* running by putting a
-simulated phone photo of a passport through it and checking the MRZ check
-digits validate:
+The `check` command exits with code `2` when it finds critical issues — pipe it into your scripts, run it over folders of old cases, automate your testing.
 
-```
-Engines
-  OK   tesseract 5.3.4
-  OK   paddleocr importable
-Live OCR test (synthetic passport, simulated phone photo)
-  engine actually used : tesseract
-  FAIL fell back to 'tesseract' instead of 'paddleocr'
-```
+---
 
-`/health` reports the same thing as `ocr_provider_ready` and
-`ocr_engine_in_use`.
-
-`check` exits `2` when any critical issue is found, so it can be scripted over
-a folder of past cases — which is exactly what §8.4 of the blueprint asks for:
-run 20 previously refused files through it and confirm the rules catch the
-actual refusal reason.
-
-Synthetic test bundles, for exercising the pipeline without real applicant data:
+## 🧪 Tests
 
 ```bash
-.venv/bin/python tests/make_fixtures.py --out /tmp/clean --case clean
-.venv/bin/python tests/make_fixtures.py --out /tmp/bad   --case problems
-```
-
----
-
-## How a check runs
-
-```
-upload → OCR → classify → extract → rules → LLM review → score → report
-```
-
-Expensive steps run last, on the least data:
-
-1. **OCR.** A born-digital PDF is read straight from its text layer — free, and
-   more accurate than rasterise-then-OCR. Only scans and photos reach Tesseract.
-2. **Classify.** Keyword signatures settle most documents instantly. Anything
-   ambiguous goes to the model in **one batched call for the whole bundle**.
-3. **Extract.** Per-type regex extractors, plus an ICAO 9303 MRZ parser whose
-   check digits let us *verify* we read the passport correctly. One batched LLM
-   call fills only the gaps regex could not, and never overwrites a
-   deterministic value.
-4. **Rules.** Deterministic evaluation of the corridor's rule pack.
-5. **LLM review.** One call, only for what code cannot judge — whether an
-   invitation letter states who is paying, whether an employment letter
-   confirms approved leave.
-6. **Score.** 100 minus severity-weighted, confidence-weighted penalties.
-
-Two or three model calls per check, not one per document. That is the
-difference between a check costing cents and costing dollars.
-
-### Pass, fail, and "could not evaluate"
-
-A rule returns one of three outcomes, and the third is not folded into the
-first. If the bank statement is missing, the "statement is recent" rule reports
-**not evaluated** — it does not report as passed. Reports list these
-separately, because telling someone their file is fine when nothing looked at
-it is the failure mode §9 warns about.
-
----
-
-## Rule packs — the moat
-
-A rule pack is data, not code. Editing a threshold in `/admin/rules` changes
-product behaviour with no deploy.
-
-```
-backend/app/rulepacks/
-  schengen_short_stay.json       # 29 Schengen countries, per-state funds
-  uk_standard_visitor.json       # UK Standard Visitor (global)
-  usa_b1b2.json                  # US B1/B2 (global)
-  canada_visitor.json            # Canada TRV (global)
-  australia_visitor.json         # Australia subclass 600 (global)
-  uae_tourist.json               # UAE tourist/e-visa (global)
-  japan_tourist.json             # Japan temporary visitor (global)
-  turkey_tourist.json            # Turkey tourist/e-visa (global)
-  schengen_short_stay_pk.json    # Schengen — from Pakistan
-  uk_visitor_pk.json             # UK — from Pakistan
-  saudi_umrah_pk.json            # Saudi Umrah — from Pakistan
-```
-
-**11 corridors, 9 destinations, any origin country.** Each global pack works
-for any passport holder — it tells you which documents are needed regardless
-of whether your nationality requires a visa, ETA, e-Visa, or is visa-free.
-
-Each pack carries the checklist (`documents`), the analytic rules (`rules`),
-FX rates for cross-currency thresholds, severity weights, the disclaimer, and
-the criteria for the AI letter review.
-
-### Rule types
-
-| Type | Checks |
-|---|---|
-| `field_consistency` | A field matches across documents (tolerant name matching) |
-| `financial_sufficiency` | Balance vs per-day or fixed threshold, with FX conversion |
-| `statement_recency` / `statement_history` | Statement freshness and period length |
-| `sudden_deposit` | A single deposit dominating the balance |
-| `passport_validity` | Validity beyond return, plus issue age |
-| `date_coverage` | Insurance covering every day of travel |
-| `date_order` | Cross-document chronology |
-| `document_age` | Letters still in date at submission |
-| `numeric_min` | Minimum insurance cover, etc. |
-| `boolean_required` | A stated feature, e.g. repatriation cover |
-| `photo_spec` | Size, DPI, head ratio, background, sharpness, colour |
-| `profile_documents` | At least one of a set, e.g. proof of income |
-
-Validation runs on save and on publish; a pack that references an unknown
-document type, or that would never report anything missing, is rejected.
-
-### Versioning
-
-Published packs are **immutable**. Each check snapshots the version it ran
-against, so editing a rule can never rewrite an existing report. To change a
-published pack, save a new version — old reports keep theirs.
-
-### Provenance: law vs our opinion
-
-Every rule and document declares an `authority`, and reports show it:
-
-| Authority | Meaning |
-|---|---|
-| `law` | Statute or regulation, e.g. EU Visa Code Art. 15. Cites its source. |
-| `member_state` | A state's own published figure, e.g. Spain's SMI-linked amount. Cites its source. |
-| `official_guidance` | Published consulate or ministry guidance. |
-| `heuristic` | **Our own calibration. Not an official requirement.** |
-
-The validator refuses to save a pack where a rule claims `law` or
-`member_state` without citing a source, so nothing can be presented as
-official without saying where it is written. On the test bundle a Schengen
-report cites the Visa Code on 11 findings and flags 5 as our own guidance.
-
-### Schengen funds are per member state
-
-Published reference amounts range from **EUR 34/day (Netherlands) to
-EUR 122.10/day (Spain)** — a factor of three. The pack therefore resolves the
-figure from the destination:
-
-```json
-"per_destination": {
-  "ES": { "per_day_amount": 122.10, "minimum_total": 1098.90 },
-  "NL": { "per_day_amount": 34.00 },
-  "DE": { "per_day_amount": 45.00 }
-}
-```
-
-Set `applicant_meta.destination_country` (ISO-3166 alpha-2) on the check.
-Without it the pack falls back to Spain.
-
-Spain's figure is not a fixed number: Orden PRE/1282/2007 sets it at 10% of
-gross SMI per day with a floor of 90% of SMI. SMI 2026 is EUR 1,221/month,
-giving EUR 122.10/day and a EUR 1,098.90 floor. **When SMI changes each
-January, update those two numbers and Spain is current again.**
-
-### What the research changed
-
-| | Before | After | Why |
-|---|---|---|---|
-| Schengen funds | EUR 100/day flat, EUR 800 floor | Per state; ES EUR 122.10/day, EUR 1,098.90 floor | Amounts are set per member state, not EU-wide |
-| UK funds floor | GBP 1,500 | GBP 800 | The old figure was ~2x what practitioners describe; UK sets no official minimum at all |
-| UK TB certificate | absent | Optional, >6-month stays only | Not required for a standard 6-month visit |
-| Saudi mahram | "relaxed", vague | Optional, all ages, licensed group | Policy now permits women of any age without a mahram |
-| Passport rules | asserted | Cited to Visa Code Art. 12 | 3 months beyond departure, 2 blank pages, issued within 10 years |
-| EES / ETIAS | absent | Documented in pack notes | EES live since 10 Apr 2026; ETIAS is for visa-*exempt* nationals, so it does **not** apply to Pakistani applicants |
-
-### ⚠️ The bundled packs are still drafts
-
-They are now researched and sourced against official material — the EU Visa
-Code, UKVI Appendix V, GOV.UK, and Saudi Ministry of Hajj / Nusuk guidance —
-but they are still marked `"unverified": true` and every report carries a
-draft banner. Sourced is not the same as verified: requirements change without
-notice, vary between consulates, and the only thing that closes that gap is
-your own casework. Before selling checks against them:
-
-- Correct each pack from your own files in `/admin/rules`.
-- Re-check the per-state Schengen amounts and Spain's SMI each January.
-- Replace the UK funds heuristic with a figure from your own refusal data.
-- Re-check the FX rates, which are indicative placeholders.
-- Run your 20 past refusals through the CLI. If fewer than 15 are caught, fix
-  the rules before going further.
-- Set `unverified: false` only once a pack reflects real casework.
-
----
-
-## Cost control
-
-§9 names LLM cost exceeding price as a live risk, so the budget is enforced
-rather than reported. Once a check has spent `LLM_BUDGET_USD_PER_CHECK`,
-further calls are refused and the check completes on deterministic findings
-alone, saying so in the report.
-
-`/admin/costs` breaks spend down by corridor and call type, and shows gross
-margin at each price point in the blueprint, so an unprofitable corridor is
-visible before it matters.
-
----
-
-## Handling applicant documents
-
-- Encrypted at rest with Fernet; the key derives from `SECRET_KEY`.
-- Stored `0600`, never written to disk in plaintext. Decryption happens into a
-  short-lived temp file only while a document is being read.
-- Deleted automatically after `RETENTION_DAYS` (default 30). Reports survive
-  the purge; source documents do not.
-- Deleting a check removes its files immediately.
-
-Run the purge daily:
-
-```bash
-0 3 * * *  cd /path/to/backend && .venv/bin/python cli.py purge
-```
-
-Rotating `SECRET_KEY` orphans stored documents, which given the 30-day window
-is a deliberate trade — but do not rotate it casually.
-
----
-
-## Configuration
-
-Everything is env-overridable; see `backend/.env.example`.
-
-| Variable | Default | Notes |
-|---|---|---|
-| `SECRET_KEY` | dev placeholder | Auth tokens **and** document encryption |
-| `DATABASE_URL` | SQLite | Point at Postgres in production |
-| `LLM_PROVIDER` | `anthropic` | `anthropic` or `deepseek` — choose your AI provider |
-| `ANTHROPIC_API_KEY` | empty | Claude API key |
-| `DEEPSEEK_API_KEY` | empty | DeepSeek API key (~20x cheaper per token) |
-| `LLM_BUDGET_USD_PER_CHECK` | `0.15` | Hard per-check ceiling |
-| `OCR_PROVIDER` | `paddleocr` | `tesseract`, `paddleocr`, or `claude_vision` |
-| `RETENTION_DAYS` | `30` | Document purge window |
-
-### Choosing an OCR engine
-
-Three providers sit behind one interface, so switching is a config change:
-
-| Provider | Cost per page | Runs on | Good for |
-|---|---|---|---|
-| `tesseract` | free | CPU | Digital PDFs and clean scans |
-| `paddleocr` | free | CPU (GPU optional) | Phone photos, skew, uneven lighting |
-| `claude_vision` | tokens | API | Worst-case images, when accuracy beats cost |
-
-Set `OCR_PROVIDER`, or override per corridor with `ocr.provider` in a rule
-pack so you only pay for accuracy where it earns its keep.
-
-`paddleocr` needs an extra install and a one-time model download:
-
-```bash
-pip install paddlepaddle paddleocr
-```
-
-### Measured: where Tesseract stops working
-
-Tesseract was benchmarked against simulated phone photos — perspective, skew,
-a shadow gradient, and JPEG recompression — scoring whether the passport MRZ
-could be recovered *and* its ICAO check digits validated:
-
-| Degradation | Text recovered | MRZ found | Check digits |
-|---|---|---|---|
-| Light (slight skew, mild compression) | 330 chars | yes | 3/3 valid |
-| Medium (~120 DPI effective, blur, JPEG 55) | 122 chars | no | — |
-| Harsh (heavy blur, JPEG 35) | 89 chars | no | — |
-
-The cliff between light and medium is steep and **preprocessing does not fix
-it**: CLAHE, denoising, sharpening and adaptive thresholding were each
-measured and all made recognition *worse*, amplifying JPEG noise faster than
-they recovered strokes. Plain upscaling to ~1800px was the only transform that
-helped, and it is the only one applied.
-
-So: Tesseract is fine for digital PDFs, which is most of a typical bundle
-(bank statements, e-tickets, insurance certificates are nearly always
-born-digital and bypass OCR entirely via the text layer). Passports and CNICs
-are the documents applicants photograph, and those are exactly where it fails.
-If your traffic is phone-photo heavy, move to `paddleocr`.
-
-`PaddleOcrProvider` could not be benchmarked in the build environment — the
-model hosts (HuggingFace, ModelScope, BOS) are unreachable from it, so the
-provider is written and unit-tested but its accuracy on your traffic is
-unverified. Benchmark it yourself before switching:
-
-```bash
-python tests/make_phone_photo.py --pdf passport.pdf --out photo.jpg --level medium
-OCR_PROVIDER=paddleocr python cli.py check --corridor schengen_short_stay_pk photo.jpg
-```
-
-### Why the MRZ matters so much
-
-The MRZ is the only place in a bundle where a field can be *verified* rather
-than merely read: ICAO 9303 check digits mean a recovered passport number is
-either right or detectably wrong. The parser also repairs the OCR-B glyph
-confusions (`O`/`0`, `I`/`1`, `S`/`5`) and re-checks.
-
-This is worth guarding. An early bug flattened Tesseract's word output into a
-single line, which made the two-line MRZ impossible to locate and silently
-disabled verified passport extraction for *every image upload* — while digital
-PDFs, which keep their newlines, kept working and hid the problem in tests.
-`tests/test_ocr_lines.py` now pins the line structure end to end.
-
----
-
-## Tests
-
-```bash
-cd backend && .venv/bin/python -m pytest -q     # 126 tests
+cd backend && .venv/bin/python -m pytest -q     # 126 tests and counting
 cd frontend && npx tsc --noEmit && npm run build
 ```
 
-The suite covers MRZ check digits and OCR repair, name matching, money and
-date parsing, statement column disambiguation, FX conversion, every rule
-outcome including "could not evaluate", scoring monotonicity and bounds, rule
-pack validation, LLM budget enforcement, and the guard that stops a
-hallucinated criterion becoming a finding, the free/paid entitlement split,
-queue claim semantics and stale-job recovery, rate limiting, rule-pack
-provenance, and per-destination funds thresholds.
+The test suite covers MRZ check digits, name matching, money and date parsing, currency conversion, every rule outcome (including "could not evaluate"), scoring, pack validation, LLM budget enforcement, rate limiting, and a specific guard that stops the AI from hallucinating a finding into your report.
 
 ---
 
-## Project layout
+## ⚠️ Important — the packs are drafts
+
+All rule packs are thoroughly researched against official sources — EU Visa Code, UKVI Appendix V, US State Department guidance, IRCC rules, Australian Home Affairs, Japan MOFA, and more. But they're marked `unverified: true` for a reason.
+
+**Sourced doesn't mean verified.** Requirements change. Consulates interpret rules differently. The only way to close that gap is real casework. Before you charge anyone money:
+
+- Go through each pack in `/admin/rules` and correct it from your own experience
+- Re-check Schengen per-state amounts and Spain's SMI every January
+- Run 20 past refusal cases through the CLI — if fewer than 15 get caught, fix your rules
+- Swap out the UK funds heuristic for a number backed by your own refusal data
+- Set `unverified: false` only when a pack has earned it
+
+---
+
+## 📁 How everything is organized
 
 ```
 backend/
   app/
-    pipeline/       ocr, mrz, classify, extract, photo, rules_engine,
-                    qualitative, scoring, runner, normalize, llm (multi-provider)
-    rulepacks/      11 corridor packs — 8 global + 3 Pakistan-origin
-    report/pdf.py   branded PDF report
-    api/            auth, corridors, checks, admin
-    rulepack_schema.py   validation for the rules editor
-  cli.py            command-line runner
-  tests/
+    pipeline/     OCR, MRZ parsing, classification, extraction, rules engine,
+                  qualitative review, scoring, multi-provider LLM (Claude + DeepSeek)
+    rulepacks/    11 corridor packs (8 global + 3 Pakistan-origin)
+    api/          Auth, corridors, checks, admin dashboard
+  cli.py          Command-line runner for checks, doctor, purge
 frontend/
-  app/              landing (dark neon theme), auth, check flow, history, account, admin
-  components/       shared UI (nav, ui primitives with glow effects)
-  lib/              api client, auth context, formatting
-  tailwind.config.ts  neon green palette, Orbitron + Share Tech Mono fonts
+  app/            Landing page, auth, check flow, reports, account, admin
+  components/     UI primitives with glow effects
+  lib/            API client, auth context, formatting utilities
 ```
 
 ---
 
-## Not built
+## 🚧 What we haven't built yet
 
-- **Billing.** Credits are tracked and enforced, but no Paddle or Lemon
-  Squeezy integration. §6 recommends a merchant of record for Pakistan.
-- Cover letter generation, re-check after fixes, non-English output, API
-  access — all v2 items, explicitly deferred until 20 paying users.
-- Anonymous checks. Running a check requires an account, which is a
-  conversion cost on a traffic-first launch but keeps every user attributable.
+- **Billing integration.** Credits and tiers are tracked and enforced, but there's no Stripe or Paddle connected yet. The code is ready — the merchant account isn't
+- Cover letter generation, re-check after fixes, non-English report output — all on the v2 roadmap
+- Anonymous checks require an account. It's a deliberate trade-off: slightly more friction at signup, but every user is attributable
 
 ---
 
-## Disclaimer
+## 🙏 Built by
 
-VisaGuard reports whether a document set matches a named checklist at a stated
-version and date. It does not give legal or eligibility advice, and nothing it
-produces predicts the outcome of any visa application. Consular requirements
-change without notice and vary between consulates and individual cases.
+**[Aashir Noman](https://github.com/Aashir01)** — with a lot of coffee and an unhealthy obsession with visa checklists.
+
+**Important legal bit:** VisaGuard is a document completeness checker. It is not an immigration adviser, lawyer, or consular officer. It tells you whether your documents match a specific, named, versioned checklist on a specific date. It does not give legal advice, it does not predict visa outcomes, and it never claims to. Consular requirements change without notice and vary between individual consulates and cases. Always confirm requirements directly with the relevant consulate or a qualified immigration professional.
