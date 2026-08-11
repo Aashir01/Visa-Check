@@ -12,14 +12,15 @@ application will be approved.
 
 ## What is built
 
-| Blueprint phase | Status |
+| Feature | Status |
 |---|---|
-| 1 — Rule packs | Draft packs for the three launch corridors, marked unverified |
+| 1 — Rule packs | **11 corridors across 9 destinations** (Global + Pakistan-origin), sourced to official regulations |
 | 2 — Core pipeline | Upload → OCR → classify → extract → rules → score, driveable from the CLI |
 | 3 — Report | Ranked issues with evidence and fix instructions, branded PDF |
-| 4 — Client UI | Landing, new check, upload, report, history, account, auth |
+| 4 — Client UI | **Dark neon theme** with Orbitron + Share Tech Mono fonts, risk gauge, drag & drop |
 | 5 — Admin | Overview, versioned rules editor, corridors, review queue, users, costs |
-| 6 — Billing | **Not built.** Credits and tiers are tracked and enforced; no payment provider is wired |
+| 6 — LLM | **Multi-provider:** Anthropic (Claude) + **DeepSeek** — pluggable backends with auto-fallback |
+| 7 — Billing | **Not built.** Credits and tiers are tracked; no payment provider is wired |
 
 Plus, for a free public launch: a free tier that costs $0 per check, a job
 queue, and rate limiting.
@@ -34,11 +35,20 @@ Two processes: a FastAPI backend and a Next.js frontend.
 
 ```bash
 cd backend
+
+# Windows
+py -3.13 -m venv .venv
+.\.venv\Scripts\pip install -r requirements.txt
+
+# macOS / Linux
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 # Tesseract is the only system dependency (PDF rasterising uses pypdfium2,
 # and PP-OCR ships as a Python wheel).
-sudo apt-get install -y tesseract-ocr
+# Windows: install from https://github.com/UB-Mannheim/tesseract/wiki
+# or: winget install UB-Mannheim.TesseractOCR
+# macOS: brew install tesseract
+# Linux: sudo apt-get install -y tesseract-ocr
 
 cp .env.example .env          # then edit SECRET_KEY at minimum
 .venv/bin/python -m app.seed --admin-email you@yourdomain.com --admin-password 'a-strong-password'
@@ -65,10 +75,33 @@ Open `http://localhost:3000` and sign in with the admin account you seeded.
 
 ### Without an API key
 
-The app runs fine with no `ANTHROPIC_API_KEY`. Every deterministic check —
+The app runs fine with **no API key at all**. Every deterministic check —
 missing documents, name and date consistency, funds, validity windows, photo
 compliance — still runs. Only the AI review of free-text letters is skipped,
 and the report says so explicitly.
+
+### With an LLM (Claude or DeepSeek)
+
+Set `LLM_PROVIDER` to `anthropic` or `deepseek` and provide the corresponding
+API key:
+
+```env
+# Option A: Anthropic (Claude)
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Option B: DeepSeek (much cheaper — ~$0.14/M in / $0.28/M out)
+LLM_PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-...
+LLM_MODEL=deepseek-chat
+LLM_PRICE_IN_PER_MTOK=0.14
+LLM_PRICE_OUT_PER_MTOK=0.28
+```
+
+Both providers can be configured at once. If your preferred provider has no
+key, the system auto-falls back to the other. The pipeline enforces a hard
+per-check budget (`LLM_BUDGET_USD_PER_CHECK`, default $0.15) and degrades to
+deterministic-only rather than silently burning margin.
 
 ---
 
@@ -231,10 +264,22 @@ product behaviour with no deploy.
 
 ```
 backend/app/rulepacks/
-  schengen_short_stay_pk.json
-  uk_visitor_pk.json
-  saudi_umrah_pk.json
+  schengen_short_stay.json       # 29 Schengen countries, per-state funds
+  uk_standard_visitor.json       # UK Standard Visitor (global)
+  usa_b1b2.json                  # US B1/B2 (global)
+  canada_visitor.json            # Canada TRV (global)
+  australia_visitor.json         # Australia subclass 600 (global)
+  uae_tourist.json               # UAE tourist/e-visa (global)
+  japan_tourist.json             # Japan temporary visitor (global)
+  turkey_tourist.json            # Turkey tourist/e-visa (global)
+  schengen_short_stay_pk.json    # Schengen — from Pakistan
+  uk_visitor_pk.json             # UK — from Pakistan
+  saudi_umrah_pk.json            # Saudi Umrah — from Pakistan
 ```
+
+**11 corridors, 9 destinations, any origin country.** Each global pack works
+for any passport holder — it tells you which documents are needed regardless
+of whether your nationality requires a visa, ETA, e-Visa, or is visa-free.
 
 Each pack carries the checklist (`documents`), the analytic rules (`rules`),
 FX rates for cross-currency thresholds, severity weights, the disclaimer, and
@@ -373,13 +418,14 @@ Everything is env-overridable; see `backend/.env.example`.
 
 | Variable | Default | Notes |
 |---|---|---|
-| `SECRET_KEY` | dev placeholder | Auth tokens **and** document encryption. Startup refuses to boot with the default outside development |
+| `SECRET_KEY` | dev placeholder | Auth tokens **and** document encryption |
 | `DATABASE_URL` | SQLite | Point at Postgres in production |
-| `ANTHROPIC_API_KEY` | empty | Omit to run deterministic-only |
+| `LLM_PROVIDER` | `anthropic` | `anthropic` or `deepseek` — choose your AI provider |
+| `ANTHROPIC_API_KEY` | empty | Claude API key |
+| `DEEPSEEK_API_KEY` | empty | DeepSeek API key (~20x cheaper per token) |
 | `LLM_BUDGET_USD_PER_CHECK` | `0.15` | Hard per-check ceiling |
-| `OCR_PROVIDER` | `tesseract` | Or `claude_vision`; a pack can override per corridor via `ocr.provider` |
+| `OCR_PROVIDER` | `paddleocr` | `tesseract`, `paddleocr`, or `claude_vision` |
 | `RETENTION_DAYS` | `30` | Document purge window |
-| `LOW_CONFIDENCE_THRESHOLD` | `0.55` | Below this, a check is routed to the review queue |
 
 ### Choosing an OCR engine
 
@@ -472,17 +518,18 @@ provenance, and per-destination funds thresholds.
 backend/
   app/
     pipeline/       ocr, mrz, classify, extract, photo, rules_engine,
-                    qualitative, scoring, runner, normalize
-    rulepacks/      the three launch corridors as JSON
+                    qualitative, scoring, runner, normalize, llm (multi-provider)
+    rulepacks/      11 corridor packs — 8 global + 3 Pakistan-origin
     report/pdf.py   branded PDF report
     api/            auth, corridors, checks, admin
     rulepack_schema.py   validation for the rules editor
-  cli.py            phase-2 command-line runner
+  cli.py            command-line runner
   tests/
 frontend/
-  app/              landing, auth, check flow, history, account, admin
-  components/       shared UI
+  app/              landing (dark neon theme), auth, check flow, history, account, admin
+  components/       shared UI (nav, ui primitives with glow effects)
   lib/              api client, auth context, formatting
+  tailwind.config.ts  neon green palette, Orbitron + Share Tech Mono fonts
 ```
 
 ---
