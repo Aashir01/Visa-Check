@@ -66,7 +66,16 @@ class Settings(BaseSettings):
     text_layer_min_chars: int = 180
 
     # --- LLM ---
+    # Provider: "anthropic" (Claude) or "deepseek" (DeepSeek).  Both can be
+    # configured at the same time; the active one is selected below.
+    llm_provider: str = "anthropic"  # anthropic | deepseek
+
+    # -- Anthropic (Claude) --
     anthropic_api_key: str = ""
+    # -- DeepSeek (OpenAI-compatible) --
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+
     llm_model: str = "claude-sonnet-5"
     llm_max_tokens: int = 4096
     llm_enabled: bool = True
@@ -74,6 +83,7 @@ class Settings(BaseSettings):
     # degrades to deterministic-only rather than silently burning margin (§9).
     llm_budget_usd_per_check: float = 0.15
     # USD per million tokens, used for the cost dashboard.
+    # Defaults are for Claude Sonnet; override for DeepSeek (~$0.14/$0.28).
     llm_price_in_per_mtok: float = 3.00
     llm_price_out_per_mtok: float = 15.00
     # Documents whose classification or extraction confidence falls below this

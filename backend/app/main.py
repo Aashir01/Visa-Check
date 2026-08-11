@@ -68,11 +68,21 @@ def _startup() -> None:
             probe["requested"], probe["actual"], probe["error"],
         )
 
+    # Determine which LLM is active
+    if settings.llm_provider == "deepseek" and settings.deepseek_api_key:
+        llm_status = f"deepseek ({settings.llm_model})"
+    elif settings.anthropic_api_key:
+        llm_status = f"anthropic ({settings.llm_model})"
+    elif settings.deepseek_api_key:
+        llm_status = f"deepseek ({settings.llm_model})"
+    else:
+        llm_status = "off"
+
     log.info(
         "VisaGuard API ready (env=%s, ocr=%s, llm=%s, worker=%s, free_tier_ai=%s)",
         settings.environment,
         settings.ocr_provider,
-        "on" if settings.anthropic_api_key else "off",
+        llm_status,
         settings.worker_mode,
         settings.free_tier_ai_enabled,
     )

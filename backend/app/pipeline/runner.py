@@ -111,6 +111,8 @@ def run_check(db: Session, check: Check, pack: dict) -> Check:
             "skipped": skipped,
             "degraded_llm": degraded,
             "ai_status": ai_status,
+            "llm_provider": llm.provider,
+            "llm_model": llm.model,
             "tier": check.tier,
             "trip_days": ctx.trip_days,
             "travel_start": ctx.effective_travel_start.isoformat()
