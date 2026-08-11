@@ -3,59 +3,148 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { Alert, Badge, Card, LinkButton, Loading, ScoreGauge } from "@/components/ui";
+import { Alert, Badge, Card, LinkButton, Loading } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { Corridor } from "@/lib/types";
 
-const CHECKS = [
-  {
-    title: "Missing documents",
-    body: "Every item on the corridor's checklist, matched against what you uploaded — including the ones that change with your employment status.",
-  },
-  {
-    title: "Name and detail mismatches",
-    body: "Your name, date of birth and passport number are compared across every file. A ticket spelled differently from your passport is a real refusal reason.",
-  },
-  {
-    title: "Financial sufficiency",
-    body: "Your balance is read from the statement, converted, and compared against the threshold for your trip length. Sudden large deposits are flagged.",
-  },
-  {
-    title: "Photo compliance",
-    body: "Dimensions, head size in frame, background, sharpness and colour, measured against the corridor's photo specification.",
-  },
-  {
-    title: "Validity windows",
-    body: "Passport validity beyond your return, insurance covering every day of travel, statements and letters still in date at submission.",
-  },
-  {
-    title: "Letter completeness",
-    body: "Invitation, employment and cover letters are read for the specific details consulates expect them to contain.",
-  },
+// --------------------------------------------------------------------------
+// Icon components
+// --------------------------------------------------------------------------
+
+function ShieldIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8.9 7.5 10 4.3-1.1 7.5-5.4 7.5-10v-6L12 2.5Z" stroke="currentColor" strokeWidth="1.5" />
+      <path d="m8.6 12.1 2.3 2.3 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function UploadIcon({ className = "h-8 w-8" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M12 16V4m0 0L8 8m4-4 4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CheckCircle({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden>
+      <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" />
+      <path d="m7 10 2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ScanIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2M3 17v2a2 2 0 002 2h2m10 0h2a2 2 0 002-2v-2M7 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChartIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M18 20V10m-6 10V4M6 20v-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SparkleIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z" fill="currentColor" />
+      <path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15z" fill="currentColor" opacity="0.5" />
+    </svg>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Checklist data
+// --------------------------------------------------------------------------
+
+const DOCUMENT_CHECKLIST = [
+  { label: "Passport", status: "Not Uploaded" },
+  { label: "Cover Letter / Purpose of Visit", status: "Not Uploaded" },
+  { label: "Bank Statement", status: "Not Uploaded" },
+  { label: "Flight Booking", status: "Not Uploaded" },
+  { label: "Hotel Booking / Accommodation", status: "Not Uploaded" },
+  { label: "Travel Insurance", status: "Not Uploaded" },
+  { label: "Additional Documents", status: "Not Uploaded" },
 ];
 
-const SAMPLE_ISSUES = [
-  {
-    severity: "critical" as const,
-    title: "Travel insurance cover is below EUR 30,000",
-    detail: "Found EUR 15,000, but this corridor requires at least EUR 30,000.",
-  },
-  {
-    severity: "critical" as const,
-    title: "Your name is not written the same way on every document",
-    detail: 'Passport shows "AHMED RAZA KHAN", but the bank statement shows "AHMAD R KHANN".',
-  },
-  {
-    severity: "warning" as const,
-    title: "Bank statement covers less than 6 months",
-    detail: "The statement runs about 1.9 months. This corridor expects at least 6.",
-  },
+const RISK_FACTORS = [
+  { factor: "Document Authenticity", risk: "Low Risk", color: "text-neon-500" },
+  { factor: "Financial Stability", risk: "Low Risk", color: "text-neon-500" },
+  { factor: "Travel History", risk: "Low Risk", color: "text-neon-500" },
+  { factor: "Purpose of Visit", risk: "Low Risk", color: "text-neon-500" },
+  { factor: "Document Completeness", risk: "Low Risk", color: "text-neon-500" },
+  { factor: "Overall Consistency", risk: "Low Risk", color: "text-neon-500" },
 ];
 
-const SEVERITY_CHIP = {
-  critical: "border-critical/30 bg-red-50 text-critical",
-  warning: "border-warn/30 bg-amber-50 text-warn",
-};
+const HOW_IT_WORKS = [
+  { step: "1", title: "UPLOAD", desc: "Upload all required visa documents", icon: UploadIcon },
+  { step: "2", title: "ANALYZE", desc: "Our AI system analyzes and verifies", icon: ScanIcon },
+  { step: "3", title: "RISK SCORE", desc: "Get risk score and detailed report", icon: ChartIcon },
+  { step: "4", title: "IMPROVE", desc: "Follow suggestions to reduce risk", icon: SparkleIcon },
+];
+
+// --------------------------------------------------------------------------
+// Circular gauge for the risk score (larger, more dramatic)
+// --------------------------------------------------------------------------
+
+function RiskGauge({ score }: { score: number }) {
+  const size = 200;
+  const stroke = 14;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const filled = (Math.max(0, Math.min(100, score)) / 100) * circumference;
+  const color = score >= 85 ? "#00E666" : score >= 65 ? "#EAB308" : score >= 40 ? "#FFB84D" : "#FF4D4D";
+
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      {/* Outer glow ring */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `radial-gradient(circle, ${color}15 0%, transparent 70%)`,
+          filter: `blur(20px)`,
+        }}
+      />
+      <svg width={size} height={size} className="-rotate-90 relative z-10">
+        {/* Track */}
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke} stroke="rgba(255,255,255,0.05)" />
+        {/* Score arc */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={`${filled} ${circumference}`}
+          stroke={color}
+          style={{ filter: `drop-shadow(0 0 12px ${color})`, transition: "stroke-dasharray 1.5s ease-out" }}
+        />
+      </svg>
+      <div className="absolute z-10 flex flex-col items-center">
+        <span className="text-5xl font-bold tabular-nums" style={{ color }}>
+          {score}%
+        </span>
+        <span className="mt-1 text-xs font-semibold uppercase tracking-wider" style={{ color }}>
+          LOW RISK
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Page
+// --------------------------------------------------------------------------
 
 export default function LandingPage() {
   const [corridors, setCorridors] = useState<Corridor[] | null>(null);
@@ -69,90 +158,157 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <>
-      {/* ---------------- hero ---------------- */}
-      <section className="border-b border-line bg-white">
-        <div className="container-page grid gap-12 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
-          <div>
-            <Badge className="border-brand-600/25 bg-brand-50 text-brand-700">
-              For applicants and visa consultancies
-            </Badge>
-            <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-ink sm:text-5xl">
-              Find the problems in your visa file{" "}
-              <span className="text-brand-700">before the consulate does.</span>
-            </h1>
-            <p className="mt-5 text-lg leading-relaxed text-muted">
-              Upload your document set. VisaGuard checks it against a versioned checklist
-              for your exact country and visa type, then tells you what is missing,
-              what contradicts itself, and how to fix each one.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <LinkButton href="/check/new" size="lg">
-                Run a free check
-              </LinkButton>
-              <LinkButton href="#how" variant="secondary" size="lg">
-                See what it checks
-              </LinkButton>
+    <div className="bg-surface min-h-screen">
+      {/* ================================================================ */}
+      {/*  HERO + MAIN DASHBOARD AREA                                      */}
+      {/* ================================================================ */}
+      <section className="container-page py-8 lg:py-12">
+        <div className="grid gap-8 lg:grid-cols-5">
+          {/* ---------------------------------------------------------------- */}
+          {/*  LEFT COLUMN — Upload + Checklist (3/5)                          */}
+          {/* ---------------------------------------------------------------- */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Heading */}
+            <div className="animate-slide-up">
+              <Badge className="border-neon-500/20 bg-neon-500/10 text-neon-400 mb-4">
+                <SparkleIcon className="h-3.5 w-3.5" />
+                AI POWERED VISA SECURITY CHECK SYSTEM
+              </Badge>
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">
+                Upload your documents and get an{" "}
+                <span className="text-neon-500">AI risk analysis</span> to avoid visa rejection.
+              </h1>
             </div>
 
-            <p className="mt-4 text-sm text-muted">
-              The checklist and risk score are free. No card required.
-            </p>
-          </div>
-
-          {/* sample report preview */}
-          <Card className="overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between border-b border-line px-5 py-3">
-              <span className="text-sm font-semibold text-ink">Sample report</span>
-              <span className="text-xs text-muted">Schengen short-stay · v0.1.0</span>
-            </div>
-
-            <div className="flex items-center gap-5 px-5 py-6">
-              <ScoreGauge score={41} band="elevated" size={124} />
-              <div>
-                <p className="font-semibold text-warn">Elevated risk</p>
-                <p className="mt-1 text-sm leading-relaxed text-muted">
-                  Several issues were found that are frequently cited in refusals for this
-                  corridor. Fix the critical items before submitting.
-                </p>
-                <p className="mt-2 text-xs text-muted">
-                  2 critical · 1 warning · 14 checks passed
+            {/* Upload drop zone */}
+            <Card className="border-glow overflow-hidden animate-slide-up" style={{ animationDelay: "0.1s" }}>
+              <div className="drop-zone m-4 flex flex-col items-center justify-center rounded-xl py-14 px-6 text-center cursor-pointer transition-all duration-300">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-neon-500/10 border border-neon-500/20 mb-4">
+                  <UploadIcon className="h-8 w-8 text-neon-500" />
+                </div>
+                <p className="text-lg font-semibold text-ink">DRAG & DROP FILES HERE</p>
+                <p className="mt-1 text-sm text-muted">or click to upload</p>
+                <p className="mt-3 text-xs text-muted/60">
+                  Supported formats: PDF, JPG, PNG (Max 20MB each)
                 </p>
               </div>
-            </div>
+            </Card>
 
-            <div className="space-y-3 border-t border-line bg-gray-50/60 px-5 py-5">
-              {SAMPLE_ISSUES.map((issue) => (
-                <div key={issue.title} className="rounded-lg border border-line bg-white p-3">
-                  <div className="flex items-start gap-2">
-                    <span
-                      className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${SEVERITY_CHIP[issue.severity]}`}
-                    >
-                      {issue.severity}
+            {/* Document checklist */}
+            <Card className="border-glow animate-slide-up" style={{ animationDelay: "0.2s" }}>
+              <div className="flex items-center gap-2 border-b border-line px-5 py-4">
+                <CheckCircle className="h-5 w-5 text-neon-500" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-ink">DOCUMENT CHECKLIST</h2>
+              </div>
+              <div className="divide-y divide-line">
+                {DOCUMENT_CHECKLIST.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between px-5 py-3.5 hover:bg-surface-hover transition-colors">
+                    <span className="text-sm text-ink">{item.label}</span>
+                    <span className="text-xs font-medium text-muted bg-surface-elevated border border-line rounded-full px-2.5 py-1">
+                      {item.status}
                     </span>
-                    <div>
-                      <p className="text-sm font-medium leading-snug text-ink">{issue.title}</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-muted">{issue.detail}</p>
-                    </div>
                   </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* ---------------------------------------------------------------- */}
+          {/*  RIGHT COLUMN — Risk Score + Analysis (2/5)                      */}
+          {/* ---------------------------------------------------------------- */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Risk Score Card */}
+            <Card className="border-glow-strong overflow-hidden animate-slide-up" style={{ animationDelay: "0.15s" }}>
+              <div className="border-b border-line px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <ShieldIcon className="h-5 w-5 text-neon-500" />
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-ink">VISA RISK SCORE</h2>
                 </div>
-              ))}
-              <p className="pt-1 text-center text-xs text-muted">
-                Each issue comes with plain-language fix instructions.
-              </p>
-            </div>
-          </Card>
+                <p className="mt-0.5 text-xs text-muted">AI ANALYSIS</p>
+              </div>
+              <div className="flex flex-col items-center py-8 px-4">
+                <p className="text-xs font-medium text-muted mb-3 uppercase tracking-wider">
+                  Based on AI analysis of your documents, your visa rejection risk is
+                </p>
+                <RiskGauge score={23} />
+                <div className="mt-6 w-full rounded-xl bg-neon-500/5 border border-neon-500/10 p-4 text-center">
+                  <p className="text-sm font-semibold text-neon-400">GOOD NEWS!</p>
+                  <p className="mt-1 text-xs text-muted">
+                    Your visa application has a low risk of rejection.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Risk Factors Analysis */}
+            <Card className="border-glow animate-slide-up" style={{ animationDelay: "0.25s" }}>
+              <div className="border-b border-line px-5 py-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-ink">RISK FACTORS ANALYSIS</h2>
+              </div>
+              <div className="divide-y divide-line">
+                <div className="flex items-center justify-between px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted">
+                  <span>Factor</span>
+                  <span>Risk</span>
+                </div>
+                {RISK_FACTORS.map((item) => (
+                  <div key={item.factor} className="flex items-center justify-between px-5 py-3 hover:bg-surface-hover transition-colors">
+                    <span className="text-sm text-ink">{item.factor}</span>
+                    <span className={`text-xs font-semibold ${item.color} flex items-center gap-1.5`}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                      {item.risk}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-line px-5 py-4">
+                <button className="w-full rounded-lg bg-neon-600 text-black font-semibold text-sm py-2.5 px-4 hover:bg-neon-500 transition-colors shadow-glow-sm">
+                  VIEW DETAILED REPORT
+                </button>
+              </div>
+            </Card>
+          </div>
         </div>
       </section>
 
-      {/* ---------------- corridors ---------------- */}
-      <section className="container-page py-16">
-        <h2 className="text-2xl font-bold tracking-tight text-ink">Pick your corridor</h2>
-        <p className="mt-2 max-w-2xl text-muted">
-          We cover three corridors in depth rather than thirty superficially. Accuracy is
-          the whole product.
-        </p>
+      {/* ================================================================ */}
+      {/*  HOW IT WORKS                                                    */}
+      {/* ================================================================ */}
+      <section id="how" className="border-t border-line bg-surface-elevated py-16">
+        <div className="container-page">
+          <div className="text-center mb-12">
+            <Badge className="border-neon-500/20 bg-neon-500/10 text-neon-400 mb-4">
+              SIMPLE 4-STEP PROCESS
+            </Badge>
+            <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">HOW IT WORKS</h2>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {HOW_IT_WORKS.map((item, i) => (
+              <Card key={item.step} className="border-glow p-6 text-center group hover:border-neon-500/30 transition-all duration-300 animate-slide-up" style={{ animationDelay: `${i * 0.1}s` }}>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neon-500/10 border border-neon-500/20 mx-auto mb-4 group-hover:shadow-glow transition-all">
+                  <item.icon className="h-7 w-7 text-neon-500" />
+                </div>
+                <div className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-neon-600 text-black text-xs font-bold mb-3">
+                  {item.step}
+                </div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-ink mb-1">{item.title}</h3>
+                <p className="text-xs text-muted leading-relaxed">{item.desc}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/*  CORRIDORS (keep existing logic)                                  */}
+      {/* ================================================================ */}
+      <section id="pricing" className="container-page py-16">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-bold tracking-tight text-ink">Pick your corridor</h2>
+          <p className="mt-2 text-muted max-w-xl mx-auto">
+            We cover three corridors in depth rather than thirty superficially. Accuracy is the whole product.
+          </p>
+        </div>
 
         {error && (
           <div className="mt-6">
@@ -167,7 +323,7 @@ export default function LandingPage() {
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {corridors?.map((c) => (
             <Link key={c.id} href={`/check/new?corridor=${c.id}`} className="group">
-              <Card className="h-full p-5 transition group-hover:border-brand-600 group-hover:shadow-sm">
+              <Card className="h-full p-5 border-glow transition-all duration-300 group-hover:border-neon-500/30 group-hover:shadow-glow">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold leading-snug text-ink">{c.label}</h3>
                 </div>
@@ -175,16 +331,16 @@ export default function LandingPage() {
                   <p className="mt-2 text-sm leading-relaxed text-muted">{c.description}</p>
                 )}
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Badge className="border-line bg-gray-50 text-muted">
+                  <Badge className="border-line bg-surface-hover text-muted">
                     checklist v{c.rulepack_version ?? "—"}
                   </Badge>
                   {c.rulepack_unverified && (
-                    <Badge className="border-amber-400/40 bg-amber-50 text-amber-800">
+                    <Badge className="border-warn/30 bg-warn/10 text-warn">
                       draft
                     </Badge>
                   )}
                 </div>
-                <p className="mt-4 text-sm font-medium text-brand-700">
+                <p className="mt-4 text-sm font-medium text-neon-500">
                   See the checklist →
                 </p>
               </Card>
@@ -199,113 +355,110 @@ export default function LandingPage() {
         )}
       </section>
 
-      {/* ---------------- what it checks ---------------- */}
-      <section id="how" className="border-y border-line bg-white py-16">
+      {/* ================================================================ */}
+      {/*  ABOUT US / PRICING                                              */}
+      {/* ================================================================ */}
+      <section id="about" className="border-t border-line bg-surface-elevated py-16">
         <div className="container-page">
-          <h2 className="text-2xl font-bold tracking-tight text-ink">What gets checked</h2>
-          <p className="mt-2 max-w-2xl text-muted">
-            Most of this is deterministic: measured, compared and computed rather than
-            guessed. AI is used only where judgement is genuinely needed, such as reading
-            whether an invitation letter states who is paying.
-          </p>
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold tracking-tight text-ink">Pricing</h2>
+            <p className="mt-2 text-muted">Applicants pay once. Agencies subscribe.</p>
+          </div>
 
-          <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-            {CHECKS.map((item) => (
-              <div key={item.title}>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50">
-                  <svg viewBox="0 0 20 20" className="h-4 w-4 fill-brand-700" aria-hidden>
-                    <path d="M8.3 13.6 4.7 10l1.3-1.3 2.3 2.3 5.7-5.7L15.3 6.6z" />
-                  </svg>
-                </div>
-                <h3 className="mt-3 font-semibold text-ink">{item.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted">{item.body}</p>
+          <div className="grid gap-4 lg:grid-cols-3 max-w-4xl mx-auto">
+            {/* Free tier */}
+            <Card className="p-6 border-glow">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Free</p>
+              <p className="mt-2 text-3xl font-bold text-ink">$0</p>
+              <p className="mt-1 text-sm text-muted">The full checklist for your corridor.</p>
+              <ul className="mt-5 space-y-2 text-sm text-ink">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  Complete document checklist
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  Key thresholds for your profile
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  One full analysis to try it
+                </li>
+              </ul>
+              <LinkButton href="/check/new" variant="secondary" className="mt-6 w-full">
+                Start free
+              </LinkButton>
+            </Card>
+
+            {/* Pro tier */}
+            <Card className="p-6 border-neon-500/30 shadow-glow relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-neon-600 text-black text-[10px] font-bold uppercase px-3 py-1 rounded-bl-lg tracking-wider">
+                Popular
               </div>
-            ))}
+              <p className="text-xs font-semibold uppercase tracking-wider text-neon-400">Per Check</p>
+              <p className="mt-2 text-3xl font-bold text-ink">
+                $19<span className="text-base text-muted font-normal">/check</span>
+              </p>
+              <p className="mt-1 text-sm text-muted">Full AI-powered analysis with detailed report.</p>
+              <ul className="mt-5 space-y-2 text-sm text-ink">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  Everything in Free
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  AI letter review
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  Branded PDF report
+                </li>
+              </ul>
+              <LinkButton href="/check/new" variant="primary" className="mt-6 w-full">
+                Run a check
+              </LinkButton>
+            </Card>
+
+            {/* Agency tier */}
+            <Card className="p-6 border-glow">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Agency</p>
+              <p className="mt-2 text-3xl font-bold text-ink">
+                $99<span className="text-base text-muted font-normal">/mo</span>
+              </p>
+              <p className="mt-1 text-sm text-muted">For consultancies handling multiple applicants.</p>
+              <ul className="mt-5 space-y-2 text-sm text-ink">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  50 checks per month
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  White-label reports
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
+                  Priority support
+                </li>
+              </ul>
+              <LinkButton href="/register" variant="neon" className="mt-6 w-full">
+                Get started
+              </LinkButton>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* ---------------- pricing ---------------- */}
-      <section className="container-page py-16">
-        <h2 className="text-2xl font-bold tracking-tight text-ink">Pricing</h2>
-        <p className="mt-2 text-muted">Applicants pay once. Agencies subscribe.</p>
-
-        <div className="mt-8 grid gap-4 lg:grid-cols-3">
-          <Card className="p-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-muted">Free</p>
-            <p className="mt-2 text-3xl font-bold text-ink">$0</p>
-            <p className="mt-1 text-sm text-muted">The full checklist for your corridor.</p>
-            <ul className="mt-5 space-y-2 text-sm text-ink">
-              <li>Complete document checklist</li>
-              <li>Key thresholds for your profile</li>
-              <li>One full analysis to try it</li>
-            </ul>
-            <LinkButton href="/check/new" variant="secondary" className="mt-6 w-full">
-              Start free
-            </LinkButton>
-          </Card>
-
-          <Card className="border-brand-600 p-6 ring-1 ring-brand-600">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold uppercase tracking-wide text-brand-700">
-                Single check
-              </p>
-              <Badge className="border-brand-600/25 bg-brand-50 text-brand-700">
-                Most popular
-              </Badge>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-ink">
-              $12 <span className="text-base font-normal text-muted">one-time</span>
-            </p>
-            <p className="mt-1 text-sm text-muted">Full analysis of one application bundle.</p>
-            <ul className="mt-5 space-y-2 text-sm text-ink">
-              <li>Every check, including AI letter review</li>
-              <li>Severity-ranked issues with fix instructions</li>
-              <li>Downloadable PDF report</li>
-            </ul>
-            <LinkButton href="/check/new" className="mt-6 w-full">
-              Run a check
-            </LinkButton>
-          </Card>
-
-          <Card className="p-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-muted">
-              For agencies
-            </p>
-            <p className="mt-2 text-3xl font-bold text-ink">
-              $29 <span className="text-base font-normal text-muted">/month</span>
-            </p>
-            <p className="mt-1 text-sm text-muted">25 checks a month, from $29.</p>
-            <ul className="mt-5 space-y-2 text-sm text-ink">
-              <li>Agency $79/mo — 150 checks, team seats</li>
-              <li>White-label $199/mo — your logo on reports</li>
-              <li>Branded PDF you can hand to your client</li>
-            </ul>
-            <LinkButton href="/register" variant="secondary" className="mt-6 w-full">
-              Create an agency account
-            </LinkButton>
-          </Card>
-        </div>
-
-        <p className="mt-6 text-sm text-muted">
-          Billing is not yet connected. Accounts start with a free check so you can try the
-          full pipeline.
+      {/* ================================================================ */}
+      {/*  DISCLAIMER                                                      */}
+      {/* ================================================================ */}
+      <section className="container-page py-10">
+        <p className="text-xs leading-relaxed text-muted text-center max-w-3xl mx-auto">
+          <strong className="text-ink">Important.</strong> VisaGuard is a document completeness checker, not an
+          immigration adviser. It reports whether your documents match a named checklist at a stated version and date.
+          It does not give legal or eligibility advice, and nothing it produces predicts the outcome of any visa application.
+          Consular requirements change without notice and vary between consulates and individual cases.
         </p>
       </section>
-
-      {/* ---------------- honesty ---------------- */}
-      <section className="container-page pb-16">
-        <Card className="bg-gray-50 p-6">
-          <h2 className="font-semibold text-ink">What VisaGuard will never tell you</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-            That you are approved. No tool can know that. VisaGuard reports whether your
-            documents match a specific checklist, at a specific version, on a specific
-            date — and says so on every report. A clean result means nothing on the
-            checklist is missing or contradictory. It is not a prediction, and it is not a
-            substitute for advice from a qualified adviser.
-          </p>
-        </Card>
-      </section>
-    </>
+    </div>
   );
 }

@@ -2,30 +2,30 @@ import type { RiskBand, Severity } from "./types";
 
 export const SEVERITY_STYLE: Record<Severity, { chip: string; text: string; label: string; dot: string }> = {
   critical: {
-    chip: "border-critical/30 bg-red-50 text-critical",
+    chip: "border-critical/30 bg-critical/10 text-critical",
     text: "text-critical",
     label: "Critical",
     dot: "bg-critical",
   },
   warning: {
-    chip: "border-warn/30 bg-amber-50 text-warn",
+    chip: "border-warn/30 bg-warn/10 text-warn",
     text: "text-warn",
     label: "Warning",
     dot: "bg-warn",
   },
   info: {
-    chip: "border-brand-600/30 bg-brand-50 text-brand-700",
-    text: "text-brand-700",
+    chip: "border-neon-500/30 bg-neon-500/10 text-neon-400",
+    text: "text-neon-400",
     label: "Info",
-    dot: "bg-brand-600",
+    dot: "bg-neon-500",
   },
 };
 
-export const BAND_STYLE: Record<RiskBand, { text: string; bar: string; ring: string }> = {
-  low: { text: "text-good", bar: "bg-good", ring: "stroke-good" },
-  moderate: { text: "text-yellow-600", bar: "bg-yellow-500", ring: "stroke-yellow-500" },
-  elevated: { text: "text-warn", bar: "bg-warn", ring: "stroke-warn" },
-  high: { text: "text-critical", bar: "bg-critical", ring: "stroke-critical" },
+export const BAND_STYLE: Record<RiskBand, { text: string; bar: string; ring: string; color: string }> = {
+  low: { text: "text-neon-500", bar: "bg-neon-500", ring: "stroke-neon-500", color: "#00E666" },
+  moderate: { text: "text-yellow-400", bar: "bg-yellow-500", ring: "stroke-yellow-500", color: "#EAB308" },
+  elevated: { text: "text-warn", bar: "bg-warn", ring: "stroke-warn", color: "#FFB84D" },
+  high: { text: "text-critical", bar: "bg-critical", ring: "stroke-critical", color: "#FF4D4D" },
 };
 
 export function bandFor(score: number | null | undefined): RiskBand {
