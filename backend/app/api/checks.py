@@ -561,6 +561,7 @@ def download_report(
         pack=pack.data or {},
         documents=list(check.documents),
         brand=brand,
+        diff=_build_diff(db, check),
     )
     return Response(
         content=pdf,

@@ -162,7 +162,8 @@ def _fmt_value(value) -> str:
     return str(value)
 
 
-def build_report_pdf(*, check, corridor, pack: dict, documents: list, brand: dict | None = None) -> bytes:
+def build_report_pdf(*, check, corridor, pack: dict, documents: list,
+                     brand: dict | None = None, diff: dict | None = None) -> bytes:
     brand = brand or {}
     brand_name = brand.get("name") or "VisaGuard"
     accent = colors.HexColor(brand.get("color") or "#1D4ED8")
@@ -240,6 +241,18 @@ def build_report_pdf(*, check, corridor, pack: dict, documents: list, brand: dic
             f"{extraction.get('travel_start') or '?'} to "
             f"{extraction.get('travel_end') or '?'}"
             + (f" ({extraction['trip_days']} days)" if extraction.get("trip_days") else ""),
+        ])
+    # Every age limit below was measured against this date, so the reader has to
+    # be told which date it was — and told plainly when it was merely assumed.
+    if extraction.get("submission_date"):
+        meta.append([
+            "Dated against",
+            f"{extraction['submission_date']}"
+            + (
+                " (your appointment)"
+                if extraction.get("submission_date_source") == "appointment"
+                else " (today — no appointment date was given)"
+            ),
         ])
     meta.append(["Documents analysed", str(len(documents))])
 
@@ -353,6 +366,75 @@ def build_report_pdf(*, check, corridor, pack: dict, documents: list, brand: dic
             S["body"],
         ))
 
+    # ---------------- timeline ----------------
+    # A checklist answers "is this valid?". The question that decides the
+    # application is "is it valid on the day I hand it in?", and on a printed
+    # report — which is what an agency gives its client — that has to be legible
+    # without the interactive view.
+    timeline = extraction.get("timeline") or []
+    if timeline:
+        story.append(Paragraph("Validity on your submission date", S["h2"]))
+        story.append(Paragraph(
+            "Each document below is dated against "
+            + (
+                "your appointment"
+                if extraction.get("submission_date_source") == "appointment"
+                else "today, because no appointment date was given"
+            )
+            + ". A document that is valid now can still be out of date by the "
+            "day the consulate sees it.",
+            S["small"],
+        ))
+        story.append(Spacer(1, 2 * mm))
+
+        status_colour = {"expired": CRITICAL, "expiring": WARNING, "ok": GOOD}
+        status_label = {
+            "expired": "OUT OF DATE", "expiring": "EXPIRING", "ok": "VALID",
+            "unknown": "UNKNOWN",
+        }
+        rows = [[
+            Paragraph(f"<b>{h}</b>", S["small"])
+            for h in ("Item", "Valid until", "Status")
+        ]]
+        for entry in timeline:
+            colour = status_colour.get(entry.get("status"), MUTED)
+            remaining = entry.get("days_remaining")
+            if remaining is None:
+                spare = ""
+            elif remaining < 0:
+                spare = f" ({abs(remaining)}d late)"
+            else:
+                spare = f" ({remaining}d spare)"
+            rows.append([
+                Paragraph(
+                    f"<b>{_esc(entry.get('what'))}</b><br/>"
+                    f'<font color="{MUTED.hexval()}">{_esc(entry.get("detail"))}</font>',
+                    S["small"],
+                ),
+                Paragraph(_esc(entry.get("valid_until") or "—"), S["small"]),
+                Paragraph(
+                    f'<font color="{colour.hexval()}"><b>'
+                    f'{status_label.get(entry.get("status"), "—")}</b>{_esc(spare)}</font>',
+                    S["small"],
+                ),
+            ])
+        table = Table(rows, colWidths=[content_w - 62 * mm, 27 * mm, 35 * mm])
+        table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.6, LINE),
+            ("LINEBELOW", (0, 1), (-1, -2), 0.4, LINE),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
+        story.append(Spacer(1, 4 * mm))
+
+    # ---------------- comparison with the previous attempt ----------------
+    if diff:
+        story.extend(_diff_section(diff, content_w, S))
+
     # ---------------- passed ----------------
     if passed:
         story.append(PageBreak())
@@ -456,6 +538,97 @@ def build_report_pdf(*, check, corridor, pack: dict, documents: list, brand: dic
 
     doc.build(story)
     return buf.getvalue()
+
+
+def _diff_section(diff: dict, width: float, S: dict) -> list:
+    """What changed since the attempt this report answers.
+
+    On a second attempt the delta is the report. "Four issues remain" tells an
+    applicant nothing about whether an evening of work achieved anything; fixed
+    / still open / new does. And after a refusal the narrower question — are the
+    grounds they actually cited now clear — outranks the score entirely.
+    """
+    story: list = []
+
+    vs_refusal = diff.get("vs_refusal")
+    if vs_refusal:
+        story.append(Paragraph("Against your refusal", S["h2"]))
+        story.append(Paragraph(_esc(vs_refusal.get("headline", "")), S["body"]))
+        story.append(Spacer(1, 2 * mm))
+
+        rows = [[Paragraph(f"<b>{h}</b>", S["small"])
+                 for h in ("Ground", "What it means", "Now")]]
+        for g in vs_refusal.get("grounds", []):
+            if not g.get("fixable"):
+                verdict, colour = "NOT PAPERWORK", CRITICAL
+            elif g.get("cleared"):
+                verdict, colour = "CLEARED", GOOD
+            else:
+                verdict, colour = "STILL OPEN", WARNING
+            rows.append([
+                Paragraph(f"<b>{g.get('number')}</b>", S["small"]),
+                Paragraph(_esc(g.get("plain")), S["small"]),
+                Paragraph(
+                    f'<font color="{colour.hexval()}"><b>{verdict}</b></font>',
+                    S["small"],
+                ),
+            ])
+        table = Table(rows, colWidths=[16 * mm, width - 51 * mm, 35 * mm])
+        table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.6, LINE),
+            ("LINEBELOW", (0, 1), (-1, -2), 0.4, LINE),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
+        story.append(Spacer(1, 5 * mm))
+
+    vs_previous = diff.get("vs_previous")
+    if vs_previous:
+        story.append(Paragraph("What changed since the last check", S["h2"]))
+        delta = vs_previous.get("score_delta")
+        line = _esc(vs_previous.get("headline", ""))
+        if delta is not None:
+            colour = GOOD if delta > 0 else CRITICAL if delta < 0 else MUTED
+            line += (
+                f' <font color="{colour.hexval()}"><b>'
+                f'{vs_previous.get("previous_score")} &rarr; {vs_previous.get("score")}'
+                f' ({delta:+d})</b></font>'
+            )
+        story.append(Paragraph(line, S["body"]))
+        story.append(Spacer(1, 2 * mm))
+
+        for key, heading, colour in (
+            ("resolved", "Fixed", GOOD),
+            ("remaining", "Still open", WARNING),
+            ("introduced", "New since last time", CRITICAL),
+        ):
+            group = vs_previous.get(key) or []
+            if not group:
+                continue
+            story.append(Paragraph(
+                f'<font color="{colour.hexval()}"><b>{heading} ({len(group)})</b></font>',
+                S["h3"],
+            ))
+            rows = [[Paragraph(
+                f'<font color="{colour.hexval()}">&bull;</font>&nbsp; '
+                f'{_esc(row.get("title") or row.get("rule_id"))}',
+                S["small"],
+            )] for row in group]
+            table = Table(rows, colWidths=[width])
+            table.setStyle(TableStyle([
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 2.5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
+            ]))
+            story.append(table)
+            story.append(Spacer(1, 2.5 * mm))
+        story.append(Spacer(1, 2 * mm))
+
+    return story
 
 
 def _issue_block(n: int, issue: dict, width: float, S: dict) -> KeepTogether:
