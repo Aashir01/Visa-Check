@@ -132,6 +132,18 @@ export interface Scoring {
   penalty_by_severity: Record<Severity, number>;
 }
 
+/** One time-bound document, dated against the submission date. */
+export interface TimelineEntry {
+  document_type: string;
+  label: string;
+  field: string;
+  what: string;
+  valid_until?: string | null;
+  days_remaining?: number | null;
+  status: "ok" | "expiring" | "expired" | "unknown";
+  detail: string;
+}
+
 export interface Extraction {
   scoring?: Scoring;
   passed?: RuleOutcome[];
@@ -142,6 +154,9 @@ export interface Extraction {
   trip_days?: number | null;
   travel_start?: string | null;
   travel_end?: string | null;
+  submission_date?: string | null;
+  submission_date_source?: "appointment" | "today" | null;
+  timeline?: TimelineEntry[];
   documents?: {
     id: string;
     type: string;
@@ -161,6 +176,51 @@ export interface PackMeta {
   source_notes?: string[];
 }
 
+/** One rule's before/after state across a re-check. */
+export interface DiffRow {
+  rule_id: string;
+  title?: string | null;
+  severity: Severity;
+  category?: string | null;
+  fix?: string | null;
+}
+
+export interface DiffVsPrevious {
+  previous_check_id?: string | null;
+  previous_score?: number | null;
+  score?: number | null;
+  score_delta?: number | null;
+  headline: string;
+  resolved: DiffRow[];
+  remaining: DiffRow[];
+  introduced: DiffRow[];
+  counts: {
+    resolved: number;
+    remaining: number;
+    introduced: number;
+    open_critical: number;
+  };
+}
+
+export interface DiffVsRefusal {
+  refusal_id?: string | null;
+  headline: string;
+  grounds: {
+    code: string;
+    number: number;
+    plain: string;
+    fixable: boolean;
+    cleared: boolean;
+    still_open_rules: string[];
+  }[];
+  counts: { cleared: number; unresolved: number; blocking: number };
+}
+
+export interface CheckDiff {
+  vs_previous?: DiffVsPrevious;
+  vs_refusal?: DiffVsRefusal;
+}
+
 export interface Check {
   id: string;
   corridor_id: string;
@@ -168,6 +228,10 @@ export interface Check {
   applicant_profile: string;
   travel_from?: string | null;
   travel_to?: string | null;
+  submission_date?: string | null;
+  parent_check_id?: string | null;
+  refusal_id?: string | null;
+  diff?: CheckDiff | null;
   status: CheckStatus;
   error?: string | null;
   risk_score?: number | null;
@@ -200,6 +264,103 @@ export interface CheckSummary {
   rulepack_version?: string | null;
   created_at: string;
   completed_at?: string | null;
+}
+
+// --------------------------------------------------------------------------
+// refusals
+// --------------------------------------------------------------------------
+
+/** One of the eleven numbered grounds on the Annex VI standard form. */
+export interface RefusalGround {
+  number: number;
+  code: string;
+  official: string;
+  plain: string;
+  category: string;
+  fixable: boolean;
+  action: string;
+  appeal_note?: string;
+  rule_ids?: string[];
+}
+
+export interface DecodedGround extends RefusalGround {
+  confidence: number;
+  evidence?: string;
+  source: "pattern" | "pattern+tick" | "tick" | "llm" | "manual";
+}
+
+export interface PlanStep {
+  ground_number: number;
+  ground_code: string;
+  title: string;
+  official: string;
+  category: string;
+  fixable: boolean;
+  action: string;
+  appeal_note?: string;
+  confidence: number;
+  evidence?: string;
+  documents: { key: string; label: string; why?: string; fix?: string; authority?: string }[];
+  rules: { id: string; title?: string; fix?: string; authority?: string }[];
+}
+
+export type RefusalVerdict = "reapply" | "reapply_hard" | "seek_advice" | "undecoded";
+
+export interface RefusalPlan {
+  verdict: RefusalVerdict;
+  headline: string;
+  summary: string;
+  steps: PlanStep[];
+  blocking_count: number;
+  fixable_count: number;
+  can_recheck: boolean;
+  consulate?: string | null;
+  decision_date?: string | null;
+  method?: string | null;
+  confidence?: number | null;
+  notes: string[];
+  source?: string;
+}
+
+export interface AppealGuidance {
+  applicable: boolean;
+  grounds?: { number: number; code: string; note: string }[];
+  general?: string;
+  caution?: string;
+}
+
+export interface Refusal {
+  id: string;
+  corridor_id?: string | null;
+  corridor_label?: string | null;
+  check_id?: string | null;
+  recheck_id?: string | null;
+  filename?: string | null;
+  status: string;
+  method?: string | null;
+  ground_codes: string[];
+  decoded?: { grounds: DecodedGround[]; notes: string[] } | null;
+  plan?: RefusalPlan | null;
+  appeal?: AppealGuidance | null;
+  confidence?: number | null;
+  consulate?: string | null;
+  decision_date?: string | null;
+  caught_by_check?: { code: string; number: number; rules: string[] }[] | null;
+  missed_by_check?: { code: string; number: number; rules: string[] }[] | null;
+  created_at: string;
+}
+
+export interface RefusalSummary {
+  id: string;
+  corridor_id?: string | null;
+  corridor_label?: string | null;
+  status: string;
+  ground_codes: string[];
+  verdict?: RefusalVerdict | null;
+  confidence?: number | null;
+  check_id?: string | null;
+  recheck_id?: string | null;
+  created_at: string;
 }
 
 export interface RulePackSummary {

@@ -262,10 +262,10 @@ export default function AdminRulesPage() {
             <Badge
               className={
                 pack.status === "published"
-                  ? "border-good/25 bg-emerald-50 text-good"
+                  ? "border-good/25 bg-good/10 text-good"
                   : pack.status === "draft"
-                    ? "border-brand-600/25 bg-brand-50 text-brand-700"
-                    : "border-line bg-gray-50 text-muted"
+                    ? "border-neon-500/25 bg-neon-500/10 text-neon-500"
+                    : "border-line bg-white/5 text-muted"
               }
             >
               {pack.status}
@@ -322,7 +322,7 @@ export default function AdminRulesPage() {
                 onClick={() => setTab(key)}
                 className={`border-b-2 px-3 py-2 text-sm font-medium transition ${
                   tab === key
-                    ? "border-brand-700 text-brand-700"
+                    ? "border-neon-500 text-neon-500"
                     : "border-transparent text-muted hover:text-ink"
                 }`}
               >
@@ -446,7 +446,7 @@ function ChecklistEditor({
                   checked={Boolean(doc.required)}
                   disabled={readOnly}
                   onChange={(e) => update(i, { required: e.target.checked })}
-                  className="h-4 w-4 rounded border-line text-brand-700"
+                  className="h-4 w-4 rounded border-line text-neon-500"
                 />
                 Required
               </label>
@@ -545,7 +545,7 @@ function RulesEditor({
                   <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-muted">
                     {rule.id}
                   </code>
-                  <Badge className="border-line bg-gray-50 text-muted">{rule.type}</Badge>
+                  <Badge className="border-line bg-white/5 text-muted">{rule.type}</Badge>
                 </div>
               </div>
 
@@ -556,7 +556,7 @@ function RulesEditor({
                     checked={rule.enabled !== false}
                     disabled={readOnly}
                     onChange={(e) => update(i, { enabled: e.target.checked })}
-                    className="h-4 w-4 rounded border-line text-brand-700"
+                    className="h-4 w-4 rounded border-line text-neon-500"
                   />
                   Enabled
                 </label>

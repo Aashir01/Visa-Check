@@ -94,7 +94,7 @@ export default function AccountPage() {
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted">Role</dt>
                   <dd>
-                    <Badge className="border-line bg-gray-50 text-ink">
+                    <Badge className="border-line bg-white/5 text-ink">
                       {account.user.role.replace(/_/g, " ")}
                     </Badge>
                   </dd>
@@ -111,12 +111,12 @@ export default function AccountPage() {
             <Card className="p-5">
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-ink">Plan</h2>
-                <Badge className="border-brand-600/25 bg-brand-50 text-brand-700">
+                <Badge className="border-neon-500/25 bg-neon-500/10 text-neon-500">
                   {account.plan}
                 </Badge>
               </div>
 
-              <div className="mt-3 rounded-lg border border-line bg-gray-50 p-3 text-sm">
+              <div className="mt-3 rounded-lg border border-line bg-white/5 p-3 text-sm">
                 <p className="font-medium text-ink">What a free check includes</p>
                 <p className="mt-1 leading-relaxed text-muted">
                   Every checklist, identity, financial, date and photo rule — missing
@@ -143,7 +143,7 @@ export default function AccountPage() {
             </Card>
           </div>
 
-          <Card className="mt-6 bg-gray-50 p-5">
+          <Card className="mt-6 bg-white/5 p-5">
             <h2 className="font-semibold text-ink">Your documents</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               Uploaded passports, bank statements and other files are encrypted at rest and

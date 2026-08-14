@@ -101,7 +101,7 @@ export default function RegisterPage() {
               type="checkbox"
               checked={isAgency}
               onChange={(e) => setIsAgency(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-line text-brand-700"
+              className="mt-0.5 h-4 w-4 rounded border-line text-neon-500"
             />
             <span className="text-sm">
               <span className="font-medium text-ink">I run a visa consultancy</span>
@@ -128,7 +128,7 @@ export default function RegisterPage() {
 
         <p className="mt-5 text-center text-sm text-muted">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-brand-700 hover:underline">
+          <Link href="/login" className="font-medium text-neon-500 hover:underline">
             Sign in
           </Link>
         </p>

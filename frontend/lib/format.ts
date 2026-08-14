@@ -1,4 +1,4 @@
-import type { RiskBand, Severity } from "./types";
+import type { RefusalVerdict, RiskBand, Severity, TimelineEntry } from "./types";
 
 export const SEVERITY_STYLE: Record<Severity, { chip: string; text: string; label: string; dot: string }> = {
   critical: {
@@ -84,6 +84,81 @@ export function formatEvidenceValue(value: unknown): string {
       : value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
   return String(value);
+}
+
+/**
+ * A timeline entry's status is about a date the user has not reached yet, so
+ * "expiring" has to look different from both fine and broken — it is the state
+ * they can still do something about.
+ */
+export const TIMELINE_STYLE: Record<
+  TimelineEntry["status"],
+  { chip: string; dot: string; text: string; label: string }
+> = {
+  ok: {
+    chip: "border-good/30 bg-good/10 text-good",
+    dot: "bg-good",
+    text: "text-good",
+    label: "Valid",
+  },
+  expiring: {
+    chip: "border-warn/30 bg-warn/10 text-warn",
+    dot: "bg-warn",
+    text: "text-warn",
+    label: "Expiring",
+  },
+  expired: {
+    chip: "border-critical/30 bg-critical/10 text-critical",
+    dot: "bg-critical",
+    text: "text-critical",
+    label: "Out of date",
+  },
+  unknown: {
+    chip: "border-line bg-white/5 text-muted",
+    dot: "bg-white/30",
+    text: "text-muted",
+    label: "Unknown",
+  },
+};
+
+export const VERDICT_STYLE: Record<
+  RefusalVerdict,
+  { label: string; chip: string; text: string }
+> = {
+  reapply: {
+    label: "Fixable — reapply",
+    chip: "border-good/30 bg-good/10 text-good",
+    text: "text-good",
+  },
+  reapply_hard: {
+    label: "Reapply, but harder",
+    chip: "border-warn/30 bg-warn/10 text-warn",
+    text: "text-warn",
+  },
+  seek_advice: {
+    label: "Seek advice",
+    chip: "border-critical/30 bg-critical/10 text-critical",
+    text: "text-critical",
+  },
+  undecoded: {
+    label: "Not decoded",
+    chip: "border-line bg-white/5 text-muted",
+    text: "text-muted",
+  },
+};
+
+/** How the grounds were identified. Users deserve to know when a model guessed. */
+export function methodLabel(method?: string | null): string {
+  switch (method) {
+    case "manual":
+      return "You selected these grounds";
+    case "deterministic":
+      return "Read directly from your letter — the official wording and the ticked boxes";
+    case "llm":
+      return "Interpreted by AI — check it against your letter";
+    default:
+      return "Not identified";
+  }
 }
 
 export function confidenceLabel(c?: number | null): { label: string; tone: string } {

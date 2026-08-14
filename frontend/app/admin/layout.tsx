@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading || !user || user.role !== "admin") return <Loading />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white/5">
       <header className="border-b border-line bg-white">
         <div className="container-page flex h-16 items-center justify-between gap-4">
           <Link href="/admin" className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="hidden text-muted sm:inline">{user.email}</span>
             <button
               onClick={logout}
-              className="rounded-lg border border-line px-3 py-1.5 font-medium text-ink transition hover:bg-gray-50"
+              className="rounded-lg border border-line px-3 py-1.5 font-medium text-ink transition hover:bg-surface-hover"
             >
               Sign out
             </button>
@@ -60,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition ${
                   active
-                    ? "border-brand-700 text-brand-700"
+                    ? "border-neon-500 text-neon-500"
                     : "border-transparent text-muted hover:text-ink"
                 }`}
               >

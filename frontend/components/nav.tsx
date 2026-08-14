@@ -48,6 +48,7 @@ export function Wordmark() {
 const NAV_LINKS = [
   { href: "/", label: "HOME" },
   { href: "/check/new", label: "CHECK VISA" },
+  { href: "/refusals/new", label: "DECODE A REFUSAL" },
   { href: "/#how", label: "HOW IT WORKS" },
   { href: "/#pricing", label: "PRICING" },
   { href: "/#about", label: "ABOUT US" },

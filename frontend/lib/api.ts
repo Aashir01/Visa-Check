@@ -9,6 +9,9 @@ import type {
   DocumentOut,
   Overview,
   Profile,
+  Refusal,
+  RefusalGround,
+  RefusalSummary,
   ReviewItem,
   RulePack,
   RulePackSummary,
@@ -133,7 +136,19 @@ export const api = {
     applicant_profile: Profile;
     travel_from?: string | null;
     travel_to?: string | null;
+    submission_date?: string | null;
+    refusal_id?: string | null;
   }) => request<Check>("/checks", { method: "POST", body: JSON.stringify(body) }),
+
+  /** Start a follow-up check that answers an earlier one, keeping its settings. */
+  recheck: (
+    checkId: string,
+    body: { refusal_id?: string | null; submission_date?: string | null } = {},
+  ) =>
+    request<Check>(`/checks/${checkId}/recheck`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 
   uploadDocuments: (checkId: string, files: File[]) => {
     const form = new FormData();
@@ -171,6 +186,31 @@ export const api = {
     if (!res.ok) throw new ApiError("Could not download the report.", res.status);
     return res.blob();
   },
+
+  // --- refusals ---
+  refusalGrounds: () =>
+    request<{ grounds: RefusalGround[]; source: string }>("/refusals/grounds"),
+
+  /** Decode a refusal from an uploaded letter, pasted text, or ticked grounds. */
+  createRefusal: (input: {
+    file?: File | null;
+    text?: string;
+    groundCodes?: string[];
+    corridorId?: string | null;
+    checkId?: string | null;
+  }) => {
+    const form = new FormData();
+    if (input.file) form.append("file", input.file);
+    if (input.text?.trim()) form.append("text", input.text.trim());
+    if (input.groundCodes?.length) form.append("ground_codes", input.groundCodes.join(","));
+    if (input.corridorId) form.append("corridor_id", input.corridorId);
+    if (input.checkId) form.append("check_id", input.checkId);
+    return request<Refusal>("/refusals", { method: "POST", body: form });
+  },
+
+  getRefusal: (id: string) => request<Refusal>(`/refusals/${id}`),
+  listRefusals: () => request<RefusalSummary[]>("/refusals"),
+  deleteRefusal: (id: string) => request<void>(`/refusals/${id}`, { method: "DELETE" }),
 
   // --- admin ---
   admin: {

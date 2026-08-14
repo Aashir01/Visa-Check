@@ -18,11 +18,11 @@ import { BAND_STYLE, bandFor, formatDateTime, titleCase } from "@/lib/format";
 import type { CheckSummary } from "@/lib/types";
 
 const STATUS_STYLE: Record<string, string> = {
-  draft: "border-line bg-gray-50 text-muted",
-  queued: "border-brand-600/25 bg-brand-50 text-brand-700",
-  processing: "border-brand-600/25 bg-brand-50 text-brand-700",
-  complete: "border-good/25 bg-emerald-50 text-good",
-  failed: "border-critical/25 bg-red-50 text-critical",
+  draft: "border-line bg-white/5 text-muted",
+  queued: "border-neon-500/25 bg-neon-500/10 text-neon-500",
+  processing: "border-neon-500/25 bg-neon-500/10 text-neon-500",
+  complete: "border-good/25 bg-good/10 text-good",
+  failed: "border-critical/25 bg-critical/10 text-critical",
 };
 
 export default function ChecksPage() {
@@ -49,7 +49,12 @@ export default function ChecksPage() {
             {user?.org ? `Shared across ${user.org.name}.` : "Every check you have run."}
           </p>
         </div>
-        <LinkButton href="/check/new">New check</LinkButton>
+        <div className="flex gap-2">
+          <LinkButton href="/refusals" variant="secondary">
+            Refusals
+          </LinkButton>
+          <LinkButton href="/check/new">New check</LinkButton>
+        </div>
       </div>
 
       {error && (
@@ -76,7 +81,7 @@ export default function ChecksPage() {
 
           return (
             <Link key={check.id} href={href} className="block">
-              <Card className="p-4 transition hover:border-brand-600 hover:shadow-sm">
+              <Card className="p-4 transition hover:border-neon-500/40 hover:shadow-sm">
                 <div className="flex flex-wrap items-center gap-4">
                   {/* score */}
                   <div className="w-16 shrink-0 text-center">
@@ -127,7 +132,7 @@ export default function ChecksPage() {
                     )}
                   </div>
 
-                  <span className="text-sm font-medium text-brand-700">
+                  <span className="text-sm font-medium text-neon-500">
                     {isDone ? "View report →" : "Continue →"}
                   </span>
                 </div>

@@ -37,6 +37,8 @@ function NewCheckInner() {
   const [profile, setProfile] = useState<Profile>("employed");
   const [travelFrom, setTravelFrom] = useState("");
   const [travelTo, setTravelTo] = useState("");
+  const [submissionDate, setSubmissionDate] = useState("");
+  const refusalId = params.get("refusal");
 
   const [checklist, setChecklist] = useState<ChecklistPreview | null>(null);
   const [checklistLoading, setChecklistLoading] = useState(false);
@@ -101,6 +103,8 @@ function NewCheckInner() {
         applicant_profile: profile,
         travel_from: travelFrom || null,
         travel_to: travelTo || null,
+        submission_date: submissionDate || null,
+        refusal_id: refusalId,
       });
       router.push(`/check/${check.id}/upload`);
     } catch (err) {
@@ -126,6 +130,18 @@ function NewCheckInner() {
           you choose.
         </p>
       </div>
+
+      {refusalId && (
+        <div className="mb-6">
+          <Alert tone="info" title="This check answers your refusal">
+            When it finishes, the report will say — ground by ground — whether the things
+            you were refused on are now clear.{" "}
+            <Link href={`/refusals/${refusalId}`} className="font-medium underline">
+              Back to the plan
+            </Link>
+          </Alert>
+        </div>
+      )}
 
       {error && (
         <div className="mb-6">
@@ -185,6 +201,24 @@ function NewCheckInner() {
               insurance cover are both calculated from your trip length.
             </p>
 
+            {/*
+              The date that actually decides validity. A statement that is fine
+              today can be three weeks stale at an appointment, and it is the
+              appointment date the consulate applies — so every age limit is
+              measured against this, not against today.
+            */}
+            <Field
+              label="Appointment date"
+              hint="When you will hand the file in. We date every document against this, not against today."
+            >
+              <Input
+                type="date"
+                value={submissionDate}
+                onChange={(e) => setSubmissionDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 10)}
+              />
+            </Field>
+
             <Button
               onClick={onStart}
               disabled={busy || !corridorId || authLoading}
@@ -198,7 +232,7 @@ function NewCheckInner() {
             {!user && !authLoading && (
               <p className="text-center text-xs text-muted">
                 The checklist on this page is free.{" "}
-                <Link href="/register" className="font-medium text-brand-700 hover:underline">
+                <Link href="/register" className="font-medium text-neon-500 hover:underline">
                   Create an account
                 </Link>{" "}
                 to analyse your documents.
@@ -236,7 +270,7 @@ function NewCheckInner() {
                   <h2 className="font-semibold text-ink">
                     Documents you need ({checklist.required_documents.length})
                   </h2>
-                  <Badge className="border-line bg-gray-50 text-muted">
+                  <Badge className="border-line bg-white/5 text-muted">
                     checklist v{checklist.version}
                   </Badge>
                 </div>
@@ -280,7 +314,7 @@ function NewCheckInner() {
                   <ul className="mt-3 space-y-2">
                     {checklist.optional_documents.map((doc) => (
                       <li key={doc.key} className="flex items-start gap-2 text-sm">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gray-300" />
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/20" />
                         <div>
                           <span className="font-medium text-ink">{doc.label}</span>
                           {doc.why && <span className="text-muted"> — {doc.why}</span>}

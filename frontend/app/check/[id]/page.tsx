@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { DiffPanel } from "@/components/diff";
+import { TimelinePanel } from "@/components/timeline";
 import {
   Alert,
   Badge,
@@ -20,7 +22,9 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/lib/auth";
 import {
   SEVERITY_STYLE,
+  TIMELINE_STYLE,
   confidenceLabel,
+  formatDate,
   formatDateTime,
   formatEvidenceValue,
   titleCase,
@@ -58,9 +62,11 @@ export default function ReportPage() {
   const params = useParams<{ id: string }>();
   const checkId = params.id;
 
+  const router = useRouter();
   const [check, setCheck] = useState<Check | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [rechecking, setRechecking] = useState(false);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
@@ -103,6 +109,22 @@ export default function ReportPage() {
     }
   }
 
+  /**
+   * A new check rather than a re-run: the original report has to survive
+   * untouched, because the applicant may already have acted on it — and the
+   * comparison between the two is the point.
+   */
+  async function startRecheck() {
+    setRechecking(true);
+    try {
+      const child = await api.recheck(checkId, { refusal_id: check?.refusal_id ?? null });
+      router.push(`/check/${child.id}/upload`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start a re-check.");
+      setRechecking(false);
+    }
+  }
+
   if (authLoading || (!check && !error)) return <Loading />;
 
   if (error) {
@@ -121,7 +143,7 @@ export default function ReportPage() {
     return (
       <div className="container-narrow py-20">
         <Card className="p-10 text-center">
-          <Spinner className="mx-auto h-6 w-6 text-brand-700" />
+          <Spinner className="mx-auto h-6 w-6 text-neon-500" />
           <h1 className="mt-4 text-xl font-semibold text-ink">Analysing your documents</h1>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
             Reading each file, detecting what it is, extracting the fields, then running
@@ -170,6 +192,10 @@ export default function ReportPage() {
   const passed = extraction.passed ?? [];
   const skipped = extraction.skipped ?? [];
   const score = check.risk_score ?? 0;
+  const timeline = extraction.timeline ?? [];
+  const expiring = timeline.filter(
+    (t) => t.status === "expired" || t.status === "expiring",
+  );
 
   return (
     <div className="container-page py-10">
@@ -190,13 +216,54 @@ export default function ReportPage() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={download} disabled={downloading}>
             {downloading ? <Spinner /> : null} Download PDF
+          </Button>
+          <Button
+            variant="neon"
+            onClick={startRecheck}
+            disabled={rechecking}
+            title="Confirming the fixes we asked for does not cost another check."
+          >
+            {rechecking ? <Spinner /> : null} Fix and re-check — free
           </Button>
           <LinkButton href="/check/new">New check</LinkButton>
         </div>
       </div>
+
+      {/*
+        The single most urgent thing on this page when it applies: a document
+        that is fine today and stale on the day it is handed in.
+      */}
+      {expiring.length > 0 && (
+        <div className="mb-6">
+          <Alert
+            tone={expiring.some((t) => t.status === "expired") ? "error" : "warning"}
+            title="Something in this file goes out of date before your appointment"
+          >
+            <ul className="mt-1 space-y-1">
+              {expiring.map((t) => (
+                <li key={`${t.document_type}.${t.field}`}>
+                  <strong className={TIMELINE_STYLE[t.status].text}>{t.what}</strong> —{" "}
+                  {formatDate(t.valid_until)}
+                  {t.days_remaining != null && t.days_remaining < 0
+                    ? ` (${Math.abs(t.days_remaining)} day(s) before you submit)`
+                    : t.days_remaining != null
+                      ? ` (${t.days_remaining} day(s) spare)`
+                      : ""}
+                </li>
+              ))}
+            </ul>
+          </Alert>
+        </div>
+      )}
+
+      {check.diff && (
+        <div className="mb-6">
+          <DiffPanel diff={check.diff} />
+        </div>
+      )}
 
       {check.rulepack_unverified && (
         <div className="mb-6">
@@ -220,11 +287,11 @@ export default function ReportPage() {
                 {scoring?.counts?.[sev] ?? 0} {SEVERITY_STYLE[sev].label.toLowerCase()}
               </Badge>
             ))}
-            <Badge className="border-good/25 bg-emerald-50 text-good">
+            <Badge className="border-good/25 bg-good/10 text-good">
               {passed.length} passed
             </Badge>
             {skipped.length > 0 && (
-              <Badge className="border-line bg-gray-50 text-muted">
+              <Badge className="border-line bg-white/5 text-muted">
                 {skipped.length} not evaluated
               </Badge>
             )}
@@ -269,6 +336,14 @@ export default function ReportPage() {
             })
           )}
 
+          {timeline.length > 0 && (
+            <TimelinePanel
+              timeline={timeline}
+              submissionDate={extraction.submission_date ?? check.submission_date}
+              source={extraction.submission_date_source}
+            />
+          )}
+
           {skipped.length > 0 && (
             <section>
               <h2 className="font-semibold text-ink">Checks that could not be run</h2>
@@ -280,7 +355,7 @@ export default function ReportPage() {
               <Card className="mt-3 divide-y divide-line">
                 {skipped.map((s) => (
                   <div key={s.rule_id} className="flex items-start gap-2.5 px-4 py-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gray-300" />
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/20" />
                     <span className="text-sm text-ink">{s.title}</span>
                   </div>
                 ))}
@@ -337,7 +412,24 @@ export default function ReportPage() {
 
           <AiStatusNotice status={extraction.ai_status} degraded={extraction.degraded_llm} />
 
-          <Card className="bg-gray-50 p-5">
+          {!check.refusal_id && (
+            <Card className="p-5">
+              <h2 className="text-sm font-semibold text-ink">Already been refused?</h2>
+              <p className="mt-2 text-xs leading-relaxed text-muted">
+                A Schengen refusal comes on a standard form with eleven numbered grounds.
+                Upload it and we will decode which ones you were given, whether reapplying
+                can answer them, and what to change first.
+              </p>
+              <Link
+                href={`/refusals/new?check=${check.id}&corridor=${check.corridor_id}`}
+                className="mt-3 inline-block text-xs font-medium text-neon-500 hover:underline"
+              >
+                Decode a refusal letter →
+              </Link>
+            </Card>
+          )}
+
+          <Card className="bg-white/5 p-5">
             <h2 className="text-sm font-semibold text-ink">Important</h2>
             <p className="mt-2 text-xs leading-relaxed text-muted">
               {check.pack_meta?.disclaimer}
@@ -349,7 +441,7 @@ export default function ReportPage() {
           </Card>
 
           <p className="px-1 text-xs text-muted">
-            <Link href="/checks" className="font-medium text-brand-700 hover:underline">
+            <Link href="/checks" className="font-medium text-neon-500 hover:underline">
               ← All checks
             </Link>
           </p>
@@ -386,7 +478,7 @@ function IssueCard({ issue, index }: { issue: Issue; index: number }) {
             {evidence.slice(0, 6).map((e, i) => (
               <span
                 key={i}
-                className="rounded border border-line bg-gray-50 px-2 py-1 text-xs text-muted"
+                className="rounded border border-line bg-white/5 px-2 py-1 text-xs text-muted"
               >
                 {e.document_label && <span className="text-ink">{e.document_label}</span>}
                 {e.field && <> · {e.field.replace(/_/g, " ")}</>}
@@ -401,7 +493,7 @@ function IssueCard({ issue, index }: { issue: Issue; index: number }) {
       </div>
 
       {issue.fix && (
-        <div className="border-l-2 border-good bg-emerald-50/60 px-4 py-3">
+        <div className="border-l-2 border-good bg-good/10 px-4 py-3">
           <p className="text-sm leading-relaxed text-ink">
             <span className="font-semibold">How to fix: </span>
             {issue.fix}
@@ -421,7 +513,7 @@ function IssueCard({ issue, index }: { issue: Issue; index: number }) {
                     href={issue.sources[0]}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="text-brand-700 underline"
+                    className="text-neon-500 underline"
                   >
                     Source
                   </a>

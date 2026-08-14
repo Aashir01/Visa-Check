@@ -110,16 +110,16 @@ export default function AdminUsersPage() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-ink">{user.email}</span>
-                  <Badge className="border-line bg-gray-50 text-muted">
+                  <Badge className="border-line bg-white/5 text-muted">
                     {user.role.replace(/_/g, " ")}
                   </Badge>
                   {!user.is_active && (
-                    <Badge className="border-critical/25 bg-red-50 text-critical">
+                    <Badge className="border-critical/25 bg-critical/10 text-critical">
                       disabled
                     </Badge>
                   )}
                   {user.org_name && (
-                    <Badge className="border-brand-600/25 bg-brand-50 text-brand-700">
+                    <Badge className="border-neon-500/25 bg-neon-500/10 text-neon-500">
                       {user.org_name}
                     </Badge>
                   )}

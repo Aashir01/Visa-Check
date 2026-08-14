@@ -182,8 +182,8 @@ export default function UploadPage() {
         }}
         className={`cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition ${
           dragging
-            ? "border-brand-600 bg-brand-50"
-            : "border-line bg-white hover:border-brand-600/50"
+            ? "border-brand-600 bg-neon-500/10"
+            : "border-line bg-white hover:border-neon-500/40/50"
         }`}
       >
         <input
@@ -270,14 +270,14 @@ export default function UploadPage() {
                 </div>
 
                 {doc.doc_type_source === "user" && (
-                  <Badge className="border-brand-600/25 bg-brand-50 text-brand-700">
+                  <Badge className="border-neon-500/25 bg-neon-500/10 text-neon-500">
                     set by you
                   </Badge>
                 )}
 
                 <button
                   onClick={() => void removeDoc(doc.id)}
-                  className="rounded-lg px-2 py-1 text-sm text-muted transition hover:bg-red-50 hover:text-critical"
+                  className="rounded-lg px-2 py-1 text-sm text-muted transition hover:bg-critical/10 hover:text-critical"
                   aria-label={`Remove ${doc.filename}`}
                 >
                   Remove

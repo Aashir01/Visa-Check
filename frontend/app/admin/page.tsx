@@ -28,7 +28,7 @@ function Stat({
     critical: "text-critical",
   };
   const body = (
-    <Card className={`p-5 ${href ? "transition hover:border-brand-600" : ""}`}>
+    <Card className={`p-5 ${href ? "transition hover:border-neon-500/40" : ""}`}>
       <p className="text-sm text-muted">{label}</p>
       <p className={`mt-1 text-2xl font-bold tabular-nums ${tones[tone]}`}>{value}</p>
       {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}

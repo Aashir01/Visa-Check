@@ -146,13 +146,13 @@ function ReviewCard({
               className={
                 isOpen
                   ? "border-warn/30 bg-amber-50 text-warn"
-                  : "border-good/25 bg-emerald-50 text-good"
+                  : "border-good/25 bg-good/10 text-good"
               }
             >
               {item.status}
             </Badge>
             {item.confidence != null && (
-              <Badge className="border-line bg-gray-50 text-muted">
+              <Badge className="border-line bg-white/5 text-muted">
                 confidence {item.confidence.toFixed(2)}
               </Badge>
             )}
@@ -163,7 +163,7 @@ function ReviewCard({
 
         <Link
           href={`/check/${item.check_id}`}
-          className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-gray-50"
+          className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-surface-hover"
         >
           Open report
         </Link>

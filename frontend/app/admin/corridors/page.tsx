@@ -64,8 +64,8 @@ export default function AdminCorridorsPage() {
                   <Badge
                     className={
                       c.enabled
-                        ? "border-good/25 bg-emerald-50 text-good"
-                        : "border-line bg-gray-50 text-muted"
+                        ? "border-good/25 bg-good/10 text-good"
+                        : "border-line bg-white/5 text-muted"
                     }
                   >
                     {c.enabled ? "enabled" : "disabled"}
@@ -95,7 +95,7 @@ export default function AdminCorridorsPage() {
               <div className="flex shrink-0 items-center gap-2">
                 <Link
                   href="/admin/rules"
-                  className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-gray-50"
+                  className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-surface-hover"
                 >
                   Edit rules
                 </Link>

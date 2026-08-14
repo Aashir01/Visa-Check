@@ -13,12 +13,19 @@ import type { RiskBand } from "@/lib/types";
 export function Card({
   children,
   className = "",
+  style,
 }: {
   children: ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
-    <div className={`rounded-xl border border-line bg-surface-card shadow-card ${className}`}>{children}</div>
+    <div
+      className={`rounded-xl border border-line bg-surface-card shadow-card ${className}`}
+      style={style}
+    >
+      {children}
+    </div>
   );
 }
 

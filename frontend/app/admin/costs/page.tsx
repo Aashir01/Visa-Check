@@ -235,7 +235,7 @@ export default function AdminCostsPage() {
                         <td className="py-2">
                           <a
                             href={`/check/${row.check_id}`}
-                            className="font-mono text-xs text-brand-700 hover:underline"
+                            className="font-mono text-xs text-neon-500 hover:underline"
                           >
                             {row.check_id.slice(0, 8)}
                           </a>
