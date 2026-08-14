@@ -38,6 +38,7 @@ from ..report.pdf import build_report_pdf
 from ..schemas import (
     CheckCreate,
     CheckOut,
+    RecheckCreate,
     CheckSummaryOut,
     DocumentOut,
     DocumentTypeOverride,
@@ -109,6 +110,10 @@ def _check_out(db: Session, check: Check) -> CheckOut:
         extraction=check.extraction,
         rulepack_version=check.rulepack_version,
         rulepack_unverified=check.rulepack_unverified,
+        submission_date=check.submission_date,
+        parent_check_id=check.parent_check_id,
+        refusal_id=check.refusal_id,
+        diff=_build_diff(db, check),
         documents=[_doc_out(d) for d in check.documents],
         documents_purged_at=check.documents_purged_at,
         pack_meta=pack_meta,
@@ -156,6 +161,19 @@ def create_check(
             f"Profile '{payload.applicant_profile}' is not offered for this corridor.",
         )
 
+    # A check may answer a refusal directly, when the refused application was
+    # never checked here. Only link one the caller actually owns.
+    refusal_id = None
+    if payload.refusal_id:
+        from ..models import Refusal
+
+        refusal = db.get(Refusal, payload.refusal_id)
+        if refusal and (
+            refusal.user_id == user.id
+            or (user.org_id and refusal.org_id == user.org_id)
+        ):
+            refusal_id = refusal.id
+
     check = Check(
         user_id=user.id,
         org_id=user.org_id,
@@ -167,12 +185,97 @@ def create_check(
         applicant_meta=payload.applicant_meta,
         travel_from=payload.travel_from,
         travel_to=payload.travel_to,
+        submission_date=payload.submission_date,
+        refusal_id=refusal_id,
         status=CheckStatus.draft,
     )
     db.add(check)
+    db.flush()
+    if refusal_id:
+        refusal.recheck_id = check.id
     db.commit()
     db.refresh(check)
     return _check_out(db, check)
+
+
+def _build_diff(db: Session, check: Check) -> dict | None:
+    """Compare a completed re-check against what it was answering."""
+    if check.status != CheckStatus.complete:
+        return None
+    if not (check.parent_check_id or check.refusal_id):
+        return None
+
+    from ..pipeline.diff import diff_against_refusal, diff_checks
+
+    out: dict = {}
+    if check.parent_check_id:
+        previous = db.get(Check, check.parent_check_id)
+        if previous:
+            out["vs_previous"] = diff_checks(previous, check)
+    if check.refusal_id:
+        from ..models import Refusal
+
+        refusal = db.get(Refusal, check.refusal_id)
+        if refusal:
+            out["vs_refusal"] = diff_against_refusal(refusal, check)
+    return out or None
+
+
+@router.post("/{check_id}/recheck", response_model=CheckOut, status_code=201)
+def create_recheck(
+    check_id: str,
+    payload: RecheckCreate | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """Start a fresh check that answers this one, keeping its settings.
+
+    A new check rather than a re-run of the old one: the original report must
+    stay exactly as it was, because the applicant may already have acted on it.
+    """
+    parent = owned_check(check_id, db, user)
+    payload = payload or RecheckCreate()
+
+    corridor = db.get(Corridor, parent.corridor_id)
+    if not corridor or not corridor.enabled:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Corridor not available")
+    pack_row, _pack = active_pack(db, corridor)
+
+    child = Check(
+        user_id=user.id,
+        org_id=user.org_id,
+        corridor_id=parent.corridor_id,
+        rulepack_id=pack_row.id,
+        rulepack_version=pack_row.version,
+        rulepack_unverified=pack_row.unverified,
+        applicant_profile=parent.applicant_profile,
+        applicant_meta=parent.applicant_meta,
+        travel_from=parent.travel_from,
+        travel_to=parent.travel_to,
+        submission_date=payload.submission_date or parent.submission_date,
+        parent_check_id=parent.id,
+        refusal_id=payload.refusal_id or parent.refusal_id,
+        status=CheckStatus.draft,
+    )
+    db.add(child)
+    db.flush()
+
+    # Link back from the refusal, so its plan page can point at the attempt that
+    # answers it rather than silently offering to start another.
+    if child.refusal_id:
+        from ..models import Refusal
+
+        refusal = db.get(Refusal, child.refusal_id)
+        owns = refusal and (
+            refusal.user_id == user.id
+            or (user.org_id and refusal.org_id == user.org_id)
+        )
+        if owns:
+            refusal.recheck_id = child.id
+
+    db.commit()
+    db.refresh(child)
+    return _check_out(db, child)
 
 
 @router.post("/{check_id}/documents", response_model=list[DocumentOut], status_code=201)
@@ -344,6 +447,14 @@ def run(
     # A previously failed check already paid; re-running it must not charge
     # twice, but it should keep whatever tier it was granted originally.
     if check.status == CheckStatus.failed:
+        jobq.enqueue(db, check)
+    elif entitlements.verification_is_free(db, check):
+        # Confirming the fixes we asked for is part of the check the user
+        # already paid for, so it inherits that check's tier and costs nothing.
+        parent = db.get(Check, check.parent_check_id)
+        check.ai_enabled = bool(parent and parent.ai_enabled)
+        check.tier = (parent.tier if parent and parent.tier else "free")
+        db.commit()
         jobq.enqueue(db, check)
     else:
         ent = entitlements.evaluate(user)

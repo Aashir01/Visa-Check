@@ -30,6 +30,7 @@ from .llm import LlmClient, LlmUsage
 from .normalize import parse_date
 from .rules_engine import CheckContext, DocView, RulesEngine
 from .scoring import build_summary, overall_confidence, score_check
+from .timeline import build_timeline
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +65,11 @@ def run_check(db: Session, check: Check, pack: dict) -> Check:
             documents=views,
             travel_start=parse_date(check.travel_from),
             travel_end=parse_date(check.travel_to),
-            submission_date=date.today(),
+            # Evaluate against the appointment date when the applicant gave one.
+            # A statement that is fine today can be out of date by an
+            # appointment three weeks away, and that later date is the one the
+            # consulate actually applies.
+            submission_date=parse_date(check.submission_date) or date.today(),
             destination_country=(check.applicant_meta or {}).get("destination_country"),
         )
 
@@ -115,6 +120,11 @@ def run_check(db: Session, check: Check, pack: dict) -> Check:
             "llm_model": llm.model,
             "tier": check.tier,
             "trip_days": ctx.trip_days,
+            "submission_date": ctx.submission_date.isoformat(),
+            "submission_date_source": (
+                "appointment" if check.submission_date else "today"
+            ),
+            "timeline": build_timeline(ctx, pack),
             "travel_start": ctx.effective_travel_start.isoformat()
             if ctx.effective_travel_start else None,
             "travel_end": ctx.effective_travel_end.isoformat()

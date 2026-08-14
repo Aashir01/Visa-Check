@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .api import admin, auth, checks, corridors
+from .api import admin, auth, checks, corridors, refusals
 from .config import settings
 from .db import SessionLocal, init_db
 
@@ -35,7 +35,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for r in (auth.router, corridors.router, checks.router, admin.router):
+for r in (auth.router, corridors.router, checks.router,
+          refusals.router, admin.router):
     app.include_router(r, prefix=settings.api_prefix)
 
 

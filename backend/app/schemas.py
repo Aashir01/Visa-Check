@@ -164,7 +164,21 @@ class CheckCreate(BaseModel):
     applicant_profile: Profile = "employed"
     travel_from: str | None = None
     travel_to: str | None = None
+    # The appointment date. Rules are evaluated against this rather than today,
+    # because that is the date the consulate applies.
+    submission_date: str | None = None
     applicant_meta: dict[str, Any] | None = None
+    # Set when this check answers a refusal that has no earlier check attached
+    # to it, so the report can still be graded ground by ground.
+    refusal_id: str | None = None
+
+
+class RecheckCreate(BaseModel):
+    """Start a follow-up check that answers an earlier check or refusal."""
+
+    parent_check_id: str | None = None
+    refusal_id: str | None = None
+    submission_date: str | None = None
 
 
 class DocumentOut(BaseModel):
@@ -227,6 +241,10 @@ class CheckOut(BaseModel):
     extraction: dict | None = None
     rulepack_version: str | None = None
     rulepack_unverified: bool = True
+    submission_date: str | None = None
+    parent_check_id: str | None = None
+    refusal_id: str | None = None
+    diff: dict | None = None
     documents: list[DocumentOut] = []
     documents_purged_at: datetime | None = None
     pack_meta: dict | None = None
@@ -248,6 +266,51 @@ class ChecklistPreviewOut(BaseModel):
     required_documents: list[dict]
     optional_documents: list[dict]
     key_thresholds: list[dict]
+
+
+# --------------------------------------------------------------------------
+# refusals
+# --------------------------------------------------------------------------
+
+
+class RefusalOut(BaseModel):
+    id: str
+    corridor_id: str | None = None
+    corridor_label: str | None = None
+    check_id: str | None = None
+    recheck_id: str | None = None
+    filename: str | None = None
+    status: str
+    method: str | None = None
+    ground_codes: list[str] = []
+    decoded: dict | None = None
+    plan: dict | None = None
+    appeal: dict | None = None
+    confidence: float | None = None
+    consulate: str | None = None
+    decision_date: str | None = None
+    caught_by_check: list | None = None
+    missed_by_check: list | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class RefusalSummaryOut(BaseModel):
+    id: str
+    corridor_id: str | None = None
+    corridor_label: str | None = None
+    status: str
+    ground_codes: list[str] = []
+    verdict: str | None = None
+    confidence: float | None = None
+    check_id: str | None = None
+    recheck_id: str | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 # --------------------------------------------------------------------------

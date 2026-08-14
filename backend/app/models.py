@@ -223,6 +223,16 @@ class Check(Base):
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     is_free: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # The appointment or submission date. Rules are evaluated against this, not
+    # against today: a statement that is 25 days old now is 46 days old at an
+    # appointment three weeks away, and that is the date the consulate applies.
+    submission_date: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    # Re-check lineage. A check created to verify fixes points back at what it
+    # is answering, so the report can show what changed.
+    parent_check_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    refusal_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
     # Whether this check was entitled to the AI letter review. Recorded on the
     # check so an old report always explains which tier produced it.
     ai_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -305,6 +315,58 @@ class ReviewItem(Base):
         DateTime(timezone=True), nullable=True
     )
     resolved_by: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+
+class Refusal(Base):
+    """A refusal letter, decoded into standard grounds and a recovery plan.
+
+    Kept as its own record rather than a field on Check because a refusal is
+    its own moment: it may arrive months after the check, may relate to an
+    application we never saw, and is the single most valuable piece of
+    evidence this product can collect. Real refusals are how the rule packs
+    stop being unverified.
+    """
+
+    __tablename__ = "refusals"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    org_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    corridor_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+
+    # The check this refusal relates to, when the applicant ran one first.
+    # Comparing the two is how we learn whether our rules caught it.
+    check_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    # A follow-up check run after the applicant fixed things.
+    recheck_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+    filename: Mapped[str | None] = mapped_column(String(400), nullable=True)
+    storage_path: Mapped[str | None] = mapped_column(String(600), nullable=True)
+    text_excerpt: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    status: Mapped[str] = mapped_column(String(20), default="decoded", index=True)
+    method: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    ground_codes: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    decoded: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    plan: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    appeal: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    consulate: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    decision_date: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    # Did the check we ran beforehand actually flag these grounds? This is the
+    # rule packs' report card, computed at decode time.
+    caught_by_check: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    missed_by_check: Mapped[list | None] = mapped_column(JSON, nullable=True)
+
+    llm_cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    documents_purged_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
 
 
 class CostEvent(Base):
