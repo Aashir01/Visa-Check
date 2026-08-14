@@ -67,24 +67,52 @@ def purge_check(check_id: str) -> int:
 
 
 def purge_expired(db) -> dict:
-    """Delete blobs for checks older than the retention window (§9).
+    """Delete blobs past the retention window (§9).
 
-    The Check row and its report survive; only the source documents go. Run
-    from the ``purge`` CLI command on a daily cron.
+    Two kinds of record hold uploaded files, and both are covered here — the
+    footer promises deletion after 30 days without qualification, and a refusal
+    letter is if anything the more sensitive of the two: it names the applicant,
+    the consulate, and the grounds they were refused on.
+
+    What survives in both cases is the derived record — the report, the decoded
+    grounds, the caught/missed grading. Those carry no document contents and are
+    what the rule packs learn from. What goes is everything the applicant
+    actually uploaded, plus the raw text read out of it.
+
+    Run from the ``purge`` CLI command on a daily cron.
     """
-    from .models import Check, Document, utcnow
+    from .models import Check, Document, Refusal, utcnow
 
     cutoff = utcnow() - timedelta(days=settings.retention_days)
-    stale = (
+    files = 0
+
+    stale_checks = (
         db.query(Check)
         .filter(Check.created_at < cutoff, Check.documents_purged_at.is_(None))
         .all()
     )
-    files = 0
-    for chk in stale:
+    for chk in stale_checks:
         files += purge_check(chk.id)
         for doc in db.query(Document).filter(Document.check_id == chk.id).all():
             doc.storage_path = None
         chk.documents_purged_at = utcnow()
+
+    stale_refusals = (
+        db.query(Refusal)
+        .filter(Refusal.created_at < cutoff, Refusal.documents_purged_at.is_(None))
+        .all()
+    )
+    for ref in stale_refusals:
+        files += purge_check(ref.id)
+        ref.storage_path = None
+        # The excerpt is raw letter text — name, address, case reference. The
+        # decoded grounds above it are what we actually needed to keep.
+        ref.text_excerpt = None
+        ref.documents_purged_at = utcnow()
+
     db.commit()
-    return {"checks_purged": len(stale), "files_removed": files}
+    return {
+        "checks_purged": len(stale_checks),
+        "refusals_purged": len(stale_refusals),
+        "files_removed": files,
+    }

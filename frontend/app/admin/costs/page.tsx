@@ -35,7 +35,8 @@ export default function AdminCostsPage() {
     try {
       const res = await api.admin.purge();
       setNotice(
-        `Purged documents for ${res.checks_purged} check(s), removing ${res.files_removed} file(s).`,
+        `Purged documents for ${res.checks_purged} check(s) and ${res.refusals_purged} ` +
+          `refusal(s), removing ${res.files_removed} file(s).`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Purge failed.");

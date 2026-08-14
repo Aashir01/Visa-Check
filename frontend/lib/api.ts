@@ -279,8 +279,9 @@ export const api = {
 
     costs: (days = 30) => request<Costs>(`/admin/costs?days=${days}`),
     purge: () =>
-      request<{ checks_purged: number; files_removed: number }>("/admin/purge", {
-        method: "POST",
-      }),
+      request<{ checks_purged: number; refusals_purged: number; files_removed: number }>(
+        "/admin/purge",
+        { method: "POST" },
+      ),
   },
 };

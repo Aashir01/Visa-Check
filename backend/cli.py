@@ -350,7 +350,8 @@ def cmd_purge(_args) -> int:
     db = SessionLocal()
     try:
         result = storage.purge_expired(db)
-        print(f"Purged documents for {result['checks_purged']} check(s), "
+        print(f"Purged documents for {result['checks_purged']} check(s) and "
+              f"{result['refusals_purged']} refusal(s), "
               f"{result['files_removed']} file(s) removed "
               f"(retention: {settings.retention_days} days).")
     finally:
