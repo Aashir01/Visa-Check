@@ -358,7 +358,63 @@
             <p class="small">A risk score, issues ranked critical to minor, the evidence behind each one, and plain-language instructions. Downloadable as a PDF the agency can hand to its client.</p>
           </div>
         </li>
+        <li>
+          <div class="stack g8">
+            <h3>Dates it against the day that counts</h3>
+            <p class="small">Not today — the appointment. A statement that is 25 days old now is 46 days old at a slot three weeks out, and it is the appointment date the consulate applies. The report carries a timeline of what expires when, measured against that day.</p>
+          </div>
+        </li>
+        <li>
+          <div class="stack g8">
+            <h3>Decodes the refusal, if one comes</h3>
+            <p class="small">And turns it into the next attempt, ground by ground.</p>
+          </div>
+        </li>
       </ol>
+    </div>
+
+    <div class="stack g12 col">
+      <p class="eyebrow">The part nobody else has built</p>
+      <h2>A Schengen refusal is not a letter. It is a form.</h2>
+      <p class="lede">
+        Annex VI of the Visa Code fixes a single standard form with eleven
+        numbered grounds, identical across all 29 member states, and the officer
+        ticks boxes. That makes a refusal <strong>machine-decodable</strong> — the
+        reason is a number, not prose. Almost nobody exploits this. Applicants
+        receive the form and cannot read it; "ground 3" means nothing to someone
+        who has just lost their fee and their slot.
+      </p>
+    </div>
+
+    <div class="grid2">
+      <div class="card stack g12">
+        <span class="tag good">What the decoder returns</span>
+        <ul class="plain check">
+          <li>Which grounds were given, in plain words</li>
+          <li>Whether reapplying can answer them — or whether the honest advice is to appeal</li>
+          <li>An ordered plan tied to that corridor's checklist</li>
+          <li>A targeted re-check reporting, ground by ground, whether the cited items are now clear</li>
+          <li>Matched against the official wording, deterministically, at $0.00 per decode</li>
+        </ul>
+      </div>
+      <div class="card stack g12">
+        <span class="tag">And it grades our own rules</span>
+        <p class="small">
+          Every decoded refusal is compared against the check that preceded it —
+          which grounds we caught, which we missed. A ground the consulate cited
+          that our check passed clean is a hole in the rules, and it is worth more
+          than any amount of internal QA.
+        </p>
+        <p class="small">
+          <strong>It has already found one.</strong> The global Schengen pack was
+          missing its Article 15 insurance rules entirely, so a €15,000 policy with
+          no repatriation cover was passing as "insurance provided". A real refusal
+          on ground 7 surfaced it in a single pass.
+        </p>
+        <p class="small">
+          No competitor has this feedback loop, because no competitor sees refusals.
+        </p>
+      </div>
     </div>
 
     <div class="grid2">
@@ -626,7 +682,8 @@
           <li>Applicant and agency web app, branded PDF reports</li>
           <li>Admin console with a versioned rules editor and cost dashboard</li>
           <li>Free tier that provably costs nothing per check</li>
-          <li>126 automated tests; encryption at rest and 30-day deletion</li>
+          <li>Refusal decoder, recovery plans, appointment-date timelines and re-check diffs — verified end to end against the running API</li>
+          <li>208 automated tests; encryption at rest and 30-day deletion</li>
         </ul>
       </div>
       <div class="card stack g12">
@@ -636,6 +693,7 @@
           <li>Payments are not connected — credits are enforced, checkout is not built</li>
           <li>Rule packs are researched and sourced, but not yet verified against real casework</li>
           <li>Accuracy on phone photographs of documents needs measuring on real user files</li>
+          <li>The refusal decoder is exact for Schengen only — the UK and US refuse in free prose with no fixed grounds, so those fall back to a model</li>
         </ul>
       </div>
     </div>

@@ -53,6 +53,43 @@ retired.
 evidence behind each one, and plain-language instructions. Downloadable as a PDF
 the agency can hand to its client.
 
+**5. Dates it against the day that counts.** Not today — the appointment. A
+statement that is 25 days old now is 46 days old at a slot three weeks out, and
+it is the appointment date the consulate applies. The report carries a timeline
+of what expires when, measured against that day.
+
+**6. Decodes the refusal, if one comes.** And turns it into the next attempt.
+
+### The part nobody else has built
+
+A Schengen refusal is not a letter. Annex VI of the Visa Code fixes a single
+standard form with eleven numbered grounds, identical across all 29 member
+states, and the officer ticks boxes. That makes a refusal **machine-decodable** —
+the reason is a number, not prose.
+
+Almost nobody exploits this. Applicants receive the form and cannot read it;
+"ground 3" means nothing to someone who has just lost their fee and their slot.
+
+VisaGuard decodes it — against the official wording, deterministically, at
+**$0.00 per decode** — and returns:
+
+- which grounds were given, in plain words
+- whether reapplying can actually answer them, or whether the honest advice is
+  to appeal instead
+- an ordered plan tied to that corridor's checklist
+- a targeted re-check that reports, ground by ground, whether the specific things
+  cited are now clear
+
+That last loop is also the compounding asset. Every decoded refusal is graded
+against the check that preceded it — which grounds we caught, which we missed.
+A ground the consulate cited that our check passed clean is a hole in the rules,
+and it is worth more than any amount of internal QA. **It has already found one:**
+the global Schengen pack was missing its Article 15 insurance rules entirely, so
+a €15,000 policy with no repatriation cover was passing as "insurance provided".
+A real refusal on ground 7 surfaced it in one pass.
+
+No competitor has this feedback loop, because no competitor sees refusals.
+
 ### Caught in testing
 
 - Insurance €15,000 where €30,000 is required by law
@@ -221,7 +258,9 @@ of use. Here it is up front.
 - Applicant and agency web app, branded PDF reports
 - Admin console with a versioned rules editor and cost dashboard
 - Free tier that provably costs nothing per check
-- 126 automated tests; encryption at rest and 30-day deletion
+- Refusal decoder, recovery plans, appointment-date timelines and re-check diffs —
+  all verified end to end against the running API
+- 208 automated tests; encryption at rest and 30-day deletion
 
 **Not there yet**
 
@@ -229,6 +268,9 @@ of use. Here it is up front.
 - Payments are not connected — credits are enforced, checkout is not built
 - Rule packs are researched and sourced, but not yet verified against real casework
 - Accuracy on phone photographs of documents needs measuring on real user files
+- The refusal decoder is exact for Schengen only. It works because Annex VI is a
+  standardised form; the UK and US refuse in free prose with no fixed grounds, so
+  those fall back to a model and are correspondingly less reliable
 
 **The honest gap.** The rules are drawn from the EU Visa Code, UK Immigration
 Rules and Saudi ministry guidance, and every report carries a visible notice that
@@ -243,6 +285,8 @@ That is the next piece of work, and the piece only the operator can do.
 **If you run a consultancy:** bring five recent files — ideally including one
 that was refused — and run them through. If it does not find something you
 missed, it is not worth your money and we should both know that in an afternoon.
+Bring the refusal letter too: decoding it takes seconds and costs nothing, and it
+tells you as much about the tool as it does about the case.
 
 **If you are considering backing it:** the near-term plan is not a venture-scale
 curve. It is 100 agencies at $79 a month, roughly $7,900 in recurring revenue,

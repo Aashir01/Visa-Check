@@ -26,6 +26,18 @@ Here's the honest breakdown — no marketing speak:
 
 And here's the thing — **a free check still covers 90% of this**. The only thing that costs money is the AI reading your letters. Everything else is plain old code.
 
+### And then there's the part nobody else does
+
+Most tools stop at "here's your checklist". The three below are about what happens *after* — and they're the reason people come back.
+
+| | |
+|---|---|
+| 🔓 **Refusal decoder** | A Schengen refusal isn't a letter — it's a form. Annex VI of the Visa Code fixes eleven numbered grounds, identical in all 29 states, and the officer just ticks boxes. Upload it and we decode which grounds you got, in plain words, **deterministically at $0.00** — matched against the official wording, not guessed at by a model. Then you get an ordered recovery plan tied to that corridor's checklist |
+| 📆 **Appointment-date awareness** | A bank statement that's fine today is 46 days old at an appointment three weeks out — and it's the *appointment* date the consulate applies. Tell us when you're handing the file in and every age limit is measured against that day, with a timeline showing exactly what expires when. People assemble perfect files and submit quietly-expired documents constantly. This is the fix |
+| 🔁 **Re-check with a diff** | "You still have 4 issues" is a useless thing to hear after an evening of work. Re-check and you get the delta instead — fixed / still open / new — plus, if you're recovering from a refusal, whether the **specific grounds you were refused on** are now clear. And it's free: charging again to confirm the fixes we asked for would be absurd |
+
+The refusal loop is also how we know whether the rules are any good. Every decoded refusal is graded against the check that preceded it — which grounds we caught, which we missed. A ground the consulate cited that our check passed clean is a gap in the rules, and it's worth more than any amount of internal testing. (It's already caught one: the global Schengen pack was missing its Art. 15 insurance rules entirely.)
+
 ---
 
 ## 🌍 Where does it work?
@@ -277,11 +289,11 @@ The `check` command exits with code `2` when it finds critical issues — pipe i
 ## 🧪 Tests
 
 ```bash
-cd backend && .venv/bin/python -m pytest -q     # 126 tests and counting
+cd backend && .venv/bin/python -m pytest -q     # 208 tests and counting
 cd frontend && npx tsc --noEmit && npm run build
 ```
 
-The test suite covers MRZ check digits, name matching, money and date parsing, currency conversion, every rule outcome (including "could not evaluate"), scoring, pack validation, LLM budget enforcement, rate limiting, and a specific guard that stops the AI from hallucinating a finding into your report.
+The test suite covers MRZ check digits, name matching, money and date parsing, currency conversion, every rule outcome (including "could not evaluate"), scoring, pack validation, LLM budget enforcement, rate limiting, refusal-ground decoding and recovery plans, submission-date timelines, re-check diffs, the free-re-check limits, and a specific guard that stops the AI from hallucinating a finding into your report.
 
 ---
 
@@ -305,9 +317,12 @@ All rule packs are thoroughly researched against official sources — EU Visa Co
 backend/
   app/
     pipeline/     OCR, MRZ parsing, classification, extraction, rules engine,
-                  qualitative review, scoring, multi-provider LLM (Claude + DeepSeek)
+                  qualitative review, scoring, submission-date timeline,
+                  re-check diffs, multi-provider LLM (Claude + DeepSeek)
+    refusal/      The eleven Annex VI grounds, deterministic decoding of a
+                  refusal letter, and the recovery plan built from it
     rulepacks/    11 corridor packs (8 global + 3 Pakistan-origin)
-    api/          Auth, corridors, checks, admin dashboard
+    api/          Auth, corridors, checks, refusals, admin dashboard
   cli.py          Command-line runner for checks, doctor, purge
 frontend/
   app/            Landing page, auth, check flow, reports, account, admin
@@ -320,7 +335,8 @@ frontend/
 ## 🚧 What we haven't built yet
 
 - **Billing integration.** Credits and tiers are tracked and enforced, but there's no Stripe or Paddle connected yet. The code is ready — the merchant account isn't
-- Cover letter generation, re-check after fixes, non-English report output — all on the v2 roadmap
+- Cover letter generation and non-English report output — still on the v2 roadmap
+- **The refusal decoder is Schengen-only.** It rests on Annex VI being a standardised form; the UK, US and others give free-prose refusals with no fixed grounds, so those fall through to the AI path and are much less reliable
 - Anonymous checks require an account. It's a deliberate trade-off: slightly more friction at signup, but every user is attributable
 
 ---
