@@ -265,7 +265,7 @@ of use. Here it is up front.
 - Free tier that provably costs nothing per check
 - Refusal decoder, recovery plans, appointment-date timelines and re-check diffs —
   all verified end to end against the running API
-- 215 automated tests; encryption at rest and 30-day deletion
+- 224 automated tests; encryption at rest and 30-day deletion
 
 **Not there yet**
 

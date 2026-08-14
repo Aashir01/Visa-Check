@@ -167,13 +167,48 @@ _DATE = re.compile(
 )
 
 
+# The issuing post, when the letter names one. This has to be strict: the word
+# "consulate" appears in ordinary prose too ("the consulate has refused your
+# application"), and grabbing the next eighty characters turns a sentence
+# fragment into a heading on the recovery plan. So require the shape of a name —
+# "Consulate General of Spain in Karachi", or "German Embassy" — and return
+# nothing at all rather than something wrong.
+# A post name never spans a line break, so the separators here are horizontal
+# whitespace only. With plain \s+ the match ran off the end of the heading and
+# swallowed the start of the next line ("...in Karachi Date of decision").
+_S = r"[ \t]+"
+_POST = rf"(?:Embassy|Consulate(?:{_S}General)?|Ambassade|Konsulat|High{_S}Commission)"
+_NAME = r"[A-Za-z][\w'-]*"
+_CONSULATE = re.compile(
+    rf"(?:(?P<pre>{_NAME}){_S})?(?P<post>{_POST})"
+    rf"(?:{_S}(?:of|de|du|der){_S}(?P<of>{_NAME}(?:{_S}{_NAME}){{0,3}}))?"
+    rf"(?:{_S}in{_S}(?P<city>{_NAME}(?:{_S}{_NAME}){{0,2}}))?",
+    re.I,
+)
+# Words that can precede "Embassy" in a sentence without naming one.
+_NOT_A_NAME = {
+    "the", "a", "an", "this", "that", "your", "our", "their", "its", "his", "her",
+    "is", "was", "has", "have", "had", "will", "would", "by", "at", "to", "from",
+    "and", "or", "any", "each", "every", "relevant", "respective", "issuing",
+}
+
+
 def _meta(text: str) -> tuple[str | None, str | None]:
     consulate = None
-    m = re.search(
-        r"(embassy|consulate(?: general)?|ambassade|konsulat)[^\n]{0,80}", text, re.I
-    )
-    if m:
-        consulate = re.sub(r"\s+", " ", m.group(0)).strip()[:120]
+    for m in _CONSULATE.finditer(text):
+        pre, of = m.group("pre"), m.group("of")
+        # A post is only identified when something actually names it: either
+        # "<Country> Embassy" or "Embassy of <Country>".
+        named_by_prefix = bool(pre) and pre.lower() not in _NOT_A_NAME
+        named_by_suffix = bool(of) and of.split()[0].lower() not in _NOT_A_NAME
+        if not (named_by_prefix or named_by_suffix):
+            continue
+        # A leading word that is not part of the name ("at Embassy of France")
+        # must not be carried into the result, so start from the keyword itself
+        # unless the prefix is what identified the post.
+        start = m.start("pre") if named_by_prefix else m.start("post")
+        consulate = re.sub(r"\s+", " ", text[start:m.end()]).strip()[:120]
+        break
 
     decision_date = None
     m = re.search(r"(?:date of (?:the )?decision|decision date|dated)\D{0,20}" + _DATE.pattern,

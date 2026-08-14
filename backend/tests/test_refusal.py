@@ -93,6 +93,48 @@ def test_ticked_form_extracts_the_consulate():
     assert "Spain" in (decode_text(TICKED).consulate or "")
 
 
+def test_the_issuing_post_is_only_read_when_the_letter_names_one():
+    """"The consulate has refused your application" names no consulate.
+
+    Grabbing the words after the keyword turned a sentence fragment into the
+    heading on someone's recovery plan. Silence is the correct answer here.
+    """
+    from app.refusal.decoder import _meta
+
+    for named, expected in [
+        ("Consulate General of Spain in Karachi", "Consulate General of Spain in Karachi"),
+        ("CONSULATE GENERAL OF ITALY IN KARACHI", "CONSULATE GENERAL OF ITALY IN KARACHI"),
+        ("Embassy of France in Islamabad", "Embassy of France in Islamabad"),
+        ("German Embassy, Lahore", "German Embassy"),
+        ("High Commission of Canada in Islamabad", "High Commission of Canada in Islamabad"),
+        # A leading word that is not part of the name must not be carried in.
+        ("This was decided at Embassy of France in Islamabad.",
+         "Embassy of France in Islamabad"),
+    ]:
+        assert _meta(named)[0] == expected
+
+
+def test_the_post_name_does_not_run_across_line_breaks():
+    """A real letter is a form, not a sentence — the name sits on its own line,
+    with unrelated words directly above and below it."""
+    from app.refusal.decoder import _meta
+
+    assert _meta(TICKED)[0] == "Consulate General of Spain in Karachi"
+    assert _meta(
+        "STANDARD FORM FOR NOTIFYING AND MOTIVATING REFUSAL OF A VISA\n"
+        "Consulate General of Italy in Karachi\n"
+        "Date of decision: 2026-07-14\n"
+    )[0] == "Consulate General of Italy in Karachi"
+
+    for prose in [
+        "The consulate has refused your application.",
+        "Your application was refused by the embassy.",
+        "the relevant consulate will contact you in due course",
+        "This decision was taken at the embassy in question.",
+    ]:
+        assert _meta(prose)[0] is None, prose
+
+
 def test_prose_letter_decodes_without_tick_marks():
     """Some states print the reasons as prose; the wording still identifies them."""
     result = decode_text(PROSE)

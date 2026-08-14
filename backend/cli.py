@@ -9,6 +9,7 @@ which §8 says to do before trusting any of it.
     python cli.py check --corridor schengen_short_stay_pk --profile employed \\
         --from 2026-09-10 --to 2026-09-20 --pdf out.pdf ./bundle/*.pdf
     python cli.py validate app/rulepacks/uk_visitor_pk.json
+    python cli.py refusal ./past-refusals/ --corridor schengen_short_stay --verbose
     python cli.py purge
 """
 
@@ -346,6 +347,103 @@ def cmd_doctor(_args) -> int:
     return 1
 
 
+def cmd_refusal(args) -> int:
+    """Decode refusal letters from the terminal, one or a folder at a time.
+
+    The README tells an operator to run past refusals through the tool before
+    trusting the rule packs, which until now meant doing it one upload at a
+    time through the web app. A folder of anonymised letters is the realistic
+    shape of that work, and the summary at the end is the number that matters:
+    how often the deterministic path was enough, and which grounds keep coming
+    up in your own casework.
+    """
+    from app.refusal import build, decode_text, from_manual, ground
+
+    paths: list[Path] = []
+    if args.codes:
+        pass
+    else:
+        for pattern in args.files or []:
+            p = Path(pattern)
+            if p.is_dir():
+                paths.extend(sorted(x for x in p.iterdir() if x.is_file()))
+            elif p.exists():
+                paths.append(p)
+            else:
+                print(f"{YELLOW}skipping missing file: {pattern}{RESET}")
+        if not paths:
+            print(f"{RED}Give one or more refusal letters, or --codes 3,7.{RESET}")
+            return 1
+
+    db = SessionLocal()
+    try:
+        pack = None
+        if args.corridor:
+            corridor = db.query(Corridor).filter(Corridor.key == args.corridor).first()
+            if not corridor:
+                print(f"{RED}Unknown corridor '{args.corridor}'.{RESET}")
+                return 1
+            if corridor.active_rulepack_id:
+                row = db.get(RulePack, corridor.active_rulepack_id)
+                pack = row.data if row else None
+
+        if args.codes:
+            cases = [("--codes", from_manual([c.strip() for c in args.codes.split(",")]))]
+        else:
+            cases = []
+            for path in paths:
+                mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+                if mime.startswith("text/") or path.suffix.lower() in {".txt", ".md"}:
+                    text = path.read_text(errors="replace")
+                else:
+                    from app.pipeline.ocr import get_provider
+
+                    text = get_provider().extract(path, mime).text or ""
+                cases.append((path.name, decode_text(text)))
+
+        tally: dict[str, int] = {}
+        deterministic = 0
+        for name, decoded in cases:
+            plan = build(decoded, pack)
+            print(f"\n{BOLD}{name}{RESET}")
+            if not decoded.grounds:
+                print(f"  {YELLOW}no grounds identified{RESET} — "
+                      "is this the page with the numbered boxes?")
+                continue
+            deterministic += decoded.method in ("deterministic", "manual")
+            print(f"  method     : {decoded.method} ({decoded.confidence:.0%} confidence)")
+            if decoded.consulate:
+                print(f"  consulate  : {decoded.consulate}")
+            if decoded.decision_date:
+                print(f"  decided    : {decoded.decision_date}")
+            colour = GREEN if plan["verdict"] == "reapply" else YELLOW
+            if plan["verdict"] == "seek_advice":
+                colour = RED
+            print(f"  verdict    : {colour}{plan['verdict']}{RESET} — {plan['headline']}")
+            for g in decoded.grounds:
+                tally[g.code] = tally.get(g.code, 0) + 1
+                mark = "" if g.fixable else f" {RED}(not fixable by reapplying){RESET}"
+                print(f"    {g.number:>2}. {g.plain}{mark}")
+                if args.verbose:
+                    rules = ", ".join(g.rule_ids) or f"{RED}no rules cover this ground{RESET}"
+                    print(f"        rules: {DIM}{rules}{RESET}")
+
+        decoded_count = sum(1 for _, d in cases if d.grounds)
+        print(f"\n{BOLD}{len(cases)} letter(s): {decoded_count} decoded, "
+              f"{len(cases) - decoded_count} not{RESET}")
+        if decoded_count:
+            print(f"  without a model call: {deterministic}/{decoded_count}")
+        if tally:
+            print("  grounds seen:")
+            for code, n in sorted(tally.items(), key=lambda kv: -kv[1]):
+                g = ground(code)
+                flag = "" if g.rule_ids else f"  {RED}<- no rule covers this{RESET}"
+                print(f"    {n:>3}x  {g.number:>2}. {code}{flag}")
+        return 0
+    finally:
+        db.close()
+
+
 def cmd_purge(_args) -> int:
     db = SessionLocal()
     try:
@@ -380,6 +478,13 @@ def main() -> int:
     c.add_argument("--pdf", help="Write the PDF report here.")
     c.add_argument("--json", help="Write the raw result JSON here.")
 
+    r = sub.add_parser("refusal", help="Decode refusal letters and summarise the grounds.")
+    r.add_argument("files", nargs="*", help="Letters, or a directory of them.")
+    r.add_argument("--codes", help="Skip decoding and name the grounds, e.g. 3,7.")
+    r.add_argument("--corridor", help="Tie each ground to this corridor's checklist.")
+    r.add_argument("--verbose", action="store_true",
+                   help="Show which rules cover each ground.")
+
     sub.add_parser("purge", help="Delete stored documents past the retention window.")
     sub.add_parser("doctor", help="Verify OCR, config and the pipeline end to end.")
 
@@ -391,6 +496,7 @@ def main() -> int:
         "corridors": cmd_corridors,
         "validate": cmd_validate,
         "check": cmd_check,
+        "refusal": cmd_refusal,
         "purge": cmd_purge,
         "doctor": cmd_doctor,
     }[args.command](args)

@@ -273,6 +273,12 @@ python cli.py check \
     --pdf report.pdf --json result.json \
     ./my-documents-folder/
 
+# Decode a folder of past refusal letters at once
+python cli.py refusal ./past-refusals/ --corridor schengen_short_stay --verbose
+
+# Or just name the grounds off the form yourself
+python cli.py refusal --codes 3,7 --corridor schengen_short_stay
+
 # Generate fake test documents (no real data needed)
 python tests/make_fixtures.py --out /tmp/clean --case clean
 python tests/make_fixtures.py --out /tmp/bad   --case problems
@@ -286,12 +292,14 @@ python cli.py purge
 
 The `check` command exits with code `2` when it finds critical issues — pipe it into your scripts, run it over folders of old cases, automate your testing.
 
+`refusal` is the other half of that workflow. Point it at a folder of past refusal letters and it prints, for each one, the grounds given, the verdict, and (with `--verbose`) which rules in your packs actually cover each ground. The summary at the end is the number worth watching: **how many grounds came up that no rule covers**. That's your list of rules to write, derived from your own casework rather than from guessing.
+
 ---
 
 ## 🧪 Tests
 
 ```bash
-cd backend && .venv/bin/python -m pytest -q     # 215 tests and counting
+cd backend && .venv/bin/python -m pytest -q     # 224 tests and counting
 cd frontend && npx tsc --noEmit && npm run build
 ```
 
