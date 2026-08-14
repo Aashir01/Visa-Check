@@ -38,6 +38,8 @@ Most tools stop at "here's your checklist". The three below are about what happe
 
 The refusal loop is also how we know whether the rules are any good. Every decoded refusal is graded against the check that preceded it — which grounds we caught, which we missed. A ground the consulate cited that our check passed clean is a gap in the rules, and it's worth more than any amount of internal testing. (It's already caught one: the global Schengen pack was missing its Art. 15 insurance rules entirely.)
 
+That grading rolls up into **`/admin/refusals`** — a per-ground scoreboard sorted worst-catch-rate-first, which is literally the work queue for the rule packs. It distinguishes a ground whose rules exist but didn't fire (tune the thresholds) from one with no rules behind it at all (write some), because those need different fixes. Every other number in the admin area measures the system against itself; this one measures it against a real consular officer.
+
 ---
 
 ## 🌍 Where does it work?
@@ -289,7 +291,7 @@ The `check` command exits with code `2` when it finds critical issues — pipe i
 ## 🧪 Tests
 
 ```bash
-cd backend && .venv/bin/python -m pytest -q     # 208 tests and counting
+cd backend && .venv/bin/python -m pytest -q     # 215 tests and counting
 cd frontend && npx tsc --noEmit && npm run build
 ```
 
@@ -325,7 +327,8 @@ backend/
     api/          Auth, corridors, checks, refusals, admin dashboard
   cli.py          Command-line runner for checks, doctor, purge
 frontend/
-  app/            Landing page, auth, check flow, reports, account, admin
+  app/            Landing page, auth, check flow, reports, refusal decoding
+                  and recovery plans, account, admin
   components/     UI primitives with glow effects
   lib/            API client, auth context, formatting utilities
 ```
