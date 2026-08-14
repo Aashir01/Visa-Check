@@ -62,6 +62,34 @@ function SparkleIcon({ className = "h-6 w-6" }: { className?: string }) {
   );
 }
 
+function FormIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M6 3h12a1 1 0 011 1v16a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1Z" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M9 8h1m-1 4h1m-1 4h1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M13 8h3m-3 4h3m-3 4h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.55" />
+    </svg>
+  );
+}
+
+function CalendarIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M4 6a1 1 0 011-1h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6Z" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M4 9h16M8 3v4m8-4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="16" cy="15" r="2.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function RepeatIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M4 9a5 5 0 015-5h9m0 0-3-3m3 3-3 3M20 15a5 5 0 01-5 5H6m0 0 3 3m-3-3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 // --------------------------------------------------------------------------
 // Checklist data
 // --------------------------------------------------------------------------
@@ -83,6 +111,24 @@ const RISK_FACTORS = [
   { factor: "Purpose of Visit", risk: "Low Risk", color: "text-neon-500" },
   { factor: "Document Completeness", risk: "Low Risk", color: "text-neon-500" },
   { factor: "Overall Consistency", risk: "Low Risk", color: "text-neon-500" },
+];
+
+const AFTER_REFUSAL = [
+  {
+    icon: FormIcon,
+    title: "The grounds, decoded",
+    desc: "Which of the eleven you were given, what each one actually means about your file, and which documents it points at.",
+  },
+  {
+    icon: CalendarIcon,
+    title: "Dated to your appointment",
+    desc: "A bank statement that is fine today can be six weeks stale by your slot. We date every document against the day you hand it in — because that is the date the consulate applies.",
+  },
+  {
+    icon: RepeatIcon,
+    title: "Re-check, ground by ground",
+    desc: "Rebuild the file and we report exactly what you fixed, what is still open, and whether the grounds you were refused on are now clear. Free — confirming a fix should not cost another check.",
+  },
 ];
 
 const HOW_IT_WORKS = [
@@ -293,6 +339,76 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-ink mb-1">{item.title}</h3>
                 <p className="text-xs text-muted leading-relaxed">{item.desc}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/*  AFTER A REFUSAL                                                  */}
+      {/*                                                                   */}
+      {/*  The differentiator, and the reason people come back. Every other */}
+      {/*  tool stops at "here is your checklist"; this is about the moment */}
+      {/*  someone has already lost their fee.                              */}
+      {/* ================================================================ */}
+      <section id="refusals" className="container-page py-16">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-center">
+          <div>
+            <Badge className="border-neon-500/20 bg-neon-500/10 text-neon-400 mb-4">
+              ALREADY BEEN REFUSED?
+            </Badge>
+            <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+              A Schengen refusal is not a letter.
+              <br />
+              <span className="text-neon-500">It is a form.</span>
+            </h2>
+            <p className="mt-4 max-w-xl leading-relaxed text-muted">
+              The Visa Code fixes one standard refusal form with eleven numbered
+              grounds, identical in all 29 member states. The officer ticks boxes. That
+              means the reason you were refused is a number — and a number can be read.
+            </p>
+            <p className="mt-3 max-w-xl leading-relaxed text-muted">
+              Upload the form and we will tell you which grounds you were given in plain
+              words, whether reapplying can actually answer them, and exactly what to
+              change first. We match it against the official wording rather than guessing
+              — so most letters are decoded exactly, and it costs you nothing.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <LinkButton href="/refusals/new" variant="neon" size="lg">
+                Decode my refusal — free
+              </LinkButton>
+              <LinkButton href="/check/new" variant="secondary" size="lg">
+                Check a file before submitting
+              </LinkButton>
+            </div>
+
+            <p className="mt-4 max-w-xl text-xs leading-relaxed text-muted">
+              Some grounds cannot be answered with better paperwork at all. When yours is
+              one of them we say so and point you at appealing, rather than selling you a
+              re-check that cannot help.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {AFTER_REFUSAL.map((item, i) => (
+              <Card
+                key={item.title}
+                className="border-glow p-5 animate-slide-up"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neon-500/20 bg-neon-500/10">
+                    <item.icon className="h-6 w-6 text-neon-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-ink">
+                      {item.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted">{item.desc}</p>
+                  </div>
+                </div>
               </Card>
             ))}
           </div>
