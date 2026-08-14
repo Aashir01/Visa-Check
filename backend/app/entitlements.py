@@ -31,6 +31,47 @@ class Entitlement:
     spend_from_org: bool = False
 
 
+def verification_is_free(db, check) -> bool:
+    """Is this re-check a free confirmation of a fix?
+
+    Charging again to confirm the fixes we ourselves asked for breaks the loop
+    the product is actually for: nobody gets a file right first time, and a
+    person who has just spent an evening rebuilding their bundle should not hit
+    a paywall for the answer to "did that work?".
+
+    So each check grants exactly one free child, up to a small chain depth. The
+    per-parent limit stops an endless free chain; the depth limit stops a long
+    one. A second attempt at the same parent is charged normally.
+    """
+    from .models import Check, CheckStatus  # local: entitlements imports early
+
+    parent_id = getattr(check, "parent_check_id", None)
+    if not parent_id:
+        return False
+
+    # One free child per parent — the first re-check, not every re-check.
+    # Only siblings that were actually started count; an abandoned draft must
+    # not consume someone's free confirmation.
+    siblings = (
+        db.query(Check)
+        .filter(
+            Check.parent_check_id == parent_id,
+            Check.id != check.id,
+            Check.status != CheckStatus.draft,
+        )
+        .count()
+    )
+    if siblings:
+        return False
+
+    # Walk up the chain so a chain of free re-checks cannot run forever.
+    depth, node = 0, check
+    while node and node.parent_check_id and depth <= settings.free_recheck_depth:
+        node = db.get(Check, node.parent_check_id)
+        depth += 1
+    return depth <= settings.free_recheck_depth
+
+
 def is_paid_plan(org: Organization | None) -> bool:
     return bool(org and org.plan in settings.paid_plan_set)
 

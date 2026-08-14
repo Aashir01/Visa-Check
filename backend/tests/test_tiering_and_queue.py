@@ -113,6 +113,71 @@ def test_refund_restores_what_was_spent(db):
     assert user.credits == 2 and user.ai_credits == 1
 
 
+# --------------------------------------------------------------------------
+# free verification re-checks
+#
+# The rule these guard: confirming a fix we asked for is part of the check
+# already paid for. What they mostly guard against is the opposite failure —
+# that "free re-check" quietly becomes "free checks forever".
+# --------------------------------------------------------------------------
+
+
+def _recheck_row(db, user, *, parent=None, status=CheckStatus.draft):
+    row = Check(
+        user_id=user.id,
+        org_id=user.org_id,
+        corridor_id="c1",
+        rulepack_id="rp1",
+        applicant_profile="employed",
+        parent_check_id=parent.id if parent else None,
+        status=status,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def test_a_first_check_is_never_free(db):
+    user = make_user(db)
+    assert entitlements.verification_is_free(db, _recheck_row(db, user)) is False
+
+
+def test_the_first_recheck_of_a_check_is_free(db):
+    user = make_user(db)
+    parent = _recheck_row(db, user, status=CheckStatus.complete)
+    assert entitlements.verification_is_free(db, _recheck_row(db, user, parent=parent)) is True
+
+
+def test_a_second_recheck_of_the_same_check_is_charged(db):
+    user = make_user(db)
+    parent = _recheck_row(db, user, status=CheckStatus.complete)
+    _recheck_row(db, user, parent=parent, status=CheckStatus.complete)
+    second = _recheck_row(db, user, parent=parent)
+    assert entitlements.verification_is_free(db, second) is False
+
+
+def test_an_abandoned_draft_does_not_burn_the_free_recheck(db):
+    """A draft nobody ran is not an attempt, and must not count as one."""
+    user = make_user(db)
+    parent = _recheck_row(db, user, status=CheckStatus.complete)
+    _recheck_row(db, user, parent=parent, status=CheckStatus.draft)
+    assert entitlements.verification_is_free(db, _recheck_row(db, user, parent=parent)) is True
+
+
+def test_the_free_chain_does_not_run_forever(db):
+    """Otherwise recheck-of-a-recheck is an unlimited supply of free checks."""
+    user = make_user(db)
+    node = _recheck_row(db, user, status=CheckStatus.complete)
+    frees = 0
+    for _ in range(6):
+        child = _recheck_row(db, user, parent=node, status=CheckStatus.complete)
+        if entitlements.verification_is_free(db, child):
+            frees += 1
+        node = child
+    assert frees == settings.free_recheck_depth
+
+
 def test_global_free_tier_ai_switch(db, monkeypatch):
     user = make_user(db, credits=3, ai_credits=0)
     assert entitlements.evaluate(user).ai_enabled is False

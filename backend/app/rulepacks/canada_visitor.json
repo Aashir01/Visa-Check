@@ -2,7 +2,7 @@
   "schema_version": 2,
   "corridor_key": "canada_visitor",
   "version": "1.0.0",
-  "title": "Canada Visitor Visa (TRV) \u00e2\u20ac\u201d Global",
+  "title": "Canada Visitor Visa (TRV) — Global",
   "unverified": true,
   "effective_date": "2026-08-11",
   "currency": "CAD",
@@ -14,7 +14,7 @@
     "summary": "Canada Temporary Resident Visa (TRV) for tourism, family visits, business. TRV ($100 CAD), eTA ($7 CAD, 5 years) or visa-exempt depending on nationality. US citizens exempt from both. Biometrics required for most visa applicants.",
     "sources": [
       {
-        "title": "IRCC \u00e2\u20ac\u201d Visit Canada",
+        "title": "IRCC — Visit Canada",
         "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada.html"
       },
       {

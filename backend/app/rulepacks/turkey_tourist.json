@@ -2,7 +2,7 @@
   "schema_version": 2,
   "corridor_key": "turkey_tourist",
   "version": "1.0.0",
-  "title": "Turkey Tourist / e-Visa \u00e2\u20ac\u201d Global",
+  "title": "Turkey Tourist / e-Visa — Global",
   "unverified": true,
   "effective_date": "2026-08-11",
   "currency": "TRY",
@@ -18,7 +18,7 @@
         "url": "https://www.evisa.gov.tr/"
       },
       {
-        "title": "MFA Turkey \u00e2\u20ac\u201d Visa Information",
+        "title": "MFA Turkey — Visa Information",
         "url": "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa"
       }
     ]

@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
   "corridor_key": "schengen_short_stay",
-  "version": "1.0.0",
-  "title": "Schengen short-stay (Type C) \u00e2\u20ac\u201d Global",
+  "version": "1.1.0",
+  "title": "Schengen short-stay (Type C) — Global",
   "unverified": true,
   "effective_date": "2026-08-11",
   "currency": "EUR",
@@ -11,14 +11,14 @@
   "provenance": {
     "researched_at": "2026-08-11",
     "verified_against_casework": false,
-    "summary": "EU-wide rules from Regulation (EC) No 810/2009 (Visa Code). Covers 29 Schengen countries. Funds are per member state \u00e2\u20ac\u201d set destination_country (ISO alpha-2) in applicant_meta.",
+    "summary": "EU-wide rules from Regulation (EC) No 810/2009 (Visa Code). Covers 29 Schengen countries. Funds are per member state — set destination_country (ISO alpha-2) in applicant_meta.",
     "sources": [
       {
-        "title": "Regulation (EC) No 810/2009 \u00e2\u20ac\u201d Visa Code",
+        "title": "Regulation (EC) No 810/2009 — Visa Code",
         "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
       },
       {
-        "title": "Your Europe \u00e2\u20ac\u201d Travel documents for non-EU nationals",
+        "title": "Your Europe — Travel documents for non-EU nationals",
         "url": "https://europa.eu/youreurope/citizens/travel/entry-exit/non-eu-nationals/index_en.htm"
       }
     ]
@@ -26,8 +26,8 @@
   "source_notes": [
     "Covers all 29 Schengen countries. Check if your nationality needs a visa at EU regulation 1806/2018.",
     "Passport: valid 3+ months beyond departure, issued within 10 years, 2 blank pages (Visa Code Art. 12).",
-    "Insurance: \u00e2\u201a\u00ac30,000+ cover, emergency, hospitalisation, repatriation (Visa Code Art. 15).",
-    "Funds: vary by member state. Defaults to Spain (\u00e2\u201a\u00ac122.10/day). Set destination_country for correct threshold.",
+    "Insurance: €30,000+ cover, emergency, hospitalisation, repatriation (Visa Code Art. 15).",
+    "Funds: vary by member state. Defaults to Spain (€122.10/day). Set destination_country for correct threshold.",
     "EES live since 10 April 2026 at all Schengen external borders."
   ],
   "disclaimer": "Document completeness check. Not immigration advice.",
@@ -123,7 +123,7 @@
       "sources": [
         "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
       ],
-      "why": "\u00e2\u201a\u00ac30,000+ cover, emergency, hospitalisation, repatriation, valid across Schengen.",
+      "why": "€30,000+ cover, emergency, hospitalisation, repatriation, valid across Schengen.",
       "fix": "Purchase Schengen-compliant policy."
     },
     {
@@ -157,7 +157,7 @@
         "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
       ],
       "why": "Round-trip itinerary showing entry and exit.",
-      "fix": "Flight reservation \u00e2\u20ac\u201d do not purchase before decision."
+      "fix": "Flight reservation — do not purchase before decision."
     },
     {
       "key": "hotel_booking",
@@ -534,6 +534,71 @@
         ]
       },
       "fix": "Explain any deposit exceeding 25% of balance."
+    },
+    {
+      "id": "insurance.coverage",
+      "type": "numeric_min",
+      "severity": "critical",
+      "title": "Travel medical insurance is below the €30,000 minimum",
+      "category": "validity",
+      "passed_label": "Insurance meets the €30,000 minimum cover",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "params": {
+        "document": "travel_insurance",
+        "field": "coverage_amount",
+        "min": 30000,
+        "currency": "EUR"
+      },
+      "fix": "Article 15 of the Visa Code sets a hard floor of €30,000. Ask your insurer for a Schengen-compliant policy at or above that figure — a lower policy is refused on sight, whatever else your file contains."
+    },
+    {
+      "id": "insurance.dates",
+      "type": "date_coverage",
+      "severity": "critical",
+      "title": "Travel insurance does not cover the whole trip",
+      "category": "validity",
+      "passed_label": "Insurance covers every day of the trip",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "params": {
+        "document": "travel_insurance",
+        "from_field": "valid_from",
+        "to_field": "valid_to"
+      },
+      "fix": "The policy must be valid for the entire intended stay, not most of it. Ask the insurer to reissue it covering every day from departure to return, including both travel days."
+    },
+    {
+      "id": "insurance.repatriation",
+      "type": "boolean_required",
+      "severity": "critical",
+      "title": "Insurance does not state repatriation cover",
+      "category": "validity",
+      "passed_label": "Insurance states repatriation cover",
+      "authority": "law",
+      "profiles": [
+        "*"
+      ],
+      "sources": [
+        "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A32009R0810"
+      ],
+      "params": {
+        "document": "travel_insurance",
+        "field": "covers_repatriation",
+        "expected": true
+      },
+      "detail": "Your certificate does not show cover for repatriation. The Visa Code requires the policy to cover repatriation for medical reasons and in the event of death, and consulates check for those words specifically.",
+      "fix": "Ask the insurer for a certificate that names repatriation for medical reasons and repatriation in the event of death. Many policies include it but do not print it — a certificate that does not say so is treated as a policy that does not have it."
     }
   ],
   "llm_review": {

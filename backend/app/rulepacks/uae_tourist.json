@@ -2,7 +2,7 @@
   "schema_version": 2,
   "corridor_key": "uae_tourist",
   "version": "1.0.0",
-  "title": "UAE Tourist / Visit Visa \u00e2\u20ac\u201d Global",
+  "title": "UAE Tourist / Visit Visa — Global",
   "unverified": true,
   "effective_date": "2026-08-11",
   "currency": "AED",
@@ -14,7 +14,7 @@
     "summary": "UAE tourist and visit visa for Dubai, Abu Dhabi etc. Visa-free/on-arrival for many (UK, EU, USA, etc.). Others apply via airlines (Emirates, Etihad), hotels, or agencies. 30 or 90 day options.",
     "sources": [
       {
-        "title": "UAE Government \u00e2\u20ac\u201d Tourist visa",
+        "title": "UAE Government — Tourist visa",
         "url": "https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae"
       }
     ]

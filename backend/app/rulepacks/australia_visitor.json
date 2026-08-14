@@ -2,7 +2,7 @@
   "schema_version": 2,
   "corridor_key": "australia_visitor",
   "version": "1.0.0",
-  "title": "Australia Visitor Visa \u00e2\u20ac\u201d Global",
+  "title": "Australia Visitor Visa — Global",
   "unverified": true,
   "effective_date": "2026-08-11",
   "currency": "AUD",
@@ -14,7 +14,7 @@
     "summary": "Australia Visitor visa (subclass 600) for tourism, family visits, business. ETA (601) for eligible nationals, eVisitor (651) for EU/EEA. Subclass 600 ($195 AUD) for visa-required nationals.",
     "sources": [
       {
-        "title": "Home Affairs \u00e2\u20ac\u201d Visitor visa (subclass 600)",
+        "title": "Home Affairs — Visitor visa (subclass 600)",
         "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600"
       }
     ]

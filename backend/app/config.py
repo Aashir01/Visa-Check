@@ -105,6 +105,9 @@ class Settings(BaseSettings):
     free_ai_credits_per_user: int = 1
     # Plans that always get the AI review.
     paid_plans: str = "starter,agency,white_label"
+    # Confirming a fix should not cost another check. Each check grants one
+    # free re-check, for chains up to this deep — after that, normal pricing.
+    free_recheck_depth: int = 2
 
     # --- abuse controls ---
     # Rate limits are enforced per process. On a single instance that is

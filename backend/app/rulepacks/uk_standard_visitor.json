@@ -2,7 +2,7 @@
   "schema_version": 2,
   "corridor_key": "uk_standard_visitor",
   "version": "1.0.0",
-  "title": "UK Standard Visitor \u00e2\u20ac\u201d Global",
+  "title": "UK Standard Visitor — Global",
   "unverified": true,
   "effective_date": "2026-08-11",
   "currency": "GBP",
@@ -11,10 +11,10 @@
   "provenance": {
     "researched_at": "2026-08-11",
     "verified_against_casework": false,
-    "summary": "UK Standard Visitor rules under Appendix V of the Immigration Rules. Up to 6 months for tourism, family visits, business, short study. Visa required, ETA (\u00c2\u00a310), or visa-free depending on nationality. No fixed financial minimum published.",
+    "summary": "UK Standard Visitor rules under Appendix V of the Immigration Rules. Up to 6 months for tourism, family visits, business, short study. Visa required, ETA (Â£10), or visa-free depending on nationality. No fixed financial minimum published.",
     "sources": [
       {
-        "title": "GOV.UK \u00e2\u20ac\u201d Visit the UK as a Standard Visitor",
+        "title": "GOV.UK — Visit the UK as a Standard Visitor",
         "url": "https://www.gov.uk/standard-visitor"
       },
       {
@@ -24,11 +24,11 @@
     ]
   },
   "source_notes": [
-    "Visa fee: \u00c2\u00a3135 for up to 6 months. Apply online at gov.uk. Earliest: 3 months before travel.",
-    "ETA (\u00c2\u00a310, 2-year validity): for EU/EEA, USA, Canada, Australia, Japan, and other visa-free nationals.",
+    "Visa fee: Â£135 for up to 6 months. Apply online at gov.uk. Earliest: 3 months before travel.",
+    "ETA (Â£10, 2-year validity): for EU/EEA, USA, Canada, Australia, Japan, and other visa-free nationals.",
     "No fixed financial minimum. Must show ability to support yourself + return journey.",
     "Passport valid for entire stay. No minimum beyond departure date.",
-    "NHS not free for visitors \u00e2\u20ac\u201d charged 150% of tariff. Travel insurance strongly recommended."
+    "NHS not free for visitors — charged 150% of tariff. Travel insurance strongly recommended."
   ],
   "disclaimer": "Document completeness check. Not immigration advice.",
   "fx": {
@@ -362,7 +362,7 @@
         "per_day_amount": 100,
         "minimum_total": 500
       },
-      "fix": "\u00c2\u00a3100/day heuristic. UK publishes no fixed minimum."
+      "fix": "Â£100/day heuristic. UK publishes no fixed minimum."
     },
     {
       "id": "financial.recency",
