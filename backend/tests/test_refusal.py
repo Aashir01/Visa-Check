@@ -362,3 +362,106 @@ def test_summarise_counts_and_finds_the_soonest():
     s = summarise(build_timeline(_Ctx(docs, today), {}))
     assert s["expired"] == 1 and s["expiring"] == 1
     assert s["soonest"]["document_type"] == "passport"
+
+
+# --------------------------------------------------------------------------
+# the report card, aggregated
+#
+# The admin insights page is how a gap in the rules becomes visible. Two things
+# have to stay true for it to be trustworthy: a ground nobody has graded yet
+# must not look like a perfect score, and a ground with no rules behind it must
+# be distinguishable from one whose rules simply failed to fire.
+# --------------------------------------------------------------------------
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.api.admin import refusal_insights
+from app.db import Base
+from app.models import Refusal
+
+
+@pytest.fixture
+def insights_db(tmp_path):
+    engine = create_engine(
+        f"sqlite:///{tmp_path/'insights.db'}", connect_args={"check_same_thread": False}
+    )
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine, expire_on_commit=False)()
+    yield session
+    session.close()
+
+
+def _refusal(db, *, codes, caught=(), missed=(), check_id="chk", status="decoded",
+             method="deterministic"):
+    row = Refusal(
+        user_id="u1",
+        check_id=check_id,
+        status=status,
+        method=method,
+        ground_codes=list(codes),
+        caught_by_check=[{"code": c, "number": 0, "rules": []} for c in caught],
+        missed_by_check=[{"code": c, "number": 0, "rules": []} for c in missed],
+    )
+    db.add(row)
+    db.commit()
+    return row
+
+
+def _by_code(result):
+    return {g["code"]: g for g in result["grounds"]}
+
+
+def test_catch_rate_counts_only_grounds_that_were_graded(insights_db):
+    _refusal(insights_db, codes=["insufficient_means"], caught=["insufficient_means"])
+    _refusal(insights_db, codes=["insufficient_means"], missed=["insufficient_means"])
+    g = _by_code(refusal_insights(days=90, db=insights_db))["insufficient_means"]
+    assert g["cited"] == 2 and g["caught"] == 1 and g["missed"] == 1
+    assert g["catch_rate"] == 0.5
+
+
+def test_an_ungraded_ground_has_no_catch_rate_rather_than_a_perfect_one(insights_db):
+    """A refusal with no prior check cannot grade us. Silence is not a pass."""
+    _refusal(insights_db, codes=["no_insurance"], check_id=None)
+    g = _by_code(refusal_insights(days=90, db=insights_db))["no_insurance"]
+    assert g["cited"] == 1
+    assert g["catch_rate"] is None
+    assert g["caught"] == 0 and g["missed"] == 0
+
+
+def test_grounds_are_ordered_worst_catch_rate_first(insights_db):
+    _refusal(insights_db, codes=["insufficient_means"], caught=["insufficient_means"])
+    _refusal(insights_db, codes=["no_insurance"], missed=["no_insurance"])
+    order = [g["code"] for g in refusal_insights(days=90, db=insights_db)["grounds"]]
+    assert order.index("no_insurance") < order.index("insufficient_means")
+
+
+def test_a_ground_with_no_rules_behind_it_is_flagged(insights_db):
+    """No rule can ever catch this one — a different problem from a rule that
+    exists and misses, and the fix is different too."""
+    _refusal(insights_db, codes=["false_document"], missed=["false_document"])
+    g = _by_code(refusal_insights(days=90, db=insights_db))["false_document"]
+    assert g["has_rules"] is False
+
+
+def test_gaps_lists_only_grounds_we_actually_missed(insights_db):
+    _refusal(insights_db, codes=["insufficient_means"], caught=["insufficient_means"])
+    _refusal(insights_db, codes=["no_insurance"], missed=["no_insurance"])
+    result = refusal_insights(days=90, db=insights_db)
+    assert [g["code"] for g in result["gaps"]] == ["no_insurance"]
+
+
+def test_deterministic_share_reports_how_much_ran_without_a_model(insights_db):
+    _refusal(insights_db, codes=["insufficient_means"], method="deterministic")
+    _refusal(insights_db, codes=["insufficient_means"], method="deterministic")
+    _refusal(insights_db, codes=["doubts_statements"], method="llm")
+    result = refusal_insights(days=90, db=insights_db)
+    assert result["deterministic_share"] == round(2 / 3, 3)
+
+
+def test_an_undecoded_refusal_is_counted_but_grades_nothing(insights_db):
+    _refusal(insights_db, codes=[], status="undecoded", method="none")
+    result = refusal_insights(days=90, db=insights_db)
+    assert result["total"] == 1 and result["decoded"] == 0 and result["undecoded"] == 1
+    assert result["grounds"] == []

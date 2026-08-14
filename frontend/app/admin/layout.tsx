@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin/rules", label: "Rule packs" },
   { href: "/admin/corridors", label: "Corridors" },
   { href: "/admin/reviews", label: "Review queue" },
+  { href: "/admin/refusals", label: "Refusal insights" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/costs", label: "Costs" },
 ];
@@ -24,8 +25,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading || !user || user.role !== "admin") return <Loading />;
 
   return (
-    <div className="min-h-screen bg-white/5">
-      <header className="border-b border-line bg-white">
+    <div className="min-h-screen bg-surface">
+      <header className="border-b border-line bg-surface-elevated">
         <div className="container-page flex h-16 items-center justify-between gap-4">
           <Link href="/admin" className="flex items-center gap-2">
             <ShieldMark className="h-5 w-5" />

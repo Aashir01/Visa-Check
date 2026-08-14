@@ -182,8 +182,8 @@ export default function UploadPage() {
         }}
         className={`cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition ${
           dragging
-            ? "border-brand-600 bg-neon-500/10"
-            : "border-line bg-white hover:border-neon-500/40/50"
+            ? "border-neon-500 bg-neon-500/10"
+            : "border-line bg-surface-elevated hover:border-neon-500/50"
         }`}
       >
         <input

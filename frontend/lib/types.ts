@@ -363,6 +363,44 @@ export interface RefusalSummary {
   created_at: string;
 }
 
+/** How well the rule packs predicted a ground the consulate actually cited. */
+export interface GroundPerformance {
+  code: string;
+  number: number;
+  plain: string;
+  category: string;
+  fixable: boolean;
+  cited: number;
+  caught: number;
+  missed: number;
+  catch_rate?: number | null;
+  has_rules: boolean;
+  rule_ids: string[];
+}
+
+export interface RefusalInsights {
+  period_days: number;
+  total: number;
+  decoded: number;
+  undecoded: number;
+  graded: number;
+  deterministic_share?: number | null;
+  llm_cost_usd: number;
+  grounds: GroundPerformance[];
+  gaps: GroundPerformance[];
+  recent: {
+    id: string;
+    corridor_id?: string | null;
+    status: string;
+    method?: string | null;
+    confidence?: number | null;
+    ground_codes: string[];
+    missed: number[];
+    check_id?: string | null;
+    created_at: string;
+  }[];
+}
+
 export interface RulePackSummary {
   id: string;
   corridor_id: string;

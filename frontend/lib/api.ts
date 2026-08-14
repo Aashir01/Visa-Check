@@ -12,6 +12,7 @@ import type {
   Refusal,
   RefusalGround,
   RefusalSummary,
+  RefusalInsights,
   ReviewItem,
   RulePack,
   RulePackSummary,
@@ -249,6 +250,9 @@ export const api = {
       request<{ id: string; action: string; detail: unknown; user?: string; created_at: string }[]>(
         `/admin/rulepacks/${id}/audit`,
       ),
+
+    refusalInsights: (days = 90) =>
+      request<RefusalInsights>(`/admin/refusals/insights?days=${days}`),
 
     reviews: (status = "open") => request<ReviewItem[]>(`/admin/reviews?status=${status}`),
     resolveReview: (

@@ -19,6 +19,7 @@ from ..models import (
     CostEvent,
     Document,
     Organization,
+    Refusal,
     ReviewItem,
     Role,
     RulePack,
@@ -340,6 +341,117 @@ def rulepack_audit(rulepack_id: str, db: Session = Depends(get_db)):
 # --------------------------------------------------------------------------
 # review queue (/admin/reviews)
 # --------------------------------------------------------------------------
+
+
+# --------------------------------------------------------------------------
+# refusal insights (/admin/refusals)
+#
+# This is the only honest measure of whether the rule packs work. Internal
+# testing tells you the rules do what you wrote; a real refusal tells you
+# whether what you wrote was the right thing. A ground the consulate cited that
+# our check passed clean is a hole, and it is worth more than any amount of QA.
+# --------------------------------------------------------------------------
+
+
+@router.get("/refusals/insights")
+def refusal_insights(
+    days: int = Query(90, ge=1, le=365),
+    db: Session = Depends(get_db),
+):
+    from .. import refusal as refusal_mod
+
+    since = utcnow() - timedelta(days=days)
+    rows = (
+        db.query(Refusal)
+        .filter(Refusal.created_at >= since)
+        .order_by(Refusal.created_at.desc())
+        .all()
+    )
+
+    # Only refusals attached to a prior check can grade the rules — the rest
+    # still tell us which grounds are common, but not whether we caught them.
+    graded = [r for r in rows if r.check_id]
+
+    per_ground: dict[str, dict] = {}
+    for r in rows:
+        caught = {c["code"] for c in (r.caught_by_check or [])}
+        missed = {m["code"] for m in (r.missed_by_check or [])}
+        for code in r.ground_codes or []:
+            g = refusal_mod.ground(code)
+            if not g:
+                continue
+            entry = per_ground.setdefault(
+                code,
+                {
+                    "code": code,
+                    "number": g.number,
+                    "plain": g.plain,
+                    "category": g.category,
+                    "fixable": g.fixable,
+                    "cited": 0,
+                    "caught": 0,
+                    "missed": 0,
+                    "rule_ids": list(g.rule_ids),
+                },
+            )
+            entry["cited"] += 1
+            if code in caught:
+                entry["caught"] += 1
+            elif code in missed:
+                entry["missed"] += 1
+
+    grounds = []
+    for entry in per_ground.values():
+        judged = entry["caught"] + entry["missed"]
+        entry["catch_rate"] = (
+            round(entry["caught"] / judged, 3) if judged else None
+        )
+        # A ground with no linked rules cannot ever be caught. That is a
+        # different problem from a rule that exists and fails to fire, and the
+        # admin needs to be able to tell them apart.
+        entry["has_rules"] = bool(entry["rule_ids"])
+        grounds.append(entry)
+
+    # Worst catch rate first — that is the queue of work.
+    grounds.sort(
+        key=lambda e: (
+            e["catch_rate"] if e["catch_rate"] is not None else 2,
+            -e["cited"],
+        )
+    )
+
+    decoded = [r for r in rows if r.status == "decoded"]
+    deterministic = [r for r in decoded if r.method == "deterministic"]
+
+    return {
+        "period_days": days,
+        "total": len(rows),
+        "decoded": len(decoded),
+        "undecoded": len(rows) - len(decoded),
+        "graded": len(graded),
+        # The share decoded without a model call. If this drops, either OCR has
+        # regressed or consulates have changed their wording.
+        "deterministic_share": (
+            round(len(deterministic) / len(decoded), 3) if decoded else None
+        ),
+        "llm_cost_usd": round(sum(r.llm_cost_usd or 0 for r in rows), 4),
+        "grounds": grounds,
+        "gaps": [g for g in grounds if g["missed"] > 0],
+        "recent": [
+            {
+                "id": r.id,
+                "corridor_id": r.corridor_id,
+                "status": r.status,
+                "method": r.method,
+                "confidence": r.confidence,
+                "ground_codes": r.ground_codes or [],
+                "missed": [m["number"] for m in (r.missed_by_check or [])],
+                "check_id": r.check_id,
+                "created_at": r.created_at,
+            }
+            for r in rows[:50]
+        ],
+    }
 
 
 @router.get("/reviews", response_model=list[ReviewItemOut])
