@@ -3,19 +3,23 @@
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { FileIcon, SparkleIcon, UploadIcon } from "@/components/icons";
+import { CHECK_STEPS, PageHeader } from "@/components/page-header";
 import {
   Alert,
   Badge,
   Button,
   Card,
-  Field,
+  CardHeader,
+  Chip,
+  EmptyState,
   Loading,
   Select,
   Spinner,
 } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { useRequireAuth } from "@/lib/auth";
-import { formatBytes } from "@/lib/format";
+import { formatBytes, titleCase } from "@/lib/format";
 import type { Check, DocumentOut, Entitlement } from "@/lib/types";
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp";
@@ -135,9 +139,7 @@ export default function UploadPage() {
     } catch (err) {
       setRunning(false);
       if (err instanceof ApiError && err.status === 402) {
-        setError(
-          "You have no checks remaining. Visit your account page to see your balance.",
-        );
+        setError("You have no checks remaining. Visit your account page to see your balance.");
       } else {
         setError(err instanceof Error ? err.message : "Could not start the analysis.");
       }
@@ -147,187 +149,224 @@ export default function UploadPage() {
   if (authLoading || (!check && !error)) return <Loading />;
 
   return (
-    <div className="container-narrow py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Upload your documents</h1>
-        <p className="mt-1 text-muted">
-          {check?.corridor_label}
-          {check?.applicant_profile && ` · ${check.applicant_profile.replace(/_/g, " ")}`}
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        breadcrumbs={[
+          { href: "/checks", label: "Your checks" },
+          { href: "/check/new", label: "New check" },
+          { label: "Upload" },
+        ]}
+        title="Upload your documents"
+        lede="Drop the whole bundle in at once, in any order. We work out what each file is; you only need to correct us if we get one wrong."
+        steps={CHECK_STEPS}
+        currentStep={1}
+        actions={
+          check && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Chip>{check.corridor_label}</Chip>
+              {check.applicant_profile && <Chip>{titleCase(check.applicant_profile)}</Chip>}
+            </div>
+          )
+        }
+      />
 
-      {error && (
-        <div className="mb-5">
-          <Alert tone="error">{error}</Alert>
-        </div>
-      )}
-
-      {/* ---------------- dropzone ---------------- */}
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragging(false);
-          void addFiles(e.dataTransfer.files);
-        }}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
-        }}
-        className={`cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition ${
-          dragging
-            ? "border-neon-500 bg-neon-500/10"
-            : "border-line bg-surface-elevated hover:border-neon-500/50"
-        }`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          accept={ACCEPT}
-          className="hidden"
-          onChange={(e) => e.target.files && void addFiles(e.target.files)}
-        />
-
-        {uploading ? (
-          <div className="flex items-center justify-center gap-2 text-sm text-muted">
-            <Spinner /> Uploading and encrypting…
+      <div className="container-narrow py-8 lg:py-10">
+        {error && (
+          <div className="mb-5">
+            <Alert tone="error">{error}</Alert>
           </div>
-        ) : (
-          <>
-            <svg viewBox="0 0 24 24" className="mx-auto h-8 w-8 fill-muted" aria-hidden>
-              <path d="M12 3 7.5 7.5 9 9l2-2v8h2V7l2 2 1.5-1.5L12 3ZM4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2h-2v2H6v-2H4Z" />
-            </svg>
-            <p className="mt-3 font-medium text-ink">
-              Drop your documents here, or click to browse
-            </p>
-            <p className="mt-1 text-sm text-muted">
-              PDF, JPG, PNG or WebP · up to {MAX_MB} MB each
-            </p>
-          </>
         )}
-      </div>
 
-      {pending.length > 0 && (
-        <div className="mt-4">
-          <Alert tone="warning" title="Some files were not accepted">
-            <ul className="mt-1 space-y-0.5">
-              {pending.map((p) => (
-                <li key={p.name}>
-                  <span className="font-medium">{p.name}</span> — {p.error}
-                </li>
-              ))}
-            </ul>
-          </Alert>
-        </div>
-      )}
-
-      {/* ---------------- uploaded files ---------------- */}
-      {docs.length > 0 && (
-        <Card className="mt-6">
-          <div className="flex items-center justify-between border-b border-line px-5 py-3">
-            <h2 className="font-semibold text-ink">
-              {docs.length} {docs.length === 1 ? "document" : "documents"}
-            </h2>
-            <span className="text-xs text-muted">
-              Types are detected when the check runs
-            </span>
-          </div>
-
-          <ul className="divide-y divide-line">
-            {docs.map((doc) => (
-              <li key={doc.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-ink">{doc.filename}</p>
-                  <p className="text-xs text-muted">
-                    {formatBytes(doc.size_bytes)}
-                    {doc.doc_type_label && doc.doc_type_source && (
-                      <> · detected as {doc.doc_type_label}</>
-                    )}
-                  </p>
-                </div>
-
-                <div className="w-52">
-                  <Select
-                    value={doc.doc_type ?? ""}
-                    onChange={(e) => void setType(doc.id, e.target.value)}
-                    className="text-xs"
-                    aria-label={`Document type for ${doc.filename}`}
-                  >
-                    <option value="">Detect automatically</option>
-                    {types.map((t) => (
-                      <option key={t.key} value={t.key}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                {doc.doc_type_source === "user" && (
-                  <Badge className="border-neon-500/25 bg-neon-500/10 text-neon-500">
-                    set by you
-                  </Badge>
-                )}
-
-                <button
-                  onClick={() => void removeDoc(doc.id)}
-                  className="rounded-lg px-2 py-1 text-sm text-muted transition hover:bg-critical/10 hover:text-critical"
-                  aria-label={`Remove ${doc.filename}`}
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {/* ---------------- run ---------------- */}
-      <div className="mt-8 flex flex-col items-start gap-3">
-        <Button
-          onClick={runCheck}
-          disabled={docs.length === 0 || running || uploading}
-          size="lg"
+        {/* ---------------- dropzone ---------------- */}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            void addFiles(e.dataTransfer.files);
+          }}
+          onClick={() => inputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Add documents"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
+          className={`drop-zone cursor-pointer px-6 py-12 text-center ${dragging ? "drag-over" : ""}`}
         >
-          {running && <Spinner />}
-          Analyse {docs.length > 0 ? `${docs.length} document${docs.length === 1 ? "" : "s"}` : "documents"}
-        </Button>
+          <input
+            ref={inputRef}
+            type="file"
+            multiple
+            accept={ACCEPT}
+            className="hidden"
+            onChange={(e) => e.target.files && void addFiles(e.target.files)}
+          />
 
-        {docs.length === 0 && (
-          <p className="text-sm text-muted">Upload at least one document to continue.</p>
-        )}
+          {uploading ? (
+            <div className="flex items-center justify-center gap-2.5 text-sm text-muted">
+              <Spinner /> Uploading and encrypting…
+            </div>
+          ) : (
+            <>
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-neon-500/25 bg-neon-500/10 text-neon-400">
+                <UploadIcon className="h-6 w-6" />
+              </span>
+              <p className="mt-4 font-display text-lg font-semibold text-ink">
+                Drop your documents here
+              </p>
+              <p className="mt-1 text-sm text-muted">or click to browse your files</p>
+              <p className="mt-4 text-xs text-muted-soft">
+                PDF, JPG, PNG or WebP · up to {MAX_MB} MB each
+              </p>
+            </>
+          )}
+        </div>
 
-        {entitlement && (
-          <div className="w-full max-w-xl">
-            <Alert tone={entitlement.ai_included ? "success" : "info"}>
-              {entitlement.ai_included ? (
-                <>
-                  <strong>Full check.</strong> Every checklist, identity, financial, date
-                  and photo rule, plus the AI review of your letters.
-                  {!entitlement.ai_always_included && (
-                    <> You have {entitlement.ai_credits_remaining} full check(s) left.</>
-                  )}
-                </>
-              ) : (
-                <>
-                  <strong>Free check.</strong> Every checklist, identity, financial, date
-                  and photo rule runs. The AI review of your letters is not included.
-                </>
-              )}
+        {pending.length > 0 && (
+          <div className="mt-4">
+            <Alert tone="warning" title="Some files were not accepted">
+              <ul className="mt-1.5 space-y-1">
+                {pending.map((p) => (
+                  <li key={p.name}>
+                    <span className="font-medium">{p.name}</span> — {p.error}
+                  </li>
+                ))}
+              </ul>
             </Alert>
           </div>
         )}
 
-        <p className="text-xs leading-relaxed text-muted">
-          Your files are encrypted as soon as they arrive and deleted automatically after
-          30 days. Analysis usually takes under a minute. Running a check uses one credit.
-        </p>
+        {/* ---------------- uploaded files ---------------- */}
+        {docs.length > 0 ? (
+          <Card className="mt-6">
+            <CardHeader
+              icon={<FileIcon className="h-4 w-4" />}
+              title={`${docs.length} ${docs.length === 1 ? "document" : "documents"}`}
+              subtitle="Types are detected when the check runs — override any that look wrong."
+            />
+
+            <ul className="divide-y divide-line">
+              {docs.map((doc) => (
+                <li key={doc.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-elevated text-muted">
+                    <FileIcon className="h-4 w-4" />
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-ink">{doc.filename}</p>
+                    <p className="text-xs text-muted">
+                      {formatBytes(doc.size_bytes)}
+                      {doc.doc_type_label && doc.doc_type_source && (
+                        <> · detected as {doc.doc_type_label}</>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="w-full sm:w-52">
+                    <Select
+                      value={doc.doc_type ?? ""}
+                      onChange={(e) => void setType(doc.id, e.target.value)}
+                      className="text-xs"
+                      aria-label={`Document type for ${doc.filename}`}
+                    >
+                      <option value="">Detect automatically</option>
+                      {types.map((t) => (
+                        <option key={t.key} value={t.key}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+
+                  {doc.doc_type_source === "user" && (
+                    <Badge className="border-neon-500/25 bg-neon-500/10 text-neon-300">
+                      set by you
+                    </Badge>
+                  )}
+
+                  <button
+                    onClick={() => void removeDoc(doc.id)}
+                    className="rounded-lg px-2.5 py-1.5 text-sm text-muted transition hover:bg-critical/10 hover:text-critical"
+                    aria-label={`Remove ${doc.filename}`}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ) : (
+          <div className="mt-6">
+            <EmptyState title="Nothing uploaded yet" icon={<FileIcon className="h-6 w-6" />}>
+              Add your passport, financial evidence, bookings and letters. You can drop them all
+              in one go and reorder nothing.
+            </EmptyState>
+          </div>
+        )}
+
+        {/* ---------------- run ---------------- */}
+        <Card className="mt-8 p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="font-display text-base font-semibold text-ink">
+                Ready when you are
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                {docs.length === 0
+                  ? "Upload at least one document to continue."
+                  : "Analysis usually takes under a minute."}
+              </p>
+            </div>
+            <Button
+              onClick={runCheck}
+              loading={running}
+              disabled={docs.length === 0 || uploading}
+              size="lg"
+            >
+              Analyse{" "}
+              {docs.length > 0
+                ? `${docs.length} document${docs.length === 1 ? "" : "s"}`
+                : "documents"}
+              <span aria-hidden>→</span>
+            </Button>
+          </div>
+
+          {entitlement && (
+            <div className="mt-5">
+              <Alert tone={entitlement.ai_included ? "success" : "info"}>
+                {entitlement.ai_included ? (
+                  <>
+                    <strong>Full check.</strong> Every checklist, identity, financial, date and
+                    photo rule, plus the AI review of your letters.
+                    {!entitlement.ai_always_included && (
+                      <> You have {entitlement.ai_credits_remaining} full check(s) left.</>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <strong>Free check.</strong> Every checklist, identity, financial, date and
+                    photo rule runs. The AI review of your letters is not included.
+                  </>
+                )}
+              </Alert>
+            </div>
+          )}
+
+          <p className="mt-5 flex items-start gap-2 border-t border-line pt-4 text-xs leading-relaxed text-muted-soft">
+            <SparkleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            Your files are encrypted as soon as they arrive and deleted automatically after 30
+            days. Running a check uses one credit; re-checking the same file afterwards does
+            not.
+          </p>
+        </Card>
       </div>
     </div>
   );

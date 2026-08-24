@@ -22,10 +22,10 @@ export const SEVERITY_STYLE: Record<Severity, { chip: string; text: string; labe
 };
 
 export const BAND_STYLE: Record<RiskBand, { text: string; bar: string; ring: string; color: string }> = {
-  low: { text: "text-neon-500", bar: "bg-neon-500", ring: "stroke-neon-500", color: "#00E666" },
-  moderate: { text: "text-yellow-400", bar: "bg-yellow-500", ring: "stroke-yellow-500", color: "#EAB308" },
-  elevated: { text: "text-warn", bar: "bg-warn", ring: "stroke-warn", color: "#FFB84D" },
-  high: { text: "text-critical", bar: "bg-critical", ring: "stroke-critical", color: "#FF4D4D" },
+  low: { text: "text-good", bar: "bg-good", ring: "stroke-good", color: "#12B76A" },
+  moderate: { text: "text-yellow-400", bar: "bg-yellow-500", ring: "stroke-yellow-500", color: "#F79009" },
+  elevated: { text: "text-warn", bar: "bg-warn", ring: "stroke-warn", color: "#F97316" },
+  high: { text: "text-critical", bar: "bg-critical", ring: "stroke-critical", color: "#F04438" },
 };
 
 export function bandFor(score: number | null | undefined): RiskBand {

@@ -3,194 +3,359 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { Alert, Badge, Card, LinkButton, Loading } from "@/components/ui";
+import {
+  AlertIcon,
+  CalendarIcon,
+  ChartIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ClockIcon,
+  FormIcon,
+  GlobeIcon,
+  LockIcon,
+  PassportIcon,
+  RepeatIcon,
+  ScanIcon,
+  ShieldIcon,
+  SparkleIcon,
+  UploadIcon,
+  XCircleIcon,
+} from "@/components/icons";
+import { GlobeIllustration, RefusalFormIllustration } from "@/components/illustrations";
+import { AmbientVideo, MediaScrim, Picture } from "@/components/media";
+import { Reveal } from "@/components/reveal";
+import {
+  Alert,
+  Badge,
+  Card,
+  Chip,
+  LinkButton,
+  ScoreGauge,
+  SectionHeading,
+  Skeleton,
+  Stat,
+} from "@/components/ui";
 import { api } from "@/lib/api";
+import {
+  CLIP_IMMIGRATION_DESK,
+  CLIP_PAPERWORK,
+  PHOTO_PASSPORTS_WINDOW,
+  PHOTO_PASSPORT_STAMPS,
+  PHOTO_VISA_PAGE,
+  corridorPhoto,
+} from "@/lib/media";
 import type { Corridor } from "@/lib/types";
 
-// --------------------------------------------------------------------------
-// Icon components
-// --------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
 
-function ShieldIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8.9 7.5 10 4.3-1.1 7.5-5.4 7.5-10v-6L12 2.5Z" stroke="currentColor" strokeWidth="1.5" />
-      <path d="m8.6 12.1 2.3 2.3 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function UploadIcon({ className = "h-8 w-8" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M12 16V4m0 0L8 8m4-4 4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CheckCircle({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden>
-      <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" />
-      <path d="m7 10 2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ScanIcon({ className = "h-6 w-6" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2M3 17v2a2 2 0 002 2h2m10 0h2a2 2 0 002-2v-2M7 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ChartIcon({ className = "h-6 w-6" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M18 20V10m-6 10V4M6 20v-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function SparkleIcon({ className = "h-6 w-6" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z" fill="currentColor" />
-      <path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15z" fill="currentColor" opacity="0.5" />
-    </svg>
-  );
-}
-
-function FormIcon({ className = "h-6 w-6" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M6 3h12a1 1 0 011 1v16a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1Z" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M9 8h1m-1 4h1m-1 4h1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M13 8h3m-3 4h3m-3 4h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.55" />
-    </svg>
-  );
-}
-
-function CalendarIcon({ className = "h-6 w-6" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M4 6a1 1 0 011-1h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6Z" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M4 9h16M8 3v4m8-4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="16" cy="15" r="2.2" fill="currentColor" />
-    </svg>
-  );
-}
-
-function RepeatIcon({ className = "h-6 w-6" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M4 9a5 5 0 015-5h9m0 0-3-3m3 3-3 3M20 15a5 5 0 01-5 5H6m0 0 3 3m-3-3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-// --------------------------------------------------------------------------
-// Checklist data
-// --------------------------------------------------------------------------
-
-const DOCUMENT_CHECKLIST = [
-  { label: "Passport", status: "Not Uploaded" },
-  { label: "Cover Letter / Purpose of Visit", status: "Not Uploaded" },
-  { label: "Bank Statement", status: "Not Uploaded" },
-  { label: "Flight Booking", status: "Not Uploaded" },
-  { label: "Hotel Booking / Accommodation", status: "Not Uploaded" },
-  { label: "Travel Insurance", status: "Not Uploaded" },
-  { label: "Additional Documents", status: "Not Uploaded" },
+const TRUST_STATS = [
+  { value: "11", label: "corridors covered", hint: "across 9 destinations" },
+  { value: "$0.00", label: "for a full deterministic check", hint: "AI review is the only paid part" },
+  { value: "30 days", label: "then source documents are purged", hint: "encrypted the whole time" },
 ];
 
-const RISK_FACTORS = [
-  { factor: "Document Authenticity", risk: "Low Risk", color: "text-neon-500" },
-  { factor: "Financial Stability", risk: "Low Risk", color: "text-neon-500" },
-  { factor: "Travel History", risk: "Low Risk", color: "text-neon-500" },
-  { factor: "Purpose of Visit", risk: "Low Risk", color: "text-neon-500" },
-  { factor: "Document Completeness", risk: "Low Risk", color: "text-neon-500" },
-  { factor: "Overall Consistency", risk: "Low Risk", color: "text-neon-500" },
+const WHAT_WE_CHECK = [
+  {
+    icon: CheckCircleIcon,
+    title: "Document checklist",
+    desc: "Matched against what your visa type actually requires — and the requirements shift depending on whether you are employed, a student, self-employed or retired.",
+  },
+  {
+    icon: PassportIcon,
+    title: "Name and detail matching",
+    desc: "Your name, date of birth and passport number, compared across every file. A ticket that spells your name differently from your passport is a real refusal reason.",
+  },
+  {
+    icon: ChartIcon,
+    title: "Funds",
+    desc: "Reads the balance, converts currency, and checks it against your destination's published daily amount. Flags a suspiciously large last-minute deposit.",
+  },
+  {
+    icon: ScanIcon,
+    title: "Photo compliance",
+    desc: "Dimensions, head size in frame, background colour and sharpness, measured against the ICAO spec that applies to your corridor.",
+  },
+  {
+    icon: CalendarIcon,
+    title: "Validity windows",
+    desc: "Is the passport valid long enough past your return? Does the insurance cover every day? Are the statements and letters still in date on the day you hand them in?",
+  },
+  {
+    icon: SparkleIcon,
+    title: "AI letter review",
+    desc: "Invitation, employment and cover letters read for the specific details consulates look for — not merely confirmed to exist. The one part that costs money.",
+  },
+];
+
+const FEATURE_CARDS = [
+  {
+    title: "A checklist that cites its sources",
+    tag: "Free",
+    desc: "Every corridor's requirements are pinned to published sources at a stated version and date, then adjusted for your employment situation.",
+    href: "/check/new",
+    photo: PHOTO_PASSPORT_STAMPS,
+  },
+  {
+    title: "AI that actually reads the letters",
+    tag: "Optional AI",
+    desc: "Invitation letters, employment letters, cover letters — read for the details a consular officer looks for, rather than ticked off as present.",
+    href: "/check/new",
+    photo: PHOTO_PASSPORTS_WINDOW,
+  },
+  {
+    title: "Dated to your appointment day",
+    tag: "Free",
+    desc: "A statement that is fine today can be stale by your slot. Every age limit is measured against the day you hand the file in, with a timeline of what expires when.",
+    href: "/check/new",
+    photo: PHOTO_VISA_PAGE,
+  },
+];
+
+const HOW_IT_WORKS = [
+  {
+    step: "01",
+    title: "Pick your corridor",
+    desc: "Destination, your situation, travel dates and the day of your appointment. The checklist appears before you upload anything.",
+    icon: GlobeIcon,
+  },
+  {
+    step: "02",
+    title: "Upload the bundle",
+    desc: "PDFs or photos, in any order. Document types are detected for you, and everything is encrypted the moment it arrives.",
+    icon: UploadIcon,
+  },
+  {
+    step: "03",
+    title: "The rules run",
+    desc: "Checklist, identity, funds, dates and photo rules evaluate in seconds. The AI letter review runs only if your check includes it.",
+    icon: ScanIcon,
+  },
+  {
+    step: "04",
+    title: "Fix, then re-check",
+    desc: "A 0–100 score with severity-ranked issues and fix instructions. Re-checking shows the delta — fixed, still open, new — and costs nothing.",
+    icon: RepeatIcon,
+  },
 ];
 
 const AFTER_REFUSAL = [
   {
     icon: FormIcon,
     title: "The grounds, decoded",
-    desc: "Which of the eleven you were given, what each one actually means about your file, and which documents it points at.",
+    desc: "Which of the eleven you were given, what each one says about your file, and which documents it points at.",
   },
   {
     icon: CalendarIcon,
     title: "Dated to your appointment",
-    desc: "A bank statement that is fine today can be six weeks stale by your slot. We date every document against the day you hand it in — because that is the date the consulate applies.",
+    desc: "A bank statement that is fine today can be six weeks stale by your slot. Every document is dated against the day you hand it in, because that is the date the consulate applies.",
   },
   {
     icon: RepeatIcon,
     title: "Re-check, ground by ground",
-    desc: "Rebuild the file and we report exactly what you fixed, what is still open, and whether the grounds you were refused on are now clear. Free — confirming a fix should not cost another check.",
+    desc: "Rebuild the file and we report what you fixed, what is still open, and whether the grounds you were refused on are now clear. Free — confirming a fix should not cost another check.",
   },
 ];
 
-const HOW_IT_WORKS = [
-  { step: "1", title: "UPLOAD", desc: "Upload all required visa documents", icon: UploadIcon },
-  { step: "2", title: "ANALYZE", desc: "Our AI system analyzes and verifies", icon: ScanIcon },
-  { step: "3", title: "RISK SCORE", desc: "Get risk score and detailed report", icon: ChartIcon },
-  { step: "4", title: "IMPROVE", desc: "Follow suggestions to reduce risk", icon: SparkleIcon },
+// Mirrors the plans the backend actually recognises — free, starter, agency,
+// white_label. Inventing a price on the landing page that no plan implements
+// is the sort of thing that only shows up after someone tries to buy it.
+const PRICING = [
+  {
+    name: "Free",
+    price: "$0",
+    cadence: "",
+    lede: "The whole checklist, every deterministic rule, and one full AI check to try it.",
+    features: [
+      "Complete document checklist for your corridor",
+      "Identity, funds, dates and photo rules",
+      "One full AI analysis included",
+      "Refusal decoding, always free",
+    ],
+    cta: { label: "Start free", href: "/check/new", variant: "secondary" as const },
+    featured: false,
+  },
+  {
+    name: "Starter",
+    price: "$29",
+    cadence: "/month",
+    lede: "For someone working through their own application, or one or two a month.",
+    features: [
+      "25 checks per month",
+      "AI review of invitation, employment and cover letters",
+      "PDF report",
+      "Free re-checks with a fixed / still-open diff",
+    ],
+    cta: { label: "Get started", href: "/register", variant: "primary" as const },
+    featured: true,
+  },
+  {
+    name: "Agency",
+    price: "$79",
+    cadence: "/month",
+    lede: "For consultancies running files for several applicants at once.",
+    features: [
+      "150 checks per month",
+      "Team seats — everyone sees every check",
+      "Shared credit pool",
+      "Priority support",
+    ],
+    cta: { label: "Get started", href: "/register", variant: "neon" as const },
+    featured: false,
+  },
+  {
+    name: "White-label",
+    price: "$199",
+    cadence: "/month",
+    lede: "Reports that go out under your own name rather than ours.",
+    features: [
+      "Everything in Agency",
+      "Your logo, name and colour on every report",
+      "Higher check volume",
+      "Priority support",
+    ],
+    cta: { label: "Talk to us", href: "/register", variant: "secondary" as const },
+    featured: false,
+  },
 ];
 
-// --------------------------------------------------------------------------
-// Circular gauge for the risk score (larger, more dramatic)
-// --------------------------------------------------------------------------
+const FAQ = [
+  {
+    q: "Is this immigration advice?",
+    a: "No. VisaGuard is a document completeness checker. It reports whether your documents match a named checklist at a stated version and date. It does not assess your eligibility, and nothing it produces predicts the outcome of an application. For advice about your circumstances, speak to a qualified adviser or the consulate.",
+  },
+  {
+    q: "What does the free check actually include?",
+    a: "Every deterministic rule: the checklist itself, name and detail matching across files, the funds calculation, all the validity windows, and photo compliance. That is roughly ninety per cent of what the tool does. The only paid part is the AI reading the content of your letters.",
+  },
+  {
+    q: "What happens to my documents?",
+    a: "They are encrypted the moment they arrive and are never stored as plaintext — decryption happens in a short-lived temporary file only while a rule is reading them. Source documents are deleted automatically after thirty days; the report survives, the files do not. Deleting a check wipes its files immediately. Nothing is used to train models.",
+  },
+  {
+    q: "Why does the appointment date matter so much?",
+    a: "Because it is the date the consulate applies, not today's date. A bank statement issued today is forty-six days old at an appointment three weeks out, and plenty of documents have an age limit shorter than that. Tell us when you are handing the file in and every limit is measured against that day, with a timeline showing what expires when.",
+  },
+  {
+    q: "How does refusal decoding work?",
+    a: "A Schengen refusal is not a letter — it is a form. Annex VI of the Visa Code fixes eleven numbered grounds, identical across all twenty-nine member states, and the officer ticks boxes. We match your form against the official wording rather than asking a model to guess, so most letters decode exactly. It costs nothing.",
+  },
+  {
+    q: "Does a re-check cost another credit?",
+    a: "No. Charging again to confirm the fixes we asked for would be absurd. A re-check reports the delta — what you fixed, what is still open, what is new — and if you are recovering from a refusal, whether the specific grounds you were cited on are now clear.",
+  },
+];
 
-function RiskGauge({ score }: { score: number }) {
-  const size = 200;
-  const stroke = 14;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const filled = (Math.max(0, Math.min(100, score)) / 100) * circumference;
-  const color = score >= 85 ? "#00E666" : score >= 65 ? "#EAB308" : score >= 40 ? "#FFB84D" : "#FF4D4D";
+// ---------------------------------------------------------------------------
+// The sample report
+//
+// The old landing page showed a mock dashboard with an upload zone and a score
+// of 23, unlabelled — which reads as a live check that has somehow already
+// analysed documents nobody uploaded. It is presented here as what it is: a
+// worked example, captioned as such, so the product is legible without the
+// page pretending to be signed in.
+// ---------------------------------------------------------------------------
 
+const SAMPLE_FINDINGS = [
+  {
+    severity: "critical" as const,
+    title: "Travel insurance does not cover the whole trip",
+    detail: "Cover ends 12 Mar, one day before your return flight on 13 Mar.",
+  },
+  {
+    severity: "critical" as const,
+    title: "Name mismatch between passport and flight booking",
+    detail: "Passport reads AHMED KHAN; the booking reads AHMAD KHAN.",
+  },
+  {
+    severity: "warning" as const,
+    title: "Bank statement will be 41 days old at your appointment",
+    detail: "This corridor accepts statements up to 30 days old on the day of submission.",
+  },
+  {
+    severity: "warning" as const,
+    title: "Large deposit nine days before applying",
+    detail: "€4,200 credited on 2 Feb with no matching salary entry. Add evidence of source.",
+  },
+  {
+    severity: "info" as const,
+    title: "Cover letter does not state your return intent",
+    detail: "Optional, but it is the first thing this consulate looks for.",
+  },
+];
+
+const SEVERITY_UI = {
+  critical: { icon: XCircleIcon, chip: "border-critical/30 bg-critical/10 text-critical", label: "Critical" },
+  warning: { icon: AlertIcon, chip: "border-warn/30 bg-warn/10 text-warn", label: "Warning" },
+  info: { icon: CheckCircleIcon, chip: "border-neon-500/30 bg-neon-500/10 text-neon-300", label: "Info" },
+};
+
+function SampleReport() {
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
-      {/* Outer glow ring */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `radial-gradient(circle, ${color}15 0%, transparent 70%)`,
-          filter: `blur(20px)`,
-        }}
-      />
-      <svg width={size} height={size} className="-rotate-90 relative z-10">
-        {/* Track */}
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke} stroke="rgba(255,255,255,0.05)" />
-        {/* Score arc */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${circumference}`}
-          stroke={color}
-          style={{ filter: `drop-shadow(0 0 12px ${color})`, transition: "stroke-dasharray 1.5s ease-out" }}
-        />
-      </svg>
-      <div className="absolute z-10 flex flex-col items-center">
-        <span className="text-5xl font-bold tabular-nums" style={{ color }}>
-          {score}%
-        </span>
-        <span className="mt-1 text-xs font-semibold uppercase tracking-wider" style={{ color }}>
-          LOW RISK
-        </span>
+    <Card className="overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface-elevated px-5 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-2 w-2 rounded-full bg-good" />
+          <span className="text-sm font-semibold text-ink">Schengen — short stay</span>
+          <Chip className="font-mono text-[11px]">checklist v2.1.0</Chip>
+        </div>
+        <span className="text-xs text-muted">Worked example</span>
       </div>
-    </div>
+
+      <div className="grid gap-6 p-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:gap-8 sm:p-6">
+        <div className="flex justify-center">
+          <ScoreGauge score={58} band="elevated" size={150} />
+        </div>
+        <div>
+          <p className="eyebrow">Rejection risk — elevated</p>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted">
+            Two issues would very likely stop this file at the counter, and both take under
+            an hour to fix. The score moves to <span className="font-semibold text-good">91</span>{" "}
+            once they are resolved.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Badge className="border-critical/30 bg-critical/10 text-critical">2 critical</Badge>
+            <Badge className="border-warn/30 bg-warn/10 text-warn">2 warnings</Badge>
+            <Badge className="border-line bg-surface-hover text-muted">1 note</Badge>
+          </div>
+        </div>
+      </div>
+
+      <ul className="divide-y divide-line border-t border-line">
+        {SAMPLE_FINDINGS.map((f) => {
+          const ui = SEVERITY_UI[f.severity];
+          const Icon = ui.icon;
+          return (
+            <li key={f.title} className="flex gap-3.5 px-5 py-4 transition-colors hover:bg-surface-hover/60">
+              <span
+                className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${ui.chip}`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">{f.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted">{f.detail}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="border-t border-line bg-surface-elevated px-5 py-3.5">
+        <p className="text-xs leading-relaxed text-muted">
+          Illustrative figures. Your report is built from your own documents and your
+          corridor&rsquo;s current rule pack.
+        </p>
+      </div>
+    </Card>
   );
 }
 
-// --------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Page
-// --------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 export default function LandingPage() {
   const [corridors, setCorridors] = useState<Corridor[] | null>(null);
@@ -204,179 +369,212 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="bg-surface min-h-screen">
-      {/* ================================================================ */}
-      {/*  HERO + MAIN DASHBOARD AREA                                      */}
-      {/* ================================================================ */}
-      <section className="container-page py-8 lg:py-12">
-        <div className="grid gap-8 lg:grid-cols-5">
-          {/* ---------------------------------------------------------------- */}
-          {/*  LEFT COLUMN — Upload + Checklist (3/5)                          */}
-          {/* ---------------------------------------------------------------- */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Heading */}
-            <div className="animate-slide-up">
-              <Badge className="border-neon-500/20 bg-neon-500/10 text-neon-400 mb-4">
-                <SparkleIcon className="h-3.5 w-3.5" />
-                AI POWERED VISA SECURITY CHECK SYSTEM
-              </Badge>
-              <h1 className="text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">
-                Upload your documents and get an{" "}
-                <span className="text-neon-500">AI risk analysis</span> to avoid visa rejection.
-              </h1>
+    <div>
+      {/* =================================================================
+          HERO
+          ================================================================= */}
+      <section className="relative isolate overflow-hidden">
+        <AmbientVideo clip={CLIP_IMMIGRATION_DESK} />
+        <MediaScrim direction="left" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-grid opacity-30 mask-radial"
+        />
+
+        {/* The header floats over this, so the top padding clears it. */}
+        <div className="container-page relative grid gap-14 pb-20 pt-16 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,480px)] lg:items-center lg:gap-12 lg:pb-28 lg:pt-24">
+          <div className="animate-slide-up">
+            <Badge className="border-neon-500/30 bg-neon-500/10 text-neon-300 backdrop-blur">
+              <SparkleIcon className="h-3.5 w-3.5" />
+              Checked against a versioned, sourced checklist
+            </Badge>
+
+            <h1 className="mt-6 max-w-[15ch] font-display text-display-lg font-bold text-white [text-wrap:pretty] sm:max-w-none">
+              Find the problem in your visa file{" "}
+              <span className="text-gradient">before the consulate does.</span>
+            </h1>
+
+            <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-slate-300">
+              Upload your application bundle and get a rejection-risk report in under a minute
+              — missing documents, name mismatches, funds, expiry dates and photo spec, all
+              measured against the published requirements for your corridor.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <LinkButton href="/check/new" variant="primary" size="lg">
+                Run a free check
+                <span aria-hidden>→</span>
+              </LinkButton>
+              <LinkButton href="/refusals/new" variant="onMedia" size="lg">
+                Decode a refusal
+              </LinkButton>
             </div>
 
-            {/* Upload drop zone */}
-            <Card className="border-glow overflow-hidden animate-slide-up" style={{ animationDelay: "0.1s" }}>
-              <div className="drop-zone m-4 flex flex-col items-center justify-center rounded-xl py-14 px-6 text-center cursor-pointer transition-all duration-300">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-neon-500/10 border border-neon-500/20 mb-4">
-                  <UploadIcon className="h-8 w-8 text-neon-500" />
-                </div>
-                <p className="text-lg font-semibold text-ink">DRAG & DROP FILES HERE</p>
-                <p className="mt-1 text-sm text-muted">or click to upload</p>
-                <p className="mt-3 text-xs text-muted/60">
-                  Supported formats: PDF, JPG, PNG (Max 20MB each)
-                </p>
-              </div>
-            </Card>
+            <p className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <CheckIcon className="h-3.5 w-3.5 text-good" /> No card required
+              </span>
+              <span className="flex items-center gap-1.5">
+                <LockIcon className="h-3.5 w-3.5 text-good" /> Encrypted at rest
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ClockIcon className="h-3.5 w-3.5 text-good" /> Deleted after 30 days
+              </span>
+            </p>
 
-            {/* Document checklist */}
-            <Card className="border-glow animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <div className="flex items-center gap-2 border-b border-line px-5 py-4">
-                <CheckCircle className="h-5 w-5 text-neon-500" />
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-ink">DOCUMENT CHECKLIST</h2>
-              </div>
-              <div className="divide-y divide-line">
-                {DOCUMENT_CHECKLIST.map((item) => (
-                  <div key={item.label} className="flex items-center justify-between px-5 py-3.5 hover:bg-surface-hover transition-colors">
-                    <span className="text-sm text-ink">{item.label}</span>
-                    <span className="text-xs font-medium text-muted bg-surface-elevated border border-line rounded-full px-2.5 py-1">
-                      {item.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Card>
+            <div className="mt-12 grid gap-6 border-t border-white/10 pt-8 sm:grid-cols-3">
+              {TRUST_STATS.map((s) => (
+                <Stat key={s.label} value={s.value} label={s.label} hint={s.hint} />
+              ))}
+            </div>
           </div>
 
-          {/* ---------------------------------------------------------------- */}
-          {/*  RIGHT COLUMN — Risk Score + Analysis (2/5)                      */}
-          {/* ---------------------------------------------------------------- */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Risk Score Card */}
-            <Card className="border-glow-strong overflow-hidden animate-slide-up" style={{ animationDelay: "0.15s" }}>
-              <div className="border-b border-line px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <ShieldIcon className="h-5 w-5 text-neon-500" />
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-ink">VISA RISK SCORE</h2>
-                </div>
-                <p className="mt-0.5 text-xs text-muted">AI ANALYSIS</p>
-              </div>
-              <div className="flex flex-col items-center py-8 px-4">
-                <p className="text-xs font-medium text-muted mb-3 uppercase tracking-wider">
-                  Based on AI analysis of your documents, your visa rejection risk is
-                </p>
-                <RiskGauge score={23} />
-                <div className="mt-6 w-full rounded-xl bg-neon-500/5 border border-neon-500/10 p-4 text-center">
-                  <p className="text-sm font-semibold text-neon-400">GOOD NEWS!</p>
-                  <p className="mt-1 text-xs text-muted">
-                    Your visa application has a low risk of rejection.
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Risk Factors Analysis */}
-            <Card className="border-glow animate-slide-up" style={{ animationDelay: "0.25s" }}>
-              <div className="border-b border-line px-5 py-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-ink">RISK FACTORS ANALYSIS</h2>
-              </div>
-              <div className="divide-y divide-line">
-                <div className="flex items-center justify-between px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted">
-                  <span>Factor</span>
-                  <span>Risk</span>
-                </div>
-                {RISK_FACTORS.map((item) => (
-                  <div key={item.factor} className="flex items-center justify-between px-5 py-3 hover:bg-surface-hover transition-colors">
-                    <span className="text-sm text-ink">{item.factor}</span>
-                    <span className={`text-xs font-semibold ${item.color} flex items-center gap-1.5`}>
-                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                      {item.risk}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-line px-5 py-4">
-                <button className="w-full rounded-lg bg-neon-600 text-black font-semibold text-sm py-2.5 px-4 hover:bg-neon-500 transition-colors shadow-glow-sm">
-                  VIEW DETAILED REPORT
-                </button>
-              </div>
-            </Card>
+          {/* The report is the product, so it is what the hero shows. */}
+          <div className="animate-slide-up lg:pl-4" style={{ animationDelay: "120ms" }}>
+            <div className="rounded-[26px] border border-white/10 bg-surface/70 p-2 shadow-overlay backdrop-blur-xl">
+              <SampleReport />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ================================================================ */}
-      {/*  HOW IT WORKS                                                    */}
-      {/* ================================================================ */}
-      <section id="how" className="border-t border-line bg-surface-elevated py-16">
+      {/* =================================================================
+          WHAT GETS CHECKED
+          ================================================================= */}
+      <section id="checks" className="section border-t border-line">
         <div className="container-page">
-          <div className="text-center mb-12">
-            <Badge className="border-neon-500/20 bg-neon-500/10 text-neon-400 mb-4">
-              SIMPLE 4-STEP PROCESS
-            </Badge>
-            <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">HOW IT WORKS</h2>
+          <SectionHeading
+            eyebrow="Everything, checked"
+            title="Your paperwork, read the way a consular officer reads it."
+            lede="The deterministic rules run instantly and cost nothing. The AI steps in only where a document has to actually be read."
+          />
+
+          <div className="mt-12 grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+            {WHAT_WE_CHECK.map((item, i) => (
+              <Reveal key={item.title} delay={i * 60}>
+                <div className="flex gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neon-500/20 bg-neon-500/10 text-neon-400">
+                    <item.icon className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="font-display text-base font-semibold text-ink">{item.title}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted">{item.desc}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {HOW_IT_WORKS.map((item, i) => (
-              <Card key={item.step} className="border-glow p-6 text-center group hover:border-neon-500/30 transition-all duration-300 animate-slide-up" style={{ animationDelay: `${i * 0.1}s` }}>
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neon-500/10 border border-neon-500/20 mx-auto mb-4 group-hover:shadow-glow transition-all">
-                  <item.icon className="h-7 w-7 text-neon-500" />
-                </div>
-                <div className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-neon-600 text-black text-xs font-bold mb-3">
-                  {item.step}
-                </div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-ink mb-1">{item.title}</h3>
-                <p className="text-xs text-muted leading-relaxed">{item.desc}</p>
-              </Card>
+          <div className="mt-14 grid gap-6 md:grid-cols-3">
+            {FEATURE_CARDS.map((f, i) => (
+              <Reveal key={f.title} delay={i * 80} className="h-full">
+                <Link href={f.href} className="group block h-full">
+                  <Card variant="interactive" className="flex h-full flex-col overflow-hidden">
+                    <Picture
+                      photo={f.photo}
+                      ratio="16/10"
+                      sizes="(min-width: 768px) 33vw, 100vw"
+                      imgClassName="transition-transform duration-[900ms] ease-out group-hover:scale-[1.07]"
+                    >
+                      <div
+                        aria-hidden
+                        className="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/25 to-transparent"
+                      />
+                      <span className="absolute bottom-3.5 left-4 rounded-full bg-neon-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white shadow-glow-sm">
+                        {f.tag}
+                      </span>
+                    </Picture>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="font-display text-lg font-semibold text-ink">{f.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted">{f.desc}</p>
+                      <p className="mt-auto pt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-neon-400">
+                        See the checklist
+                        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                      </p>
+                    </div>
+                  </Card>
+                </Link>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ================================================================ */}
-      {/*  AFTER A REFUSAL                                                  */}
-      {/*                                                                   */}
-      {/*  The differentiator, and the reason people come back. Every other */}
-      {/*  tool stops at "here is your checklist"; this is about the moment */}
-      {/*  someone has already lost their fee.                              */}
-      {/* ================================================================ */}
-      <section id="refusals" className="container-page py-16">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-center">
+      {/* =================================================================
+          HOW IT WORKS
+          ================================================================= */}
+      <section id="how" className="relative isolate overflow-hidden border-y border-line">
+        <AmbientVideo clip={CLIP_PAPERWORK} kenburns={false} />
+        <MediaScrim direction="full" />
+
+        <div className="container-page relative section">
+          <SectionHeading
+            eyebrow="Four steps"
+            title="From a folder of scans to a submission-ready file."
+            lede="Most people finish in one sitting. The longest part is finding the documents, not checking them."
+            align="center"
+          />
+
+          <ol className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {HOW_IT_WORKS.map((item, i) => (
+              <Reveal key={item.step} delay={i * 90} as="li" className="h-full">
+                <Card className="relative h-full overflow-hidden bg-surface-card/85 p-6 backdrop-blur">
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -right-3 -top-5 font-display text-7xl font-bold text-white/[0.045]"
+                  >
+                    {item.step}
+                  </span>
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-neon-500/25 bg-neon-500/10 text-neon-400">
+                    <item.icon className="h-6 w-6" />
+                  </span>
+                  <h3 className="mt-5 font-display text-base font-semibold text-ink">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{item.desc}</p>
+                </Card>
+              </Reveal>
+            ))}
+          </ol>
+
+          <div className="mt-12 flex justify-center">
+            <LinkButton href="/check/new" variant="primary" size="lg">
+              Start with your corridor
+              <span aria-hidden>→</span>
+            </LinkButton>
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================================
+          AFTER A REFUSAL
+
+          The differentiator, and the reason people come back. Every other
+          tool stops at "here is your checklist"; this is about the moment
+          someone has already lost their fee.
+          ================================================================= */}
+      <section id="refusals" className="section">
+        <div className="container-page grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,430px)] lg:items-start">
           <div>
-            <Badge className="border-neon-500/20 bg-neon-500/10 text-neon-400 mb-4">
-              ALREADY BEEN REFUSED?
-            </Badge>
-            <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-              A Schengen refusal is not a letter.
-              <br />
-              <span className="text-neon-500">It is a form.</span>
-            </h2>
-            <p className="mt-4 max-w-xl leading-relaxed text-muted">
-              The Visa Code fixes one standard refusal form with eleven numbered
-              grounds, identical in all 29 member states. The officer ticks boxes. That
-              means the reason you were refused is a number — and a number can be read.
-            </p>
-            <p className="mt-3 max-w-xl leading-relaxed text-muted">
-              Upload the form and we will tell you which grounds you were given in plain
-              words, whether reapplying can actually answer them, and exactly what to
-              change first. We match it against the official wording rather than guessing
-              — so most letters are decoded exactly, and it costs you nothing.
+            <SectionHeading
+              eyebrow="Already been refused?"
+              title={
+                <>
+                  A Schengen refusal is not a letter.
+                  <br />
+                  <span className="text-neon-400">It is a form.</span>
+                </>
+              }
+              lede="Annex VI of the Visa Code fixes one standard refusal form with eleven numbered grounds, identical in all twenty-nine member states. The officer ticks boxes. That means the reason you were refused is a number — and a number can be read."
+            />
+
+            <p className="mt-5 max-w-xl leading-relaxed text-muted">
+              Upload the form and we will tell you which grounds you were given in plain words,
+              whether reapplying can actually answer them, and what to change first. We match
+              against the official wording rather than guessing, so most letters decode exactly
+              — and it costs nothing.
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <LinkButton href="/refusals/new" variant="neon" size="lg">
+            <div className="mt-7 flex flex-wrap gap-3">
+              <LinkButton href="/refusals/new" variant="primary" size="lg">
                 Decode my refusal — free
               </LinkButton>
               <LinkButton href="/check/new" variant="secondary" size="lg">
@@ -384,196 +582,269 @@ export default function LandingPage() {
               </LinkButton>
             </div>
 
-            <p className="mt-4 max-w-xl text-xs leading-relaxed text-muted">
-              Some grounds cannot be answered with better paperwork at all. When yours is
-              one of them we say so and point you at appealing, rather than selling you a
-              re-check that cannot help.
-            </p>
+            <div className="mt-8 max-w-xl">
+              <Alert tone="info">
+                Some grounds cannot be answered with better paperwork at all. When yours is one
+                of them we say so and point you at appealing, rather than selling you a re-check
+                that cannot help.
+              </Alert>
+            </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
+            {/* The point of the section, drawn: eleven numbered boxes and a
+                tick. Original artwork rather than a photograph, because no
+                stock library has a picture of Annex VI. */}
+            <Card className="overflow-hidden bg-surface-elevated">
+              <RefusalFormIllustration className="w-full" />
+            </Card>
+
             {AFTER_REFUSAL.map((item, i) => (
-              <Card
-                key={item.title}
-                className="border-glow p-5 animate-slide-up"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neon-500/20 bg-neon-500/10">
-                    <item.icon className="h-6 w-6 text-neon-500" />
+              <Reveal key={item.title} delay={i * 80}>
+                <Card className="p-5">
+                  <div className="flex items-start gap-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neon-500/20 bg-neon-500/10 text-neon-400">
+                      <item.icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h3 className="font-display text-[15px] font-semibold text-ink">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-muted">{item.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-ink">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1 text-sm leading-relaxed text-muted">{item.desc}</p>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ================================================================ */}
-      {/*  CORRIDORS (keep existing logic)                                  */}
-      {/* ================================================================ */}
-      <section id="pricing" className="container-page py-16">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold tracking-tight text-ink">Pick your corridor</h2>
-          <p className="mt-2 text-muted max-w-xl mx-auto">
-            We cover three corridors in depth rather than thirty superficially. Accuracy is the whole product.
+      {/* =================================================================
+          CORRIDORS
+          ================================================================= */}
+      <section id="corridors" className="section border-t border-line bg-surface-sunken/60">
+        <div className="container-page">
+          <SectionHeading
+            eyebrow="Where it works"
+            title="Nine destinations, eleven corridors."
+            lede="Each with its own checklist, sourced from the published requirements and pinned to a version and a date. Any passport, any origin country."
+            align="center"
+          />
+
+          <div className="mx-auto mt-10 max-w-2xl">
+            <GlobeIllustration className="w-full" />
+          </div>
+
+          {error && (
+            <div className="mx-auto mt-10 max-w-xl">
+              <Alert tone="error" title="Could not load corridors">
+                {error}
+              </Alert>
+            </div>
+          )}
+
+          {!corridors && !error && (
+            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="h-44 w-full rounded-none" />
+                  <div className="space-y-3 p-5">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-4/5" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {corridors?.map((c, i) => {
+              const photo = corridorPhoto(c.key);
+              return (
+                <Reveal key={c.id} delay={Math.min(i, 5) * 60} className="h-full">
+                  <Link href={`/check/new?corridor=${c.id}`} className="group block h-full">
+                    <Card variant="interactive" className="flex h-full flex-col overflow-hidden">
+                      <Picture
+                        photo={photo}
+                        ratio="16/10"
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        imgClassName="transition-transform duration-[900ms] ease-out group-hover:scale-[1.07]"
+                      >
+                        <div
+                          aria-hidden
+                          className="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/55 to-transparent"
+                        />
+                        <h3 className="absolute inset-x-4 bottom-3.5 font-display text-lg font-semibold leading-snug text-white [text-shadow:0_2px_12px_rgba(5,9,17,0.9)]">
+                          {c.label}
+                        </h3>
+                      </Picture>
+
+                      <div className="flex flex-1 flex-col p-5">
+                        {c.description && (
+                          <p className="text-sm leading-relaxed text-muted">{c.description}</p>
+                        )}
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <Chip className="font-mono text-[11px]">
+                            v{c.rulepack_version ?? "—"}
+                          </Chip>
+                          {c.rulepack_unverified && (
+                            <Badge className="border-warn/30 bg-warn/10 text-warn">Draft</Badge>
+                          )}
+                        </div>
+                        <p className="mt-auto pt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-neon-400">
+                          See the checklist
+                          <span className="transition-transform duration-300 group-hover:translate-x-1">
+                            →
+                          </span>
+                        </p>
+                      </div>
+                    </Card>
+                  </Link>
+                </Reveal>
+              );
+            })}
+          </div>
+
+          {corridors?.length === 0 && !error && (
+            <div className="mx-auto mt-10 max-w-xl">
+              <Alert tone="warning" title="No corridors are enabled yet">
+                An administrator needs to publish a rule pack and enable a corridor.
+              </Alert>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* =================================================================
+          PRICING
+          ================================================================= */}
+      <section id="pricing" className="section">
+        <div className="container-page">
+          <SectionHeading
+            eyebrow="Pricing"
+            title="Applicants pay once. Agencies subscribe."
+            lede="A free check runs every deterministic rule — roughly ninety per cent of what the tool does. Paying adds the AI reading your letters."
+            align="center"
+          />
+
+          <div className="mx-auto mt-12 grid max-w-6xl items-start gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {PRICING.map((tier, i) => (
+              <Reveal key={tier.name} delay={i * 80} className="h-full">
+                <Card
+                  className={`relative flex h-full flex-col overflow-hidden p-6 ${
+                    tier.featured ? "border-neon-500/40 shadow-glow lg:-mt-4 lg:pb-8 lg:pt-8" : ""
+                  }`}
+                >
+                  {tier.featured && (
+                    <span className="absolute right-0 top-0 rounded-bl-xl bg-neon-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white">
+                      Most chosen
+                    </span>
+                  )}
+
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                    {tier.name}
+                  </p>
+                  <p className="mt-3 flex items-baseline gap-1">
+                    <span className="font-display text-4xl font-bold text-ink-strong">
+                      {tier.price}
+                    </span>
+                    {tier.cadence && (
+                      <span className="text-sm font-normal text-muted">{tier.cadence}</span>
+                    )}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{tier.lede}</p>
+
+                  <ul className="mt-6 flex-1 space-y-3 border-t border-line pt-6">
+                    {tier.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-ink">
+                        <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-good" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <LinkButton
+                    href={tier.cta.href}
+                    variant={tier.cta.variant}
+                    size="lg"
+                    className="mt-7 w-full"
+                  >
+                    {tier.cta.label}
+                  </LinkButton>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+
+          <p className="mx-auto mt-8 max-w-xl text-center text-xs leading-relaxed text-muted-soft">
+            Credits and tiers are tracked and enforced today; card payment is not yet connected,
+            so paid plans are issued manually while that is finished.
           </p>
         </div>
-
-        {error && (
-          <div className="mt-6">
-            <Alert tone="error" title="Could not load corridors">
-              {error}
-            </Alert>
-          </div>
-        )}
-
-        {!corridors && !error && <Loading label="Loading corridors…" />}
-
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {corridors?.map((c) => (
-            <Link key={c.id} href={`/check/new?corridor=${c.id}`} className="group">
-              <Card className="h-full p-5 border-glow transition-all duration-300 group-hover:border-neon-500/30 group-hover:shadow-glow">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold leading-snug text-ink">{c.label}</h3>
-                </div>
-                {c.description && (
-                  <p className="mt-2 text-sm leading-relaxed text-muted">{c.description}</p>
-                )}
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Badge className="border-line bg-surface-hover text-muted">
-                    checklist v{c.rulepack_version ?? "—"}
-                  </Badge>
-                  {c.rulepack_unverified && (
-                    <Badge className="border-warn/30 bg-warn/10 text-warn">
-                      draft
-                    </Badge>
-                  )}
-                </div>
-                <p className="mt-4 text-sm font-medium text-neon-500">
-                  See the checklist →
-                </p>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
-        {corridors?.length === 0 && !error && (
-          <Alert tone="warning" title="No corridors are enabled yet">
-            An administrator needs to publish a rule pack and enable a corridor.
-          </Alert>
-        )}
       </section>
 
-      {/* ================================================================ */}
-      {/*  ABOUT US / PRICING                                              */}
-      {/* ================================================================ */}
-      <section id="about" className="border-t border-line bg-surface-elevated py-16">
+      {/* =================================================================
+          FAQ
+          ================================================================= */}
+      <section id="faq" className="section border-t border-line bg-surface-sunken/60">
+        <div className="container-page grid gap-12 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+          <SectionHeading
+            eyebrow="Questions"
+            title="The things people ask first."
+            lede="If yours is not here, the report itself explains every rule it applied and where the requirement came from."
+          />
+
+          <div className="divide-y divide-line border-y border-line">
+            {FAQ.map((item) => (
+              <details key={item.q} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-[15px] font-semibold text-ink transition hover:text-neon-300 [&::-webkit-details-marker]:hidden">
+                  {item.q}
+                  <ChevronDownIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted transition-transform duration-300 group-open:rotate-180" />
+                </summary>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================================
+          CLOSING CTA
+          ================================================================= */}
+      <section className="section-tight">
         <div className="container-page">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold tracking-tight text-ink">Pricing</h2>
-            <p className="mt-2 text-muted">Applicants pay once. Agencies subscribe.</p>
-          </div>
+          <Card className="relative overflow-hidden border-neon-500/25 px-6 py-12 text-center sm:px-12 sm:py-16">
+            <div aria-hidden className="pointer-events-none absolute inset-0 bg-dots opacity-[0.35] mask-radial" />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22),transparent_70%)]"
+            />
 
-          <div className="grid gap-4 lg:grid-cols-3 max-w-4xl mx-auto">
-            {/* Free tier */}
-            <Card className="p-6 border-glow">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Free</p>
-              <p className="mt-2 text-3xl font-bold text-ink">$0</p>
-              <p className="mt-1 text-sm text-muted">The full checklist for your corridor.</p>
-              <ul className="mt-5 space-y-2 text-sm text-ink">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  Complete document checklist
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  Key thresholds for your profile
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  One full analysis to try it
-                </li>
-              </ul>
-              <LinkButton href="/check/new" variant="secondary" className="mt-6 w-full">
-                Start free
-              </LinkButton>
-            </Card>
-
-            {/* Pro tier */}
-            <Card className="p-6 border-neon-500/30 shadow-glow relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-neon-600 text-black text-[10px] font-bold uppercase px-3 py-1 rounded-bl-lg tracking-wider">
-                Popular
+            <div className="relative">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-neon-500/25 bg-neon-500/10 text-neon-400">
+                <ShieldIcon className="h-7 w-7" />
+              </span>
+              <h2 className="mt-6 font-display text-display-sm font-bold text-ink-strong">
+                One evening of checking beats one refused application.
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl leading-relaxed text-muted">
+                A refused application costs the fee, the appointment slot, and the weeks before
+                the next one. Checking the file first costs nothing.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <LinkButton href="/check/new" variant="primary" size="lg">
+                  Run a free check
+                  <span aria-hidden>→</span>
+                </LinkButton>
+                <LinkButton href="/refusals/new" variant="secondary" size="lg">
+                  Decode a refusal
+                </LinkButton>
               </div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-neon-400">Per Check</p>
-              <p className="mt-2 text-3xl font-bold text-ink">
-                $19<span className="text-base text-muted font-normal">/check</span>
-              </p>
-              <p className="mt-1 text-sm text-muted">Full AI-powered analysis with detailed report.</p>
-              <ul className="mt-5 space-y-2 text-sm text-ink">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  Everything in Free
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  AI letter review
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  Branded PDF report
-                </li>
-              </ul>
-              <LinkButton href="/check/new" variant="primary" className="mt-6 w-full">
-                Run a check
-              </LinkButton>
-            </Card>
-
-            {/* Agency tier */}
-            <Card className="p-6 border-glow">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Agency</p>
-              <p className="mt-2 text-3xl font-bold text-ink">
-                $99<span className="text-base text-muted font-normal">/mo</span>
-              </p>
-              <p className="mt-1 text-sm text-muted">For consultancies handling multiple applicants.</p>
-              <ul className="mt-5 space-y-2 text-sm text-ink">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  50 checks per month
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  White-label reports
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-neon-500 shrink-0" />
-                  Priority support
-                </li>
-              </ul>
-              <LinkButton href="/register" variant="neon" className="mt-6 w-full">
-                Get started
-              </LinkButton>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </div>
-      </section>
-
-      {/* ================================================================ */}
-      {/*  DISCLAIMER                                                      */}
-      {/* ================================================================ */}
-      <section className="container-page py-10">
-        <p className="text-xs leading-relaxed text-muted text-center max-w-3xl mx-auto">
-          <strong className="text-ink">Important.</strong> VisaGuard is a document completeness checker, not an
-          immigration adviser. It reports whether your documents match a named checklist at a stated version and date.
-          It does not give legal or eligibility advice, and nothing it produces predicts the outcome of any visa application.
-          Consular requirements change without notice and vary between consulates and individual cases.
-        </p>
       </section>
     </div>
   );

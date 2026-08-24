@@ -3,15 +3,17 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
+import { FormIcon } from "@/components/icons";
+import { PageHeader } from "@/components/page-header";
 import {
   Alert,
   Badge,
   Button,
   Card,
+  CardHeader,
   Field,
   Loading,
   Select,
-  Spinner,
   Textarea,
 } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -96,20 +98,14 @@ function DecodeInner() {
   if (authLoading || (!grounds && !error)) return <Loading label="Loading grounds…" />;
 
   return (
-    <div className="container-page py-10">
-      <div className="mb-8 max-w-2xl">
-        <h1 className="text-2xl font-bold tracking-tight text-ink">
-          Decode your refusal
-        </h1>
-        <p className="mt-2 leading-relaxed text-muted">
-          A Schengen refusal is not a letter — it is a form. The consulate ticks numbered
-          boxes from a list of eleven, identical in every member state. That makes the
-          reason readable, once you know what the numbers mean. Give us the form and we
-          will tell you which grounds you were given, whether reapplying can answer them,
-          and exactly what to change first.
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        breadcrumbs={[{ href: "/refusals", label: "Refusals" }, { label: "Decode" }]}
+        title="Decode your refusal"
+        lede="A Schengen refusal is not a letter — it is a form. The consulate ticks numbered boxes from a list of eleven, identical in every member state. That makes the reason readable, once you know what the numbers mean. Give us the form and we will tell you which grounds you were given, whether reapplying can answer them, and what to change first."
+      />
 
+      <div className="container-page py-8 lg:py-10">
       {error && (
         <div className="mb-6 max-w-2xl">
           <Alert tone="error" title="Could not decode that">
@@ -127,20 +123,31 @@ function DecodeInner() {
                 key={m.key}
                 type="button"
                 onClick={() => setMode(m.key)}
-                className={`rounded-xl border p-4 text-left transition ${
+                aria-pressed={mode === m.key}
+                className={`surface-lift rounded-2xl border p-4 text-left transition duration-200 ${
                   mode === m.key
-                    ? "border-neon-500/50 bg-neon-500/10 shadow-glow-sm"
-                    : "border-line bg-surface-card hover:bg-surface-hover"
+                    ? "border-neon-500/50 bg-neon-500/10 shadow-glow"
+                    : "border-line bg-surface-card hover:border-line-strong hover:bg-surface-hover"
                 }`}
               >
-                <p
-                  className={`text-sm font-semibold ${
-                    mode === m.key ? "text-neon-500" : "text-ink"
-                  }`}
-                >
-                  {m.label}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-muted">{m.blurb}</p>
+                <span className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition ${
+                      mode === m.key ? "border-neon-400" : "border-line-strong"
+                    }`}
+                  >
+                    {mode === m.key && <span className="h-2 w-2 rounded-full bg-neon-400" />}
+                  </span>
+                  <span
+                    className={`text-sm font-semibold ${
+                      mode === m.key ? "text-neon-300" : "text-ink"
+                    }`}
+                  >
+                    {m.label}
+                  </span>
+                </span>
+                <span className="mt-2 block text-xs leading-relaxed text-muted">{m.blurb}</span>
               </button>
             ))}
           </div>
@@ -151,23 +158,26 @@ function DecodeInner() {
                 label="Your refusal letter"
                 hint="PDF, JPG, PNG or WebP. Include the page with the numbered boxes."
               >
-                <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-line bg-surface-elevated px-6 py-10 text-center transition hover:border-neon-500/40 hover:bg-surface-hover">
+                <label className="drop-zone flex cursor-pointer flex-col items-center justify-center px-6 py-10 text-center">
                   <input
                     type="file"
-                    className="hidden"
+                    className="sr-only"
                     accept="application/pdf,image/jpeg,image/png,image/webp"
                     onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                   />
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-neon-500/25 bg-neon-500/10 text-neon-400">
+                    <FormIcon className="h-5 w-5" />
+                  </span>
                   {file ? (
                     <>
-                      <span className="font-medium text-ink">{file.name}</span>
+                      <span className="mt-3.5 font-medium text-ink">{file.name}</span>
                       <span className="mt-1 text-xs text-muted">
                         {formatBytes(file.size)} · click to replace
                       </span>
                     </>
                   ) : (
                     <>
-                      <span className="font-medium text-ink">Choose a file</span>
+                      <span className="mt-3.5 font-medium text-ink">Choose a file</span>
                       <span className="mt-1 text-xs text-muted">
                         A clear photo of the form is enough
                       </span>
@@ -211,7 +221,7 @@ function DecodeInner() {
                         >
                           <input
                             type="checkbox"
-                            className="mt-1 h-4 w-4 shrink-0 accent-[#00E666]"
+                            className="mt-1 h-4 w-4 shrink-0 accent-[#3B82F6]"
                             checked={on}
                             onChange={() =>
                               setPicked((prev) =>
@@ -257,16 +267,16 @@ function DecodeInner() {
               </Select>
             </Field>
 
-            <Button onClick={submit} disabled={!ready || busy} size="lg" className="w-full">
-              {busy && <Spinner />} Decode this refusal
+            <Button onClick={submit} loading={busy} disabled={!ready} size="lg" className="w-full">
+              Decode this refusal
             </Button>
           </Card>
         </div>
 
         <aside className="space-y-4">
-          <Card className="p-5">
-            <h2 className="text-sm font-semibold text-ink">What you will get</h2>
-            <ul className="mt-3 space-y-3 text-sm text-muted">
+          <Card>
+            <CardHeader title="What you will get" />
+            <ul className="space-y-3 p-5 text-sm leading-relaxed text-muted">
               <li>
                 <strong className="text-ink">The grounds, in plain words.</strong> Which of
                 the eleven were given, and what each actually means about your file.
@@ -288,9 +298,10 @@ function DecodeInner() {
             </ul>
           </Card>
 
-          <Card className="p-5">
-            <h2 className="text-sm font-semibold text-ink">Why the form is decodable</h2>
-            <p className="mt-2 text-xs leading-relaxed text-muted">
+          <Card>
+            <CardHeader title="Why the form is decodable" />
+            <div className="p-5 pt-4">
+            <p className="text-xs leading-relaxed text-muted">
               Annex VI of the EU Visa Code (Regulation 810/2009) fixes the refusal form and
               its eleven numbered grounds for all Schengen states. We match your letter
               against that official wording first and only fall back to AI if the text
@@ -301,16 +312,17 @@ function DecodeInner() {
                 href={source}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="mt-2 inline-block text-xs font-medium text-neon-500 hover:underline"
+                className="mt-3 inline-block text-xs font-medium text-neon-400 hover:underline"
               >
                 Read the regulation →
               </a>
             )}
+            </div>
           </Card>
 
-          <Card className="p-5">
-            <h2 className="text-sm font-semibold text-ink">Important</h2>
-            <p className="mt-2 text-xs leading-relaxed text-muted">
+          <Card className="border-warn/25">
+            <CardHeader title="Important" />
+            <p className="p-5 pt-4 text-xs leading-relaxed text-muted">
               This decodes what your letter says and maps it to document requirements. It is
               not legal advice, and it cannot tell you whether an appeal will succeed. Appeal
               deadlines are short and printed on your own letter — check that date before
@@ -318,6 +330,7 @@ function DecodeInner() {
             </p>
           </Card>
         </aside>
+      </div>
       </div>
     </div>
   );

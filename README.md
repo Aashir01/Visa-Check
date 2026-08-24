@@ -102,6 +102,14 @@ cp .env.example .env
 
 Your API docs are now live at **http://localhost:8000/docs** 🎉
 
+> **Upgrading an existing dev database?** Seeding calls `Base.metadata.create_all`, which
+> creates missing *tables* but silently ignores missing *columns*. A `visaguard.db` that
+> predates a model change keeps working until something selects the new column, then
+> returns a 500 — `no such column: checks.submission_date` is the usual first symptom.
+> Delete the SQLite file and re-seed, or add the columns in place with
+> `ALTER TABLE … ADD COLUMN` (they are nullable, so nothing needs backfilling). Alembic is
+> the real answer and is not wired up yet.
+
 ### Step 2 — Frontend
 
 ```bash
@@ -152,12 +160,14 @@ That's the whole reason we added DeepSeek support — same quality of review, a 
 
 ## 🎨 What does it look like?
 
-Dark mode. Neon green accents. Think sci-fi dashboard meets visa application form:
+A deep navy dark theme with one confident blue accent and a semantic risk ramp — green, amber, orange, red — that means the same thing everywhere it appears.
 
-- **Left panel:** Drag & drop upload zone → interactive document checklist with live status
-- **Right panel:** Circular risk gauge (0–100) → Good news / warning banner → Risk factors breakdown table → "View Detailed Report" button
-- **Bottom:** Clean 4-step "How It Works" walkthrough
-- **Fonts:** Orbitron for headings (that sci-fi dashboard feel), Share Tech Mono for body text (terminal/machine aesthetic)
+- **Landing page:** footage of an actual immigration counter behind the hero, with a worked example of a finished report sitting beside the headline. Then what gets checked, the four steps, the refusal decoder, all eleven corridors, pricing and an FAQ
+- **Check flow:** a `Corridor → Upload → Report` stepper across all three pages, so nobody is ever guessing how much is left. The corridor you picked is shown as a photograph of the destination, not just its name
+- **The report:** a 0–100 gauge in the band colour, issues grouped by severity with fix instructions, a validity timeline dated to your appointment, and an honest "checks that could not be run" list that never reads as a pass
+- **Fonts:** Sora for headings, Inter for UI, JetBrains Mono for versions and IDs
+
+Imagery and footage are Pexels-licensed and registered in one place (`frontend/lib/media.ts`) so a photo is chosen once and reused. Every picture reserves its aspect box and paints the image's dominant colour underneath, so nothing shifts as it loads and a failed CDN request leaves a plain surface rather than a hole. Autoplaying footage is skipped entirely for anyone whose OS asks for reduced motion, serves a 720p file on narrow screens, and pauses once scrolled past.
 
 It's designed to feel like a tool you can trust — not another generic SaaS landing page.
 
@@ -305,6 +315,8 @@ cd frontend && npx tsc --noEmit && npm run build
 
 The test suite covers MRZ check digits, name matching, money and date parsing, currency conversion, every rule outcome (including "could not evaluate"), scoring, pack validation, LLM budget enforcement, rate limiting, refusal-ground decoding and recovery plans, submission-date timelines, re-check diffs, the free-re-check limits, and a specific guard that stops the AI from hallucinating a finding into your report.
 
+Four of them drive a real Tesseract binary against a photographed passport. If `cli.py doctor` says OCR is not working, those four fail with empty OCR output — fix the install rather than the test.
+
 ---
 
 ## ⚠️ Important — the packs are drafts
@@ -337,8 +349,10 @@ backend/
 frontend/
   app/            Landing page, auth, check flow, reports, refusal decoding
                   and recovery plans, account, admin
-  components/     UI primitives with glow effects
-  lib/            API client, auth context, formatting utilities
+  components/     UI primitives, one icon set, media (photo + ambient video),
+                  page headers with breadcrumbs and the check stepper,
+                  original SVG illustrations
+  lib/            API client, auth context, formatting, media registry
 ```
 
 ---
@@ -349,6 +363,7 @@ frontend/
 - Cover letter generation and non-English report output — still on the v2 roadmap
 - **The refusal decoder is Schengen-only.** It rests on Annex VI being a standardised form; the UK, US and others give free-prose refusals with no fixed grounds, so those fall through to the AI path and are much less reliable
 - Anonymous checks require an account. It's a deliberate trade-off: slightly more friction at signup, but every user is attributable
+- **Database migrations.** Schema changes are applied by `create_all`, which adds tables but never columns. Fine while the only database is a dev SQLite file you can delete; not fine the first time there is data worth keeping. Alembic before the first paying user
 
 ---
 

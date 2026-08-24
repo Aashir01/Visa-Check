@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { PageHeader } from "@/components/page-header";
 import {
   Alert,
   Badge,
@@ -12,7 +13,6 @@ import {
   EmptyState,
   Loading,
   LinkButton,
-  Spinner,
 } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/lib/auth";
@@ -88,27 +88,31 @@ export default function RefusalPlanPage() {
   }
 
   return (
-    <div className="container-page py-10">
-      {/* header */}
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">Recovery plan</h1>
-          <p className="mt-1 text-muted">
+    <div>
+      <PageHeader
+        breadcrumbs={[{ href: "/refusals", label: "Refusals" }, { label: "Recovery plan" }]}
+        title="Recovery plan"
+        lede={
+          <>
             {refusal.corridor_label ?? "Refusal"}
             {refusal.consulate && <> · {refusal.consulate}</>}
             {refusal.decision_date && <> · decided {refusal.decision_date}</>}
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            Decoded {formatDateTime(refusal.created_at)} · {methodLabel(refusal.method)}
-            {refusal.confidence != null && (
-              <> · {Math.round(refusal.confidence * 100)}% confidence</>
-            )}
-          </p>
-        </div>
-        <LinkButton href="/refusals" variant="secondary">
-          All refusals
-        </LinkButton>
-      </div>
+            <span className="mt-1 block text-sm text-muted-soft">
+              Decoded {formatDateTime(refusal.created_at)} · {methodLabel(refusal.method)}
+              {refusal.confidence != null && (
+                <> · {Math.round(refusal.confidence * 100)}% confidence</>
+              )}
+            </span>
+          </>
+        }
+        actions={
+          <LinkButton href="/refusals" variant="secondary">
+            All refusals
+          </LinkButton>
+        }
+      />
+
+    <div className="container-page py-8 lg:py-10">
 
       {lowConfidence && (
         <div className="mb-6">
@@ -135,14 +139,16 @@ export default function RefusalPlanPage() {
             </Badge>
           )}
         </div>
-        <h2 className={`mt-3 text-lg font-semibold ${verdict.text}`}>{plan?.headline}</h2>
+        <h2 className={`mt-3 font-display text-xl font-semibold ${verdict.text}`}>
+          {plan?.headline}
+        </h2>
         <p className="mt-1.5 max-w-3xl leading-relaxed text-muted">{plan?.summary}</p>
 
         <div className="mt-5 flex flex-wrap gap-3">
           {plan?.can_recheck && refusal.check_id ? (
             <div>
-              <Button onClick={startRecheck} disabled={starting} size="lg">
-                {starting && <Spinner />} Rebuild the file and re-check
+              <Button onClick={startRecheck} loading={starting} size="lg">
+                Rebuild the file and re-check
               </Button>
               <p className="mt-2 text-xs text-muted">
                 Free — confirming a fix we asked for does not cost another check.
@@ -293,6 +299,7 @@ export default function RefusalPlanPage() {
           </Card>
         </aside>
       </div>
+    </div>
     </div>
   );
 }

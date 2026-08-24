@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
-import { Alert, Button, Card, Field, Input, Spinner } from "@/components/ui";
+import { AuthShell } from "@/components/auth-shell";
+import { Alert, Button, Field, Input, Loading } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 
 function LoginForm() {
@@ -33,11 +34,20 @@ function LoginForm() {
   }
 
   return (
-    <Card className="p-6">
-      <h1 className="text-xl font-bold text-ink">Sign in</h1>
-      <p className="mt-1 text-sm text-muted">Access your checks and reports.</p>
-
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+    <AuthShell
+      title="Sign in"
+      lede="Pick up where you left off — your checks, reports and decoded refusals."
+      footer={
+        <>
+          No account yet?{" "}
+          <Link href="/register" className="font-semibold text-neon-400 hover:underline">
+            Create one
+          </Link>
+          {" — it comes with a free check."}
+        </>
+      }
+    >
+      <form onSubmit={onSubmit} className="space-y-5" noValidate>
         {error && <Alert tone="error">{error}</Alert>}
 
         <Field label="Email">
@@ -47,6 +57,7 @@ function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
+            autoFocus
             placeholder="you@example.com"
           />
         </Field>
@@ -58,30 +69,22 @@ function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
+            placeholder="••••••••"
           />
         </Field>
 
-        <Button type="submit" disabled={busy} className="w-full">
-          {busy && <Spinner />} Sign in
+        <Button type="submit" loading={busy} size="lg" className="w-full">
+          Sign in
         </Button>
       </form>
-
-      <p className="mt-5 text-center text-sm text-muted">
-        No account?{" "}
-        <Link href="/register" className="font-medium text-neon-500 hover:underline">
-          Create one
-        </Link>
-      </p>
-    </Card>
+    </AuthShell>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="container-narrow max-w-md py-16">
-      <Suspense fallback={<Card className="p-6"><Spinner /></Card>}>
-        <LoginForm />
-      </Suspense>
-    </div>
+    <Suspense fallback={<Loading label="Loading…" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

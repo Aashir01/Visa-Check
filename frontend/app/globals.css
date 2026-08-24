@@ -2,137 +2,276 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   Fallback metrics.
+
+   Inter and Sora arrive from a stylesheet, so the first paint uses a system
+   face. Matching the metrics here keeps that swap from shifting the layout.
+   --------------------------------------------------------------------------- */
+@font-face {
+  font-family: "InterFallback";
+  src: local("Segoe UI"), local("Helvetica Neue"), local("Arial");
+  size-adjust: 107%;
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem; /* clears the sticky header on anchor jumps */
   }
 
   body {
     @apply bg-surface text-ink antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     background-image:
-      radial-gradient(ellipse at 50% 0%, rgba(0, 230, 102, 0.03) 0%, transparent 60%),
-      radial-gradient(ellipse at 85% 20%, rgba(0, 230, 102, 0.02) 0%, transparent 50%);
+      radial-gradient(ellipse 80% 50% at 50% -8%, rgba(59, 130, 246, 0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 92% 8%, rgba(20, 184, 166, 0.05) 0%, transparent 55%);
+    background-attachment: fixed;
   }
 
-  /* Custom scrollbar */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: "Sora", "Inter", "InterFallback", ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Keyboard focus stays visible everywhere; mouse focus never shows a ring. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-neon-400 ring-offset-2 ring-offset-surface;
+  }
+
+  ::selection {
+    background: rgba(59, 130, 246, 0.32);
+    color: #f8faff;
+  }
+
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 10px;
+    height: 10px;
   }
   ::-webkit-scrollbar-track {
-    background: #0D0D14;
+    background: #050911;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1C1C30;
-    border-radius: 3px;
+    background: #1d2b45;
+    border-radius: 99px;
+    border: 2px solid #050911;
   }
-  /* Machine-written font rendering */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: "Orbitron", "Share Tech Mono", monospace;
-    letter-spacing: 0.02em;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2a3c5e;
   }
 
-  /* Mono body text for machine aesthetic */
-  p, span, li, a, button, input, select, textarea, label, td, th {
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+  /* Date pickers ship a black glyph that disappears on a navy field. */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
+    cursor: pointer;
   }
 
-  /* Glitch-like subtle text shadow for important text */
-  .text-machine {
-    text-shadow: 0 0 1px rgba(0, 230, 102, 0.2);
+  /* Chrome paints autofilled inputs white. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #e8eef9;
+    -webkit-box-shadow: 0 0 0 1000px #0d1524 inset;
+    caret-color: #e8eef9;
+    transition: background-color 9999s ease-out;
   }
 
-  /* Keyboard focus stays visible */
-  :focus-visible {
-    @apply outline-none ring-2 ring-neon-500 ring-offset-2 ring-offset-surface;
-  }
-
-  /* Selection color */
-  ::selection {
-    background: rgba(0, 230, 102, 0.2);
-    color: #E8E8ED;
+  /* Anyone who asked their OS for less motion gets none of ours. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-@layer utilities {
+@layer components {
+  /* ----------------------------------------------------------------------
+     Layout
+     ---------------------------------------------------------------------- */
   .container-page {
-    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-6 lg:px-8;
   }
-
+  .container-wide {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8;
+  }
   .container-narrow {
-    @apply mx-auto w-full max-w-3xl px-4 sm:px-6;
+    @apply mx-auto w-full max-w-3xl px-5 sm:px-6;
   }
 
-  /* Glow border effect */
-  .border-glow {
-    border: 1px solid rgba(0, 230, 102, 0.15);
-    box-shadow: 0 0 10px rgba(0, 230, 102, 0.05), inset 0 0 10px rgba(0, 230, 102, 0.02);
+  /* Vertical rhythm for marketing sections. */
+  .section {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+  .section-tight {
+    @apply py-12 sm:py-16;
   }
 
-  .border-glow-strong {
-    border: 1px solid rgba(0, 230, 102, 0.3);
-    box-shadow: 0 0 20px rgba(0, 230, 102, 0.1), inset 0 0 20px rgba(0, 230, 102, 0.03);
-  }
+  /* ----------------------------------------------------------------------
+     Surfaces
+     ---------------------------------------------------------------------- */
 
-  /* Glass card effect */
-  .glass {
-    background: rgba(22, 22, 37, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  /* Neon text */
-  .text-neon {
-    color: #00E666;
-    text-shadow: 0 0 20px rgba(0, 230, 102, 0.3);
-  }
-
-  /* Grid background pattern */
-  .bg-grid {
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
-  }
-
-  /* Animated gradient border */
-  .border-animated {
+  /* A hairline highlight along the top edge reads as light falling across the
+     card, which is what separates a real surface from a coloured rectangle. */
+  .surface-lift {
     position: relative;
-    background: #161625;
-    border-radius: 12px;
   }
-  .border-animated::before {
+  .surface-lift::before {
     content: "";
     position: absolute;
-    inset: -1px;
-    border-radius: 13px;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(0,230,102,0.3), transparent 40%, transparent 60%, rgba(0,230,102,0.3));
+    inset: 0;
+    border-radius: inherit;
+    padding-top: 1px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.09), transparent 42%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
-    animation: borderRotate 4s linear infinite;
+    pointer-events: none;
   }
 
-  @keyframes borderRotate {
-    0% { filter: hue-rotate(0deg); }
-    100% { filter: hue-rotate(360deg); }
+  .glass {
+    background: rgba(17, 27, 46, 0.72);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(148, 163, 184, 0.13);
   }
 
-  /* Upload drop zone */
+  .border-glow {
+    border: 1px solid rgba(59, 130, 246, 0.16);
+  }
+  .border-glow-strong {
+    border: 1px solid rgba(59, 130, 246, 0.32);
+    box-shadow: 0 12px 32px -14px rgba(59, 130, 246, 0.4);
+  }
+}
+
+@layer utilities {
+  /* ----------------------------------------------------------------------
+     Type
+     ---------------------------------------------------------------------- */
+  .text-gradient {
+    background: linear-gradient(96deg, #93c5fd 0%, #60a5fa 40%, #2dd4bf 105%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Small uppercase label that sits above a heading. */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-neon-400;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ----------------------------------------------------------------------
+     Backdrops
+     ---------------------------------------------------------------------- */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Fades a backdrop out toward the edges so it never fights the content. */
+  .mask-radial {
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 78%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 78%);
+  }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+
+  /* ----------------------------------------------------------------------
+     Media
+     ---------------------------------------------------------------------- */
+
+  /* Slow push-in on hero stills, so the poster frame still feels alive while
+     the video downloads behind it. */
+  @keyframes kenburns {
+    0% {
+      transform: scale(1.02) translate3d(0, 0, 0);
+    }
+    100% {
+      transform: scale(1.14) translate3d(-1.5%, -1.2%, 0);
+    }
+  }
+  .kenburns {
+    animation: kenburns 28s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  /* ----------------------------------------------------------------------
+     Loading
+     ---------------------------------------------------------------------- */
+  .skeleton {
+    background-color: rgba(148, 163, 184, 0.07);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(148, 163, 184, 0.11) 50%,
+      transparent 100%
+    );
+    background-size: 500px 100%;
+    background-repeat: no-repeat;
+    @apply animate-shimmer rounded-md;
+  }
+
+  /* ----------------------------------------------------------------------
+     Interaction
+     ---------------------------------------------------------------------- */
   .drop-zone {
-    @apply border-2 border-dashed rounded-xl transition-all duration-300;
-    border-color: rgba(0, 230, 102, 0.2);
-    background: rgba(0, 230, 102, 0.02);
+    @apply rounded-2xl border-2 border-dashed transition-all duration-300;
+    border-color: rgba(59, 130, 246, 0.28);
+    background: rgba(59, 130, 246, 0.035);
   }
   .drop-zone:hover,
   .drop-zone.drag-over {
-    border-color: rgba(0, 230, 102, 0.5);
-    background: rgba(0, 230, 102, 0.05);
-    box-shadow: 0 0 30px rgba(0, 230, 102, 0.1);
+    border-color: rgba(59, 130, 246, 0.6);
+    background: rgba(59, 130, 246, 0.07);
+  }
+
+  /* Lift used by cards and tiles that link somewhere. */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

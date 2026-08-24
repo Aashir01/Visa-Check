@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DiffPanel } from "@/components/diff";
+import { ScanIcon } from "@/components/icons";
+import { CHECK_STEPS, PageHeader } from "@/components/page-header";
 import { TimelinePanel } from "@/components/timeline";
 import {
   Alert,
@@ -143,11 +145,35 @@ export default function ReportPage() {
     return (
       <div className="container-narrow py-20">
         <Card className="p-10 text-center">
-          <Spinner className="mx-auto h-6 w-6 text-neon-500" />
-          <h1 className="mt-4 text-xl font-semibold text-ink">Analysing your documents</h1>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-            Reading each file, detecting what it is, extracting the fields, then running
+          <span className="mx-auto flex h-14 w-14 animate-pulse-glow items-center justify-center rounded-2xl border border-neon-500/25 bg-neon-500/10 text-neon-400">
+            <ScanIcon className="h-6 w-6" />
+          </span>
+          <h1 className="mt-5 font-display text-xl font-semibold text-ink">
+            Analysing your documents
+          </h1>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
+            Reading each file, working out what it is, extracting the fields, then running
             every rule for this corridor. This usually takes under a minute.
+          </p>
+
+          {/* Naming the stages makes a silent minute feel like progress rather
+              than a hang, without inventing a percentage we cannot measure. */}
+          <ol className="mx-auto mt-7 max-w-xs space-y-2.5 text-left">
+            {[
+              "Decrypting and reading each file",
+              "Detecting document types",
+              "Extracting names, dates and amounts",
+              "Running the corridor rule pack",
+            ].map((stage) => (
+              <li key={stage} className="flex items-center gap-2.5 text-sm text-muted">
+                <Spinner className="h-3.5 w-3.5 shrink-0 text-neon-400" />
+                {stage}
+              </li>
+            ))}
+          </ol>
+
+          <p className="mt-7 text-xs text-muted-soft">
+            You can leave this page — the report will be waiting under Your checks.
           </p>
         </Card>
       </div>
@@ -198,39 +224,43 @@ export default function ReportPage() {
   );
 
   return (
-    <div className="container-page py-10">
-      {/* header */}
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">
-            Document completeness report
-          </h1>
-          <p className="mt-1 text-muted">
+    <div>
+      <PageHeader
+        breadcrumbs={[{ href: "/checks", label: "Your checks" }, { label: "Report" }]}
+        title="Document completeness report"
+        lede={
+          <>
             {check.corridor_label} · {titleCase(check.applicant_profile)}
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            Checklist{" "}
-            <span className="font-mono">{check.pack_meta?.version ?? check.rulepack_version}</span>
-            {check.pack_meta?.effective_date && <> dated {check.pack_meta.effective_date}</>}
-            {" · "}run {formatDateTime(check.completed_at ?? check.created_at)}
-          </p>
-        </div>
+            <span className="mt-1 block text-sm text-muted-soft">
+              Checklist{" "}
+              <span className="font-mono">
+                {check.pack_meta?.version ?? check.rulepack_version}
+              </span>
+              {check.pack_meta?.effective_date && <> dated {check.pack_meta.effective_date}</>}
+              {" · "}run {formatDateTime(check.completed_at ?? check.created_at)}
+            </span>
+          </>
+        }
+        steps={CHECK_STEPS}
+        currentStep={2}
+        actions={
+          <>
+            <Button variant="secondary" onClick={download} loading={downloading}>
+              Download PDF
+            </Button>
+            <Button
+              variant="neon"
+              onClick={startRecheck}
+              loading={rechecking}
+              title="Confirming the fixes we asked for does not cost another check."
+            >
+              Fix and re-check — free
+            </Button>
+          </>
+        }
+      />
 
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={download} disabled={downloading}>
-            {downloading ? <Spinner /> : null} Download PDF
-          </Button>
-          <Button
-            variant="neon"
-            onClick={startRecheck}
-            disabled={rechecking}
-            title="Confirming the fixes we asked for does not cost another check."
-          >
-            {rechecking ? <Spinner /> : null} Fix and re-check — free
-          </Button>
-          <LinkButton href="/check/new">New check</LinkButton>
-        </div>
-      </div>
+    <div className="container-page py-8 lg:py-10">
 
       {/*
         The single most urgent thing on this page when it applies: a document
@@ -272,11 +302,11 @@ export default function ReportPage() {
       )}
 
       {/* score */}
-      <Card className="mb-6 flex flex-col items-center gap-8 p-6 sm:flex-row sm:items-start">
-        <ScoreGauge score={score} band={check.risk_band} />
+      <Card className="mb-6 flex flex-col items-center gap-8 p-6 sm:flex-row sm:items-start sm:p-7">
+        <ScoreGauge score={score} band={check.risk_band} size={170} />
 
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-semibold text-ink">
+          <h2 className="font-display text-xl font-semibold text-ink-strong">
             {scoring?.band_label ?? "Result"}
           </h2>
           <p className="mt-1 leading-relaxed text-muted">{scoring?.band_message}</p>
@@ -447,6 +477,7 @@ export default function ReportPage() {
           </p>
         </aside>
       </div>
+    </div>
     </div>
   );
 }
